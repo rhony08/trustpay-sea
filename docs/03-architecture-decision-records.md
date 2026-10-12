@@ -20,6 +20,9 @@ This document captures the key engineering decisions with their context, options
 - [ADR-010: Neutral Risk Language & PII Masking as Legal Shield (UU ITE / PDPA)](#adr-010-neutral-risk-language--pii-masking-as-legal-shield-uu-ite--pdpa)
 - [ADR-011: Aggregate, Privacy-Safe Search Intelligence Counters](#adr-011-aggregate-privacy-safe-search-intelligence-counters)
 - [ADR-012: AI Augmentation & Google Fact Check Tools as Optional Enrichment](#adr-012-ai-augmentation--google-fact-check-tools-as-optional-enrichment)
+- [ADR-013: HSM/KMS-Keyed Account Hash + Prompt-Injection-Proof AI Boundary](#adr-013-hsmkms-keyed-account-hash--prompt-injection-proof-ai-boundary)
+- [ADR-014: Identity-Graph Anti-Brigading & Freeze-Thats-Rise-Only](#adr-014-identity-graph-anti-brigading--freeze-thats-rise-only)
+- [ADR-015: Web-First Scope for Hackathon MVP (No Chat Bots)](#adr-015-web-first-scope-for-hackathon-mvp-no-chat-bots)
 
 ---
 
@@ -57,11 +60,11 @@ Bank accounts are sensitive personal data (PDPA/UU PDP). Raw storage enables bul
 3. **Canonical normalization + HMAC-SHA256 index (Selected)**: strip formatting → canonical key `country:institution:account` → `HMAC_SHA256(key, server_salt)` stored as the unique index. Public surfaces show only masked (`883-****-831`).
 
 ### Decision
-Use **Salted HMAC-SHA256 canonical lookup index**. The salt lives in the secret manager, rotated with re-hashing migration path.
+Use **KMS-keyed HMAC-SHA256 canonical lookup index** (see ADR-013) with per-row `hash_version`. Salt/key lives in the KMS/HSM (never beside the DB); rotation is possible because a `hash_version` and re-encryption path are planned from day one.
 
 ### Consequences
 - **+**: No cleartext enumeration; compliant with data minimization; deterministic exact match.
-- **−**: No fuzzy/partial substring search — users must enter (or scan) the exact correct number; we enforce exact input with client-side format hints and QR scanning to reduce typos.
+- **−**: No fuzzy/partial substring search — users must enter (or scan) the exact correct number; we enforce exact input with client-side format hints and QR scanning to reduce typos. Low-entropy accounts are brute-forceable if the key leaks → hence KMS/HSM key management and lookup-oracle rate limiting (ADR-013).
 
 ---
 
@@ -141,7 +144,7 @@ The user explicitly wants SEA government integration (cekrekening.id, PDRM Semak
 3. **Open Public API first + adapter layer later (Selected)**: Build a documented, versioned public API now. Government/ecosystem connectors become adapters *over our own API* (or pulling their feeds via `GovAdapter` interface) that we activate when permissions are granted. Ship a **mock adapter + fixtures** in MVP to prove the flow.
 
 ### Decision
-**Public API is an MVP deliverable.** The `GovAdapter` interface is defined in code and docs now; real national integrations are Phase 5+ post-permission wiring.
+**Public API is an MVP deliverable.** The `GovAdapter` interface is defined in code and docs now; real national integrations are **Post-MVP · B2G** post-permission wiring.
 
 ### Consequences
 - **+**: Ecosystem value (communities, gateways, NGOs) delivered early; gov integration becomes "just build one adapter"; demo shows B2G direction.
@@ -274,6 +277,71 @@ Ship **grounded AI entity summaries** as a core feature, and **Google Fact Check
 ### Consequences
 - **+**: Big UX jump in "search intelligence"; aligns with AI Search direction; low legal risk by keeping summaries grounded and fact-checks external.
 - **−**: Requires explicit source-grounded prompting + evaluation tests; fact-check API requires Google account/API key (optional); needs graceful degradation offline.
+
+---
+
+## ADR-013: HSM/KMS-Keyed Account Hash + Prompt-Injection-Proof AI Boundary
+
+**Status**: Accepted
+
+### Context
+Security audit (A-C5, A-C3) flagged two architectural weaknesses: (1) a single low-entropy HMAC key would let a DB/key compromise reverse the whole account registry (and salt rotation was impossible without re-collecting); (2) the public AI entity summary ingests attacker-controlled report/OCR text, enabling prompt-injection that could poison the summary shown to every future payer.
+
+### Options Considered
+1. **Keep single global HMAC salt**: fast but single point of permanent compromise (rejected).
+2. **HSM/KMS-keyed HMAC with `hash_version` + envelope encryption (Selected)**: high-entropy key in KMS/HSM; envelope-encrypt account under a data key (reversible ciphertext), HMAC as the index; rotation = re-encrypt, not re-collect; `hash_version` on each row.
+3. **Raw LLM summary from free text**: fastest but permits injection (rejected).
+4. **Structured-output + grounding contract for all AI (Selected)**: treat all report/OCR/metadata text as untrusted; force JSON-schema output; derive human summaries server-side from validated fields; grounding check rejects facts not present in input; adversarial injection test suite is a blocking CI gate.
+
+### Decision
+Implement **KMS/HSM-keyed HMAC with envelope encryption + `hash_version`**, and enforce an **untrusted-input / structured-output AI boundary** with a grounding check for every public-facing AI output.
+
+### Consequences
+- **+**: Registry not permanently reversible on key leak; AI summary not poisonable by report text; defensible under UU PDP/PDPA audits.
+- **−**: Slightly higher infra cost (KMS/HSM); AI prompts must be engineered as templates, not free-form.
+
+---
+
+## ADR-014: Identity-Graph Anti-Brigading & Freeze-That-Rises-Only
+
+**Status**: Accepted
+
+### Context
+Security audit (A-C1, A-C2): the original anti-brigading detector counted "distinct users" with a reputation default of 50 — above the 40 threshold, so a sock-puppet network was invisible. Separately, the dispute freeze capped the *whole entity* at ≤45, letting a mule-operator claiming ownership drag an 88-score fraud account down to 45.
+
+### Options Considered
+1. **Keep raw count + default rep 50**: vulnerable (rejected).
+2. **Human-identity graph + trust-weighted velocity (Selected)**: identity = device ∩ (IP/ASN + phone-verified) ∩ payment instrument; unverified-new accounts start at trust 10; EWMA z-score over 7-day baseline catches spaced-out attacks; per-entity hourly cap.
+3. **Freeze that sets whole score=45**: abusable (rejected).
+4. **Freeze that caps only score *increases* (Selected)**: `effective = max(score_without_recent_unverified, prior_verified_baseline)` — never lowers a verified/high score; badges inform, never mask.
+
+### Decision
+Adopt **identity-graph anti-brigading** and a **rise-only dispute freeze**. Ownership proof tiers T1/T2 prove control only; only T3 business-KYC or human-verified ownership may contest admin-verified/gov records.
+
+### Consequences
+- **+**: The score — the product's core asset — can't be gamed by sock puppets or mule operators.
+- **−**: Requires device-fingerprint + phone-verification infrastructure; privacy constraints apply to identity clustering (fingerprints stored hashed, TTL-limited).
+
+---
+
+## ADR-015: Web-First Scope for Hackathon MVP (No Chat Bots)
+
+**Status**: Accepted
+
+### Context
+Competing ideas (WhatsApp/Telegram check bot, IVR line, mobile-extension overlays) are high-wow, but the hackathon priority is a **web-based PWA** that works flawlessly end-to-end. Chat/telephony channels add deployment, bot-approval, and runtime complexity that dilute the core demo.
+
+### Options Considered
+1. **Build bot channel now**: high demo wow, but depends on external platform approval + long-running service; risk to hackathon delivery.
+2. **Web-first (Selected)**: prioritize the Next.js PWA + Public API; deliver chat/SMS/IVR channels as **post-MVP roadmap** (documented in blueprint, implemented later behind the same `screen/*` API).
+3. **Ignore non-web channels entirely**: loses a major distribution narrative (rejected).
+
+### Decision
+**Web-first MVP.** All MVP phases target the PWA + Public API. Non-web channels are post-MVP roadmap items, designed from day one to reuse the `screen/account` and `screen/qr` contracts.
+
+### Consequences
+- **+**: Single focused demo surface; faster delivery; the Public API keeps future channel options open.
+- **−**: No WA/TG quick-check in the MVP demo (trade-off accepted for hackathon quality).
 
 ---
 

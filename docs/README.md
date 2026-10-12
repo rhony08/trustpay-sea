@@ -9,10 +9,10 @@ This folder contains the complete planning, design, and implementation documenta
 
 | # | Document | Purpose |
 |---|----------|---------|
-| 01 | [Product Blueprint](01-product-blueprint.md) | Vision, problem context, personas, workflows, feature spec, MVP scope, success metrics, roadmap |
-| 02 | [Technical Design Document](02-technical-design.md) | System architecture, data model, API contracts, AI/forensics pipeline, risk scoring, security |
-| 03 | [Architecture Decision Records](03-architecture-decision-records.md) | Key engineering decisions (ADRs) with context, options, and rationale |
-| 04 | [Implementation Plan](04-implementation-plan.md) | Phased delivery plan with granular tasks, acceptance criteria, and verification plan |
+| 01 | [Product Blueprint](01-product-blueprint.md) | Vision, problem context, personas, workflows, feature spec (incl. search intelligence, AI augmentation, web-first community features, security-awareness features), MVP scope, success metrics, roadmap |
+| 02 | [Technical Design Document](02-technical-design.md) | System architecture, data model, API contracts, AI/forensics pipeline, risk scoring, security & hardening appendix, non-functional requirements, operations |
+| 03 | [Architecture Decision Records](03-architecture-decision-records.md) | 15 engineering decisions (ADRs) with context, options, and rationale |
+| 04 | [Implementation Plan](04-implementation-plan.md) | Phased delivery plan (Phase 0–7 + 3B/4B) with granular tasks, acceptance criteria, and verification plan |
 
 ## Quick Summary
 
@@ -26,7 +26,7 @@ TrustPay SEA is a **community-driven payment-risk & reputation registry** for So
 6. Supports **admin manual verification** with AI-assisted forensics (slip OCR, tamper detection, duplicate detection, review-bomb detection).
 7. Produces an **explainable 0–100 trust/risk score** for every entity.
 8. Shows **search intelligence** on every lookup — if it was ever reported, how many times it's been searched, 7d/30d trends, last-searched recency — plus a **grounded AI entity summary** and optional **Google Fact Check Tools** enrichment.
-9. Ships an **open Public API** (OpenAPI 3.0, `screen/account`, `screen/qr`), so communities, payment gateways, and *future government platforms* can integrate with our standard (real gov integration with cekrekening.id / PDRM Semak Mule / SPF ASC / MDES AOC / NCSC / BSP IACAT is Phase 5+ behind permissions).
+9. Ships an **open Public API** (OpenAPI 3.0, `screen/account`, `screen/qr`), so communities, payment gateways, and *future government platforms* can integrate with our standard (real gov integration with cekrekening.id / PDRM Semak Mule / SPF ASC / MDES AOC / NCSC / BSP IACAT is "Post-MVP · B2G", behind permissions).
 
 The long-term vision turns this into a **B2G/B2B infrastructure**: syncing with government fraud registries, and exposing a sub-50ms pre-transfer screening API for banks & e-wallets. **Note**: real government integrations require permissions/MoUs that take time — so we deliver the Open Public API first, and wire gov connectors as adapters later.
 

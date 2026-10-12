@@ -254,7 +254,7 @@ This prevents both:
 ### 6.7 SEA Government & Ecosystem Integration (Future Pillar — requires permissions)
 
 > **⚠️ Important scope note**: Direct integration with official government platforms (cekrekening.id, PDRM Semak Mule, etc.) **requires formal permissions, MoUs, and approval processes that take a long time**. Therefore:
-> 1. **Gov-sync is explicitly a POST-MVP / Phase 5+ item** in this plan.
+> 1. **Gov-sync is explicitly a POST-MVP / "Post-MVP · B2G" item** (scheduled after MVP Phase 7, not as implementation Phase 5).
 > 2. **What we build NOW is the open Public API** — a well-documented, versioned REST/OpenAPI surface that *other platforms, including government portals later, can integrate with*. We build the standard first; permissions come later.
 > 3. The public API means our data is machine-readable and shareable, so the eventual gov integration is a *connector on top of an API we already own* — not a rewrite.
 
@@ -336,6 +336,41 @@ When a user searches an account or scans a QR, the profile is far richer than Tr
 - Additionally, when a user researches a scam type, surface reputable fact-checked explainers to boost literacy.
 - **Safeguards**: external links are clearly labeled as references, never as verdicts on the specific entity; AI summaries are derived only from internal structured data.
 
+### 6.10 Community & Engagement Features (Web-First, MVP-Viable)
+
+Features build the Truecaller-style status loop and network effect — **all delivered in the web PWA** (chat/SMS channels are explicitly post-MVP per ADR-015).
+
+| Feature | Description | Priority |
+|---------|-------------|----------|
+| **Trust Rank Ladder** | Public reporter reputation tiers (Warga Baru → Waspada → Penjaga → Pahlawan) unlocking privileges | P1 |
+| **Verified Reporter Badge** | Phone/ID-lite verified reporters' reports weighted higher in score & anti-brigading | P1 |
+| **Pioneer Warn badge** | Permanent badge for the first reporter of an entity that becomes admin/gov-verified | P1 |
+| **Watchlist + alerts** | Save entities; be notified on new report, band crossing, dispute open/close, gov match | P1 |
+| **Scam Vaccine quiz** | 60-second onboarding quiz on 3 SEA scam archetypes → "Anti-Scam Aware" badge | P1 |
+| **Share-to-Check** | PWA share-target so a QR/screenshot from any app can be scanned in one tap | P1 |
+| **Diligence Receipt** | Exportable timestamped PDF/QR: "you checked account X on [date], risk = Y" (bank/police evidence) | P1 |
+| **High-risk cooling-off timer** | 15–60s countdown + "are you sure? did they refuse video call / push urgency / price unreal?" checklist before paying High/Critical entity | P1 |
+| **Scam Simulator** | 90-second interactive walkthrough where audience almost pays a fake seller, then TrustPay intercepts | P1 |
+| **Scam Playbook library** | SEO-friendly evergreen pages per scam typology (red flags, anonymized report snippets, linked entities) | P1 |
+
+> **Web-first scope note (ADR-015)**: WhatsApp/Telegram bot, SMS/IVR quick-check, and browser extension are post-MVP roadmap items. They will reuse the same `screen/account` and `screen/qr` contracts when built.
+
+### 6.11 User-Facing Security-Awareness Features (Web-First)
+
+Warning and protection features that interrupt scam urgency — all on the web surface:
+
+| Feature | Description | Priority |
+|---------|-------------|----------|
+| **Fresh bad-review interstitial** | When an entity gained new reports in last 24–72h or active velocity spike, interrupt with mandatory "I understand the risk → Continue" modal | P0 |
+| **Too-good-to-be-true deal checker** | Paste seller/listing text → heuristics flag bait (low price, urgency, off-platform payment, no COD) + literacy tip | P1 |
+| **3-2-1 rule for large amounts** | 3 independent verifications, 2 channels, 1 cooling-off before amounts above a tunable threshold (e.g., Rp5m) | P1 |
+| **Geo-aware SOS hotline buttons** | One-tap dial correct national line (MY NSRC 997, TH AOC 1441, ID OJK 157/1799, SG 1799, VN 5656, PH 1342) + attach redacted case summary | P0 |
+| **"I just got scammed" recovery wizard** | Post-loss guided flow: account-freeze steps per bank, one-tap police/cekrekening referral, generated incident dossier | P1 |
+| **Phishing-URL & QR checker** | Paste URL or upload QR → domain age/lookalike/known-scam verdict via Public API | P2 |
+| **Warning card generator** | One tap → branded social warning card (WhatsApp/FB/TikTok-ready) with canonical check link + QR | P1 |
+| **Vulnerable-user mode** | High-contrast warnings, larger confirmations, optional trusted-contact co-approval for large transfers | P2 |
+| **Privacy dashboard / DSAR** | Self-serve export/correct/delete of own reports & data (operationalizes right-to-erasure) | P1 |
+
 ---
 
 ## 7. Trust Score Definition (0–100)
@@ -345,20 +380,22 @@ When a user searches an account or scans a QR, the profile is far richer than Tr
 | Band | Label | Meaning |
 |------|-------|---------|
 | 0–20 | Safe / Verified Clean | Owner verified, no confirmed fraud |
-| 21–50 | Caution / Dispute Active | Low activity or active dispute (score frozen at ≤45) |
+| 21–50 | Caution / Dispute Active | Low activity or active dispute (new-score rise capped at ≤45) |
 | 51–79 | High Risk | Multiple consistent community reports with evidence |
 | 80–100 | Critical Fraud | Admin-verified fraud / government blacklist |
 
+> **Display rule (C5 fix)**: an entity's **badge** is driven by `verification_status`, not just the numeric score. A brand-new unverified entity (default score 15) shows the **Amber "Unverified"** badge — NOT the green "Verified Clean" band — until it has verified history or an owner. Only entities with verified-owner/clean history can render the green badge.
+
 ### 7.2 Explainability requirement
 
-Every score must display its **factor breakdown**:
+Every score must display its **factor breakdown** (exact weights visible to the verified owner + admins; public sees the score + rounded factor labels to prevent threshold gaming):
 ```
-Risk Score: 72 / 100  HIGH RISK
+Risk Score: 72 / 100  CRITICAL_RISK-HIGH
   + 35 → 1 admin-verified fraud report
-  + 20 → community reports (3 reports, severity 4,5,4)
-  + 17 → upvote weight (5 helpful marks)
-  = 72   (dampened 0.85× during anomaly spike; no dispute active)
+  + 37 → community reports (3 reports, severity 4,5,4 + helpful votes), dampened 0.45× during anomaly spike
+  = 72   (no dispute active)
 ```
+> The example was reconciled with the TDD formula (C8) — `35 admin + 37 community (dampened 0.45) = 72`. The earlier "0.85×" figure was an inconsistency and is now corrected to **0.45**.
 
 ---
 
