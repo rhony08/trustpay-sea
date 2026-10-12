@@ -13,6 +13,7 @@ This folder contains the complete planning, design, and implementation documenta
 | 02 | [Technical Design Document](02-technical-design.md) | System architecture, data model, API contracts, AI/forensics pipeline, risk scoring, security & hardening appendix, non-functional requirements, operations |
 | 03 | [Architecture Decision Records](03-architecture-decision-records.md) | 15 engineering decisions (ADRs) with context, options, and rationale |
 | 04 | [Implementation Plan](04-implementation-plan.md) | Phased delivery plan (Phase 0–7 + 3B/4B) with granular tasks, acceptance criteria, and verification plan |
+| 05 | [Gap Analysis & Open Decisions](05-gap-analysis.md) | Resolved gaps, current recommendations (incl. masking-policy recommendation), all open questions needing owner confirmation, handoff notes |
 
 ## Quick Summary
 
@@ -30,4 +31,28 @@ TrustPay SEA is a **community-driven payment-risk & reputation registry** for So
 
 The long-term vision turns this into a **B2G/B2B infrastructure**: syncing with government fraud registries, and exposing a sub-50ms pre-transfer screening API for banks & e-wallets. **Note**: real government integrations require permissions/MoUs that take time — so we deliver the Open Public API first, and wire gov connectors as adapters later.
 
-> **Note**: `history/` contains earlier drafts from a prior AI workflow that were cut off mid-generation. This `docs/` folder is the authoritative, recrafted planning set.
+---
+
+## 🤖 Handoff Message for the Next AI Agent
+
+> **You are resuming work on TrustPay SEA** (product: BFSI — Intelligent Risk, Fraud & Financial Experiences). Target market: SEA. Stack direction fixed in Doc 02: Next.js 15 PWA + FastAPI + PostgreSQL 16 + Redis + R2/S3 + Gemini. **Web-first scope** (no chat bots — see ADR-015).
+>
+> **Before writing any code, read in this order:**
+> 1. **`05-gap-analysis.md`** — the critical first stop. It lists every **open decision needing owner confirmation** (G-1…G-15) and the current **recommendations (R-1…R-5)**. The two that GATE Phase 0/1 are **G-1 (masking policy — exact-match name disclosure)** and **G-2 (final MVP feature cut-list)**. Ask the owner about these before scaffolding if they remain unresolved.
+> 2. `01-product-blueprint.md` — vision, personas, feature spec, trust-band semantics.
+> 3. `02-technical-design.md` — architecture, full SQL schema (incl. `report_votes`, `user_notifications`, hash-chained `audit_logs`, `identity_trust`, KMS-keyed account hashing), API contracts, risk formula, Security/Hardening appendix, non-functional requirements.
+> 4. `03-architecture-decision-records.md` — 15 ADRs; the recent ones (013/014/015) encode critical security & scope decisions. DO NOT silently reverse them.
+> 5. `04-implementation-plan.md` — Phase 0–7 + 3B/4B tasks with acceptance criteria. Follow the phases in order; each phase must produce a verifiable demo.
+>
+> **Critical invariants you must preserve (do not regress):**
+> - Account numbers stored only as **KMS-keyed HMAC** with `hash_version` — never cleartext index. Public surfaces masked by default (exact-match name disclosure pending G-1).
+> - AI summaries are **grounded/untrusted-input** (prompt-injection-proof); report/OCR/metadata text is never treated as instructions; adversarial injection tests are a **blocking CI gate**.
+> - **Rise-only** dispute freeze — never reduce a verified/high score. Identity-graph anti-brigading (`identity_trust` starts at 10, not 50).
+> - Fail-closed PII redaction: unredacted evidence is never published.
+> - MFA (WebAuthn) + four-eyes dual-control + hash-chained audit for admin destructive actions.
+> - One canonical report-category enum shared by DB, NLP, and API.
+> - Moderate when in doubt: **ask the product owner before overriding any G-item or R-recommendation.**
+>
+> **Conventions**: conventional commits (`feat/fix/docs/refactor/test` scoped); tests gate every todo item; auto-commit after each verified task. Docs are the source of truth — update them when implementation reveals a change.
+>
+> — *Handover recorded on 2026-10-12. Repo: github.com/rhony08/trustpay-sea*
