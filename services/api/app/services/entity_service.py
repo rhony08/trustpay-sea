@@ -182,6 +182,8 @@ def build_profile(
             "is_gov_blacklisted": entity.is_gov_blacklisted,
             "is_under_dispute": entity.is_under_dispute,
             "is_verified_legit": entity.is_owner_verified,
+            "anomaly_spike_detected": entity.anomaly_spike_detected,
+            "factors": (entity.risk_factors or {}).get("factors", []),
         },
         "community_signals": {
             "total_reports": total_reports,

@@ -20,6 +20,7 @@ from app.ai.providers import get_ai_provider
 from app.enums import ProcessingStatus
 from app.models import FraudReport, PaymentEntity, ReportEvidence
 from app.services.report_service import list_evidence
+from app.services.risk_scorer import recompute_entity_score
 from app.services.watchlist_service import notify_watchers
 from app.storage import get_storage
 
@@ -116,6 +117,7 @@ async def process_report(db, report_id: uuid.UUID) -> str:
 
     entity = await db.get(PaymentEntity, report.payment_entity_id)
     if entity is not None:
+        await recompute_entity_score(db, entity)
         notified = await notify_watchers(db, entity, report)
         if notified:
             log.info("notified %d watcher(s) of report %s", notified, report_id)
