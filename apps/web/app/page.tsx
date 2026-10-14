@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { t, type Locale } from "@/lib/i18n";
 
@@ -51,14 +52,13 @@ export default function HomePage() {
       </div>
 
       <div className="grid grid-cols-2 gap-3">
-        <button
-          disabled
-          className="rounded-xl border border-slate-800 bg-slate-900/40 px-4 py-3 text-left text-sm text-slate-500"
-          title={t(locale, "phase")}
+        <Link
+          href="/check"
+          className="rounded-xl border border-emerald-500/40 bg-emerald-500/10 px-4 py-3 text-left text-sm text-emerald-200 hover:bg-emerald-500/20"
         >
-          <span className="block font-semibold text-slate-400">{t(locale, "checkAccount")}</span>
-          Phase 1
-        </button>
+          <span className="block font-semibold">{t(locale, "checkAccount")}</span>
+          <span className="text-xs text-emerald-300/80">Phase 1 — live</span>
+        </Link>
         <button
           disabled
           className="rounded-xl border border-slate-800 bg-slate-900/40 px-4 py-3 text-left text-sm text-slate-500"

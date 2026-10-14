@@ -61,6 +61,7 @@ This plan is structured so each phase produces a **verifiable, demo-able increme
 
 ### Phase 1 Demo
 - Scan QRIS → profile card shows Merchant Name, City, NMID, masked account, scheme, risk placeholder.
+- **Status 2026-10-14**: ✅ DONE — bank directory (40 institutions, 6 countries + ID e-wallets), normalizer (formatting variants → same KMS-keyed HMAC hash, H11 collision guards, length validation), EMVCo TLV parser w/ CRC-16 + scheme detection + homoglyph detector, server-side QR image decode (`POST /api/v1/qr/decode`, upload guards), `GET /api/v1/entities/account` + `POST /api/v1/entities/qr` (exact-match only; lookups never insert rows §10.3; ADR-016 holder-name labels), `/check` PWA page. 49 tests green. Implementation notes: opencv pinned `<5` (5.0.0 QRCodeEncoder segfaults on arm64); QR fixture PNG committed (encoder unusable in-wheel); CV2 multi-decode arity handled defensively.
 
 ---
 
