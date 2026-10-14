@@ -23,6 +23,8 @@ services:
       SCHEDULER_ENABLED: "true"
       AI_PROVIDER: ${AI_PROVIDER:-mock}
       CORS_ALLOW_ORIGINS: ${CORS_ALLOW_ORIGINS:-https://trustpay.quesitive.com}
+      # Optional integrations (set in .env; empty = disabled)
+      SEMAKMULE_API_KEY: ${SEMAKMULE_API_KEY:-}
     extra_hosts:
       - "host.docker.internal:host-gateway"
     volumes:
