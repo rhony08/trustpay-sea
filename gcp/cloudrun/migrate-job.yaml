@@ -1,0 +1,80 @@
+# TrustPay SEA — one-shot Alembic migration Job.
+# Run BEFORE promoting a new API revision:
+#   gcloud run jobs replace gcp/cloudrun/migrate-job.yaml --region $REGION
+#   gcloud run jobs execute trustpay-migrate --region $REGION --wait
+apiVersion: run.googleapis.com/v1
+kind: Job
+metadata:
+  name: trustpay-migrate
+  namespace: "${PROJECT_NUMBER}"
+  labels:
+    app: trustpay-api
+    env: "${ENVIRONMENT}"
+  annotations:
+    run.googleapis.com/vpc-access-connector: "${VPC_CONNECTOR}"
+    run.googleapis.com/vpc-access-egress: private-ranges-only
+    run.googleapis.com/cloudsql-instances: "${SQL_CONNECTION_NAME}"
+    run.googleapis.com/service-account: "${API_SERVICE_ACCOUNT}"
+spec:
+  template:
+    spec:
+      taskCount: 1
+      template:
+        spec:
+          serviceAccountName: "${API_SERVICE_ACCOUNT}"
+          maxRetries: 1
+          timeoutSeconds: 600
+          volumes:
+            - name: jwt-private
+              secret:
+                secretName: "${PREFIX}-jwt-private-pem"
+                items:
+                  - key: latest
+                    path: jwt_private.pem
+            - name: jwt-public
+              secret:
+                secretName: "${PREFIX}-jwt-public-pem"
+                items:
+                  - key: latest
+                    path: jwt_public.pem
+          containers:
+            - name: migrate
+              image: "${API_IMAGE}"
+              command: ["alembic", "upgrade", "head"]
+              resources:
+                limits:
+                  cpu: "1"
+                  memory: 512Mi
+              env:
+                - name: ENVIRONMENT
+                  value: "${ENVIRONMENT}"
+                - name: DATABASE_URL
+                  valueFrom:
+                    secretKeyRef:
+                      name: "${PREFIX}-database-url"
+                      key: latest
+                - name: REDIS_URL
+                  valueFrom:
+                    secretKeyRef:
+                      name: "${PREFIX}-redis-url"
+                      key: latest
+                - name: JWT_PRIVATE_KEY_PATH
+                  value: /run/secrets/jwt_private.pem
+                - name: JWT_PUBLIC_KEY_PATH
+                  value: /run/secrets/jwt_public.pem
+                - name: ACCOUNT_HMAC_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: "${PREFIX}-account-hmac-key"
+                      key: latest
+                - name: SCHEDULER_ENABLED
+                  value: "false" # no scheduler in the migration task
+              volumeMounts:
+                - name: jwt-private
+                  mountPath: /run/secrets/jwt_private.pem
+                  subPath: jwt_private.pem
+                  readOnly: true
+                - name: jwt-public
+                  mountPath: /run/secrets/jwt_public.pem
+                  subPath: jwt_public.pem
+                  readOnly: true

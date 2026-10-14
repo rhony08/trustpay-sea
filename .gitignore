@@ -25,6 +25,7 @@ out/
 # Local data
 *.sqlite3
 *.db
+var/
 # Python build artifacts
 *.egg-info/
 
@@ -38,3 +39,10 @@ htmlcov/
 apps/web/test-results/
 apps/web/playwright-report/
 apps/web/playwright/.cache/
+
+# Terraform / GCP (never commit state, vars, or rendered manifests)
+*.tfstate
+*.tfstate.*
+.terraform/
+terraform.tfvars
+/tmp/trustpay-rendered/
