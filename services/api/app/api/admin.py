@@ -59,6 +59,18 @@ async def audit(
     return {"status": "success", "data": await svc.audit_view(db, limit=min(limit, 200))}
 
 
+@router.get("/reports/{report_id}")
+async def admin_report(
+    report_id: uuid.UUID,
+    _admin: User = Depends(require_role(Role.ANALYST)),
+    db: AsyncSession = Depends(get_db),
+):
+    detail = await svc.report_detail(db, report_id)
+    if detail is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "report not found")
+    return {"status": "success", "data": detail}
+
+
 @router.get("/approvals")
 async def list_approvals(
     status_filter: str | None = "PENDING",

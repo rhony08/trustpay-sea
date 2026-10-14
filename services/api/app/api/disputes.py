@@ -180,11 +180,12 @@ async def admin_queue(
     _admin: User = Depends(require_role(Role.ANALYST)),
     db: AsyncSession = Depends(get_db),
 ):
-    stmt = select(OwnerDispute).order_by(OwnerDispute.created_at)
-    if status_filter:
-        stmt = stmt.where(OwnerDispute.status == status_filter)
-    rows = await db.scalars(stmt)
-    return {"status": "success", "data": {"disputes": [_view(d) for d in rows]}}
+    from app.services import admin_service
+
+    disputes = await admin_service.dispute_queue(
+        db, status=status_filter.value if status_filter else None
+    )
+    return {"status": "success", "data": {"disputes": disputes}}
 
 
 @router.post("/admin/disputes/{dispute_id}/resolve")

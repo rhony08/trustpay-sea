@@ -114,8 +114,12 @@ async def admin_flag_queue(
     _admin: User = Depends(require_role(Role.ANALYST)),
     db: AsyncSession = Depends(get_db),
 ):
-    flags = await svc.list_flag_queue(db, status=status_filter)
-    return {"status": "success", "data": {"flags": [_flag_view(f) for f in flags]}}
+    from app.services import admin_service
+
+    flags = await admin_service.flag_queue(
+        db, status=status_filter.value if status_filter else None
+    )
+    return {"status": "success", "data": {"flags": flags}}
 
 
 @router.post("/admin/flags/{flag_id}/resolve")

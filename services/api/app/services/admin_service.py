@@ -22,6 +22,7 @@ from app.models import (
     FraudReport,
     OwnerDispute,
     PaymentEntity,
+    ReportEvidence,
     ReviewFlag,
     User,
 )
@@ -160,3 +161,137 @@ async def sync_gov_feed(db: AsyncSession) -> int:
             await recompute_entity_score(db, entity)
             applied += 1
     return applied
+
+
+# --- Enriched queues for the admin portal UI -------------------------------
+
+
+async def _entity_index(db: AsyncSession, entity_ids: set) -> dict:
+    if not entity_ids:
+        return {}
+    rows = await db.scalars(select(PaymentEntity).where(PaymentEntity.id.in_(entity_ids)))
+    return {row.id: row for row in rows}
+
+
+def _entity_brief(entity: PaymentEntity | None) -> dict | None:
+    if entity is None:
+        return None
+    return {
+        "id": str(entity.id),
+        "entity_type": entity.entity_type,
+        "country": entity.country_code,
+        "institution": entity.institution_code,
+        "account_masked": entity.account_masked,
+        "risk_score": entity.risk_score,
+        "is_gov_blacklisted": entity.is_gov_blacklisted,
+    }
+
+
+def _report_brief(report: FraudReport | None) -> dict | None:
+    if report is None:
+        return None
+    return {
+        "id": str(report.id),
+        "category": report.category,
+        "severity": report.severity,
+        "description": report.description,
+        "status": report.status,
+        "admin_verification_status": report.admin_verification_status,
+        "upvotes": report.upvotes_count,
+        "downvotes": report.downvotes_count,
+        "created_at": report.created_at.isoformat() if report.created_at else None,
+    }
+
+
+async def flag_queue(
+    db: AsyncSession, *, status: str | None = ReviewFlagStatus.PENDING
+) -> list[dict]:
+    stmt = select(ReviewFlag).order_by(ReviewFlag.created_at)
+    if status:
+        stmt = stmt.where(ReviewFlag.status == status)
+    flags = list(await db.scalars(stmt))
+    report_ids = {f.report_id for f in flags}
+    reports = (
+        {
+            r.id: r
+            for r in await db.scalars(select(FraudReport).where(FraudReport.id.in_(report_ids)))
+        }
+        if report_ids
+        else {}
+    )
+    entities = await _entity_index(db, {r.payment_entity_id for r in reports.values()})
+
+    out = []
+    for flag in flags:
+        report = reports.get(flag.report_id)
+        entity = entities.get(report.payment_entity_id) if report else None
+        out.append(
+            {
+                "id": str(flag.id),
+                "reason": flag.reason,
+                "details": flag.details,
+                "status": flag.status,
+                "created_at": flag.created_at.isoformat() if flag.created_at else None,
+                "report": _report_brief(report),
+                "entity": _entity_brief(entity),
+            }
+        )
+    return out
+
+
+async def dispute_queue(
+    db: AsyncSession, *, status: str | None = DisputeStatus.UNDER_REVIEW
+) -> list[dict]:
+    stmt = select(OwnerDispute).order_by(OwnerDispute.created_at)
+    if status:
+        stmt = stmt.where(OwnerDispute.status == status)
+    disputes = list(await db.scalars(stmt))
+    entities = await _entity_index(db, {d.payment_entity_id for d in disputes})
+
+    out = []
+    for dispute in disputes:
+        out.append(
+            {
+                "id": str(dispute.id),
+                "claim_stage": dispute.claim_stage,
+                "status": dispute.status,
+                "proof_type": dispute.owner_proof_type,
+                "dispute_reason": dispute.dispute_reason,
+                "justification": dispute.justification_statement,
+                "counter_evidence_urls": dispute.counter_evidence_urls,
+                "target_report_id": str(dispute.target_report_id)
+                if dispute.target_report_id
+                else None,
+                "created_at": dispute.created_at.isoformat() if dispute.created_at else None,
+                "entity": _entity_brief(entities.get(dispute.payment_entity_id)),
+            }
+        )
+    return out
+
+
+async def report_detail(db: AsyncSession, report_id) -> dict | None:
+    report = await db.get(FraudReport, report_id)
+    if report is None:
+        return None
+    entity = await db.get(PaymentEntity, report.payment_entity_id)
+    evidence = list(
+        await db.scalars(select(ReportEvidence).where(ReportEvidence.report_id == report_id))
+    )
+    return {
+        **_report_brief(report),
+        "currency": report.currency,
+        "loss_amount": float(report.loss_amount) if report.loss_amount is not None else None,
+        "ai_risk_score": report.ai_risk_score,
+        "ai_forensic_notes": report.ai_forensic_notes,
+        "is_legal_hold": report.is_legal_hold,
+        "entity": _entity_brief(entity),
+        "evidence": [
+            {
+                "media_type": e.media_type,
+                "media_url": e.media_url,
+                "is_blurred_pii": e.is_blurred_pii,
+                "ai_tampering_detected": e.ai_tampering_detected,
+            }
+            for e in evidence
+        ],
+    }
