@@ -8,7 +8,7 @@ All lookups are exact-match on the KMS-keyed hash. Anonymous lookups never
 create rows (Doc 02 §10.3). Holder-name reveal = ADR-016 (exact-match only).
 """
 
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
+from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile, status
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -16,7 +16,13 @@ from app.config import get_settings
 from app.db import get_db
 from app.enums import EntityType, Scheme
 from app.resolver.banks import UnsupportedBankError, get_institution
-from app.resolver.emvco import EMVCoParseError, ParsedQR, has_homoglyph_risk, parse_emvco
+from app.resolver.emvco import (
+    EMVCoParseError,
+    ParsedQR,
+    has_homoglyph_risk,
+    normalize_merchant_name,
+    parse_emvco,
+)
 from app.resolver.normalize import NormalizationError, normalize_account, normalize_qr_identifier
 from app.resolver.qr_image import QRDecodeError, decode_qr_payload
 from app.services.entity_service import (
@@ -25,11 +31,13 @@ from app.services.entity_service import (
     get_entity_by_hash,
     not_found_profile,
 )
+from app.services.intel_service import get_entity_intel
 from app.services.report_service import (
     evidence_for_reports,
     list_published_reports,
     serialize_report,
 )
+from app.services.search_intel import record_search
 
 router = APIRouter(tags=["resolver"])
 
@@ -54,7 +62,13 @@ class QRScreenRequest(BaseModel):
     qr_image_base64: str | None = None
 
 
-def _qr_metadata(parsed: ParsedQR) -> dict:
+def _qr_metadata(parsed: ParsedQR, *, payload: str | None = None, entity=None) -> dict:
+    changed = bool(
+        entity is not None
+        and entity.emvco_payload
+        and payload is not None
+        and entity.emvco_payload != payload
+    )
     return {
         "scheme": parsed.scheme.value,
         "point_of_initiation": parsed.point_of_initiation,
@@ -66,11 +80,14 @@ def _qr_metadata(parsed: ParsedQR) -> dict:
         "amount": parsed.amount,
         "country": parsed.country,
         "homoglyph_warning": has_homoglyph_risk(parsed.merchant_name),
+        "normalized_merchant_name": normalize_merchant_name(parsed.merchant_name),
+        "qr_changed_since_last_seen": changed,
     }
 
 
 @router.get("/entities/account", response_model=AccountLookupResponse)
 async def lookup_account(
+    request: Request,
     country: str,
     bank: str,
     account: str,
@@ -106,7 +123,16 @@ async def lookup_account(
     if entity is None:
         return {"status": "not_found", "data": not_found_profile(query)}
 
+    await record_search(db, entity.id)
     total, verified, velocity = await _report_stats(db, entity.id)
+    intel = await get_entity_intel(
+        db,
+        request.app.state.redis,
+        entity,
+        total_reports=total,
+        admin_verified_reports=verified,
+        report_velocity_7d=velocity,
+    )
     return {
         "status": "success",
         "data": {
@@ -117,13 +143,14 @@ async def lookup_account(
                 report_velocity_7d=velocity,
                 reports=await _published_reports(db, entity.id),
             ),
+            **intel,
             "query": query,
         },
     }
 
 
 @router.post("/entities/qr", response_model=AccountLookupResponse)
-async def screen_qr(body: QRScreenRequest, db: AsyncSession = Depends(get_db)):
+async def screen_qr(body: QRScreenRequest, request: Request, db: AsyncSession = Depends(get_db)):
     if not body.qr_payload:
         raise HTTPException(
             status.HTTP_400_BAD_REQUEST,
@@ -143,7 +170,7 @@ async def screen_qr(body: QRScreenRequest, db: AsyncSession = Depends(get_db)):
         kms_key=settings.account_hmac_key,
     )
     entity = await get_entity_by_hash(db, account_hash)
-    metadata = _qr_metadata(parsed)
+    metadata = _qr_metadata(parsed, payload=body.qr_payload, entity=entity)
     query = {"masked_method": f"{parsed.scheme.value} code {parsed.merchant_name or ''}".strip()}
     if entity is None:
         return {
@@ -151,7 +178,16 @@ async def screen_qr(body: QRScreenRequest, db: AsyncSession = Depends(get_db)):
             "data": {**not_found_profile(query), "qr_metadata": metadata},
         }
 
+    await record_search(db, entity.id)
     total, verified, velocity = await _report_stats(db, entity.id)
+    intel = await get_entity_intel(
+        db,
+        request.app.state.redis,
+        entity,
+        total_reports=total,
+        admin_verified_reports=verified,
+        report_velocity_7d=velocity,
+    )
     return {
         "status": "success",
         "data": {
@@ -162,6 +198,7 @@ async def screen_qr(body: QRScreenRequest, db: AsyncSession = Depends(get_db)):
                 report_velocity_7d=velocity,
                 reports=await _published_reports(db, entity.id),
             ),
+            **intel,
             "qr_metadata": metadata,
             "query": query,
         },

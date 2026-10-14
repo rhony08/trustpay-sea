@@ -58,6 +58,9 @@ class Settings(BaseSettings):
     # Async worker cadence (Phase 2.3); scheduler safety-net poll interval.
     report_worker_interval_seconds: int = 20
 
+    # AI summary cache (Phase 3.4): invalidated when the entity's signal version changes.
+    ai_summary_cache_ttl_seconds: int = 3600
+
     # AI fail-closed test hook (Phase 2.3): force PII redaction to fail.
     ai_redaction_always_fail: bool = False
 

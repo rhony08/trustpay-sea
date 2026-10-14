@@ -16,7 +16,12 @@ scheduler = AsyncIOScheduler(timezone="UTC")
 
 async def search_stats_rollup_job() -> None:
     """Roll search_events_daily → entity_search_stats 7d/30d/total windows (Phase 3)."""
-    log.info("search_stats_rollup: placeholder run (rollup lands in Phase 3)")
+    from app.db import SessionLocal
+    from app.services.search_intel import rollup_search_stats
+
+    async with SessionLocal() as db:
+        count = await rollup_search_stats(db)
+    log.info("search_stats_rollup: recomputed %d entit(ies)", count)
 
 
 async def anti_brigading_scan_job() -> None:
