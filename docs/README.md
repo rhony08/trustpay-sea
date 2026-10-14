@@ -14,6 +14,7 @@ This folder contains the complete planning, design, and implementation documenta
 | 03 | [Architecture Decision Records](03-architecture-decision-records.md) | 15 engineering decisions (ADRs) with context, options, and rationale |
 | 04 | [Implementation Plan](04-implementation-plan.md) | Phased delivery plan (Phase 0–7 + 3B/4B) with granular tasks, acceptance criteria, and verification plan |
 | 05 | [Gap Analysis & Open Decisions](05-gap-analysis.md) | Resolved gaps, current recommendations (incl. masking-policy recommendation), all open questions needing owner confirmation, handoff notes |
+| 06 | [Handoff: Status, Gaps & Notes](06-handoff-next-agent.md) | Post-implementation status (Phases 0–7 core), what's mocked/deferred, gaps found, next-work order, do-not-regress invariants |
 
 ## Quick Summary
 
@@ -61,3 +62,11 @@ The long-term vision turns this into a **B2G/B2B infrastructure**: syncing with 
 > **Conventions**: conventional commits (`feat/fix/docs/refactor/test` scoped); tests gate every todo item; auto-commit after each verified task. Docs are the source of truth — update them when implementation reveals a change.
 >
 > — *Handover recorded on 2026-10-12. G-1/G-2 resolved 2026-10-14. Repo: github.com/rhony08/trustpay-sea*
+
+---
+
+## 📌 Status Update — 2026-10-14 (post-implementation)
+
+**Phases 0–7 core are implemented and merged to `main`** (resolver + 393-institution SEA bank reference, reporting pipeline with fail-closed redaction, search intel + grounded AI summary, pluggable AI provider `mock|gcp|openrouter`, community engagement, moderation, safety-awareness, owner disputes, risk engine + admin portal, demo seed, coverage gate + E2E).
+
+👉 **Before starting new work, read [`06-handoff-next-agent.md`](06-handoff-next-agent.md)** — it lists what is real vs mocked, what's deferred (live AI validation, S3/R2 storage, WebAuthn MFA, admin-portal UI, partner API keys, retention job), gaps/deviation notes, the recommended next-work order, and the invariants that must not regress.
