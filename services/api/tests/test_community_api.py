@@ -145,6 +145,15 @@ async def test_watchers_notified_on_publish(client: httpx.AsyncClient) -> None:
         )
     assert count >= 1
 
+    # Notifications are exposed via the API and can be marked read.
+    listing = await client.get("/api/v1/profile/notifications", headers=_auth(watcher))
+    items = listing.json()["data"]["notifications"]
+    assert len(items) >= 1
+    read = await client.post(
+        f"/api/v1/profile/notifications/{items[0]['id']}/read", headers=_auth(watcher)
+    )
+    assert read.json()["data"]["read_at"] is not None
+
 
 async def test_scam_quiz_grants_badge(client: httpx.AsyncClient) -> None:
     token = await _signup(client, "quiz@trustpay.dev")

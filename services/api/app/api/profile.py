@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import uuid
+from datetime import UTC, datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel, Field
@@ -14,7 +15,7 @@ from app.core.otp import confirm_otp, start_otp
 from app.db import get_db
 from app.deps import get_current_user
 from app.enums import BadgeType, RiskLevel
-from app.models import PaymentEntity, User
+from app.models import PaymentEntity, User, UserNotification
 from app.services import reputation, scam_quiz, watchlist_service
 from app.services.dsar import erase_user_data, export_user_data
 
@@ -179,3 +180,38 @@ async def export_data(user: User = Depends(get_current_user), db: AsyncSession =
 async def erase_data(user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
     """DSAR: erase the user's reports (evidence cascades), votes, flags, watchlist."""
     return {"status": "success", "data": await erase_user_data(db, user)}
+
+
+def _notification_view(n: UserNotification) -> dict:
+    return {
+        "id": str(n.id),
+        "type": n.type,
+        "payload": n.payload,
+        "read_at": n.read_at.isoformat() if n.read_at else None,
+        "created_at": n.created_at.isoformat() if n.created_at else None,
+    }
+
+
+@router.get("/notifications")
+async def notifications(user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+    rows = await db.scalars(
+        select(UserNotification)
+        .where(UserNotification.user_id == user.id)
+        .order_by(UserNotification.created_at.desc())
+        .limit(50)
+    )
+    return {"status": "success", "data": {"notifications": [_notification_view(n) for n in rows]}}
+
+
+@router.post("/notifications/{notification_id}/read")
+async def read_notification(
+    notification_id: uuid.UUID,
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    notification = await db.get(UserNotification, notification_id)
+    if notification is None or notification.user_id != user.id:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "notification not found")
+    notification.read_at = datetime.now(UTC)
+    await db.commit()
+    return {"status": "success", "data": _notification_view(notification)}
