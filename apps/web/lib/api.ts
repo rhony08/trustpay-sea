@@ -79,11 +79,30 @@ export interface ReportView {
   processing_status: "PROCESSING" | "PUBLISHED" | "FAILED";
   admin_verification_status: string;
   status: string;
+  upvotes: number;
+  downvotes: number;
+  flags: number;
   ai_risk_score: number | null;
   ai_tampering_detected: boolean;
   evidence: ReportEvidence[];
   created_at: string | null;
 }
+
+export interface FlagView {
+  id: string;
+  report_id: string;
+  reason: string;
+  details: string | null;
+  status: string;
+  created_at: string | null;
+}
+
+export const FLAG_REASONS = [
+  { value: "DEFAMATION_SPAM", label: "Defamation / spam" },
+  { value: "INCORRECT_ACCOUNT", label: "Incorrect account" },
+  { value: "OFFENSIVE_CONTENT", label: "Offensive content" },
+  { value: "OTHER", label: "Other" },
+];
 
 export interface Bank {
   country: string;
@@ -480,5 +499,44 @@ export async function getReceipt(token: string): Promise<Receipt> {
   const body = await request<{ data: Receipt }>(`/api/v1/receipts/${token}`);
   return body.data;
 }
+
+// --- Phase 4: community moderation ---
+
+export async function castVote(
+  token: string,
+  reportId: string,
+  vote: 1 | -1,
+): Promise<{ upvotes: number; downvotes: number }> {
+  const body = await authed<{ data: { upvotes: number; downvotes: number } }>(
+    `/api/v1/reports/${reportId}/vote`,
+    token,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ vote }),
+    },
+  );
+  return body.data;
+}
+
+export async function flagReport(
+  token: string,
+  reportId: string,
+  reason: string,
+  details?: string,
+): Promise<FlagView> {
+  const body = await authed<{ data: FlagView }>(`/api/v1/reports/${reportId}/flags`, token, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ reason, details }),
+  });
+  return body.data;
+}
+
+export async function getMyFlags(token: string): Promise<FlagView[]> {
+  const body = await authed<{ data: { flags: FlagView[] } }>("/api/v1/flags/me", token);
+  return body.data.flags;
+}
+
 
 

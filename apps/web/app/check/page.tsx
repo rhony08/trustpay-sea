@@ -6,8 +6,11 @@ import {
   ApiError,
   BANKS,
   COUNTRIES,
+  FLAG_REASONS,
   addWatch,
+  castVote,
   decodeQrImage,
+  flagReport,
   getToken,
   screenAccount,
   screenQr,
@@ -366,6 +369,11 @@ function ResultCard({ result }: { result: ScreenResult }) {
                   className="mt-2 max-h-48 rounded border border-slate-700"
                 />
               )}
+              <ReportActions
+                reportId={r.id}
+                initialUp={r.upvotes}
+                initialDown={r.downvotes}
+              />
             </div>
           ))}
         </div>
@@ -444,6 +452,84 @@ function CoolingOff({ level }: { level: string }) {
           onClick={() => setAck(true)}
         >
           I understand the risk
+        </button>
+      )}
+    </div>
+  );
+}
+
+function ReportActions({
+  reportId,
+  initialUp,
+  initialDown,
+}: {
+  reportId: string;
+  initialUp: number;
+  initialDown: number;
+}) {
+  const [up, setUp] = useState(initialUp);
+  const [down, setDown] = useState(initialDown);
+  const [flagStatus, setFlagStatus] = useState<string | null>(null);
+  const [reason, setReason] = useState(FLAG_REASONS[0].value);
+  const [showFlag, setShowFlag] = useState(false);
+  const token = getToken();
+
+  async function vote(value: 1 | -1) {
+    if (!token) return;
+    const result = await castVote(token, reportId, value);
+    setUp(result.upvotes);
+    setDown(result.downvotes);
+  }
+
+  return (
+    <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
+      <button
+        disabled={!token}
+        onClick={() => void vote(1)}
+        className="rounded border border-slate-600 px-2 py-0.5 disabled:opacity-40"
+      >
+        ▲ {up}
+      </button>
+      <button
+        disabled={!token}
+        onClick={() => void vote(-1)}
+        className="rounded border border-slate-600 px-2 py-0.5 disabled:opacity-40"
+      >
+        ▼ {down}
+      </button>
+      {!token ? (
+        <span className="text-slate-500">Sign in to vote or flag</span>
+      ) : flagStatus ? (
+        <span className="text-amber-300">Flag submitted ({flagStatus})</span>
+      ) : showFlag ? (
+        <>
+          <select
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            className="rounded border border-slate-600 bg-slate-900 px-1 py-0.5"
+          >
+            {FLAG_REASONS.map((fr) => (
+              <option key={fr.value} value={fr.value}>
+                {fr.label}
+              </option>
+            ))}
+          </select>
+          <button
+            className="rounded border border-rose-500/50 px-2 py-0.5 text-rose-300"
+            onClick={async () => {
+              const flag = await flagReport(token, reportId, reason);
+              setFlagStatus(flag.status);
+            }}
+          >
+            Submit
+          </button>
+        </>
+      ) : (
+        <button
+          onClick={() => setShowFlag(true)}
+          className="rounded border border-slate-600 px-2 py-0.5"
+        >
+          Report this review
         </button>
       )}
     </div>
