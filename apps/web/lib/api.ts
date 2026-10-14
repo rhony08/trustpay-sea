@@ -21,6 +21,7 @@ export interface EntityProfile {
     mcc: string | null;
     nmid: string | null;
     holder: HolderDisclosure | null;
+    owner_response?: string | null;
   };
   risk_assessment: {
     risk_score: number;
@@ -607,6 +608,123 @@ export async function eraseData(token: string): Promise<Record<string, number>> 
   });
   return body.data;
 }
+
+// --- Phase 5: owner claim & dispute ---
+
+export interface DisputeView {
+  id: string;
+  entity_id: string;
+  claim_stage: string;
+  status: string;
+  proof_type: string;
+  dispute_reason: string | null;
+  justification: string | null;
+  counter_evidence_urls: string[] | null;
+  resolution_notes: string | null;
+  created_at: string | null;
+  resolved_at: string | null;
+}
+
+export const PROOF_TYPES = [
+  { value: "BANK_PASSBOOK", label: "Bank passbook / statement" },
+  { value: "MBANKING_SCREENSHOT", label: "Mobile banking profile screenshot" },
+  { value: "MERCHANT_PORTAL_NMID", label: "Merchant portal NMID" },
+  { value: "MICRO_DEPOSIT_OTP", label: "Micro-deposit OTP" },
+];
+
+export const DISPUTE_REASONS = [
+  { value: "SPAM_REVIEW_BOMB", label: "Spam / review bomb" },
+  { value: "RESOLVED_REFUNDED", label: "Already resolved / refunded" },
+  { value: "IDENTITY_THEFT", label: "Identity theft" },
+  { value: "FALSE_CLAIM", label: "False claim" },
+  { value: "OTHER", label: "Other" },
+];
+
+export async function claimEntity(
+  token: string,
+  entityId: string,
+  body: { proof_type: string; proof_document_url: string; declared_reference?: string },
+): Promise<DisputeView & { note?: string }> {
+  const resp = await authed<{ data: DisputeView & { note?: string } }>(
+    `/api/v1/entities/${entityId}/claim`,
+    token,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    },
+  );
+  return resp.data;
+}
+
+export async function startMicroDeposit(
+  token: string,
+  entityId: string,
+): Promise<{ dev_code?: string; note: string }> {
+  const resp = await authed<{ data: { dev_code?: string; note: string } }>(
+    `/api/v1/entities/${entityId}/claim/micro-deposit/start`,
+    token,
+    { method: "POST" },
+  );
+  return resp.data;
+}
+
+export async function verifyMicroDeposit(
+  token: string,
+  entityId: string,
+  code: string,
+): Promise<DisputeView> {
+  const resp = await authed<{ data: DisputeView }>(
+    `/api/v1/entities/${entityId}/claim/micro-deposit/verify`,
+    token,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ code }),
+    },
+  );
+  return resp.data;
+}
+
+export async function submitDispute(
+  token: string,
+  entityId: string,
+  body: { reason: string; justification: string },
+): Promise<DisputeView> {
+  const resp = await authed<{ data: DisputeView }>(
+    `/api/v1/entities/${entityId}/disputes`,
+    token,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    },
+  );
+  return resp.data;
+}
+
+export async function getMyDisputes(token: string): Promise<DisputeView[]> {
+  const resp = await authed<{ data: { disputes: DisputeView[] } }>("/api/v1/disputes/me", token);
+  return resp.data.disputes;
+}
+
+export async function setOwnerResponse(
+  token: string,
+  entityId: string,
+  response: string,
+): Promise<{ owner_response: string }> {
+  const resp = await authed<{ data: { owner_response: string } }>(
+    `/api/v1/entities/${entityId}/owner-response`,
+    token,
+    {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ response }),
+    },
+  );
+  return resp.data;
+}
+
 
 
 
