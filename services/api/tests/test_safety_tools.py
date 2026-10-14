@@ -105,11 +105,18 @@ async def test_dsar_export_and_erase(client: httpx.AsyncClient) -> None:
     assert export["reports"][0]["account_masked"].startswith("840")
 
     erased = (await client.delete("/api/v1/profile/data", headers=_auth(token))).json()["data"]
-    assert erased["reports_deleted"] >= 1
+    assert erased["reports_tombstoned"] >= 1
     assert erased["votes_deleted"] >= 1
 
-    assert (await client.get(f"/api/v1/reports/{report_id}")).status_code == 404
+    # Tombstoned, not deleted: body nulled, still countable for scoring integrity.
     import uuid
 
     async with SessionLocal() as db:
-        assert await db.get(FraudReport, uuid.UUID(report_id)) is None
+        row = await db.get(FraudReport, uuid.UUID(report_id))
+    assert row is not None
+    assert row.deleted_at is not None
+    assert row.description is None
+
+    # Export no longer lists erased reports.
+    export2 = (await client.get("/api/v1/profile/export", headers=_auth(token))).json()["data"]
+    assert all(r["id"] != report_id for r in export2["reports"])

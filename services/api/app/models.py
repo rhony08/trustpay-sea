@@ -193,7 +193,7 @@ class FraudReport(Base):
     currency: Mapped[str] = mapped_column(String(3), default="IDR", nullable=False)
     loss_amount: Mapped[Decimal | None] = mapped_column(Numeric(18, 2))
     incident_date: Mapped[date | None] = mapped_column(Date)
-    description: Mapped[str] = mapped_column(Text, nullable=False)
+    description: Mapped[str | None] = mapped_column(Text)  # NULL once tombstoned (docs/10)
     processing_status: Mapped[str] = mapped_column(
         String(30), default=ProcessingStatus.PROCESSING, nullable=False
     )
@@ -208,6 +208,7 @@ class FraudReport(Base):
     upvotes_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     downvotes_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     flags_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))  # tombstone marker
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     __table_args__ = (

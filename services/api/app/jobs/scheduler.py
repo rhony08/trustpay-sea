@@ -34,6 +34,16 @@ async def audit_chain_reconcile_job() -> None:
     log.info("audit_chain_reconcile: placeholder run (reconciler lands in Phase 7)")
 
 
+async def retention_purge_job() -> None:
+    """Purge/tombstone per the data fate matrix (Phase 10 / docs/10). Dry-run by default."""
+    from app.db import SessionLocal
+    from app.services.retention import run_retention
+
+    async with SessionLocal() as db:
+        result = await run_retention(db)
+    log.info("retention_purge: %s", result)
+
+
 async def report_processing_job() -> None:
     """Publish any reports left PROCESSING (Phase 2.3 async worker safety-net)."""
     from app.config import get_settings
@@ -82,6 +92,14 @@ def start_scheduler() -> None:
         hour=3,
         minute=0,
         id="audit_chain_reconcile",
+        replace_existing=True,
+    )
+    scheduler.add_job(
+        retention_purge_job,
+        "cron",
+        hour=2,
+        minute=0,
+        id="retention_purge",
         replace_existing=True,
     )
     scheduler.start()

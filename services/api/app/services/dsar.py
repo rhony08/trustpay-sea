@@ -1,28 +1,42 @@
-"""DSAR: self-serve export + erasure of a user's own data (Phase 4B.7 / §9.8 H8).
+"""DSAR: self-serve export + erasure of a user's own data (Phase 4B.7 / docs/10).
 
-Erasure deletes the user's reports (evidence cascades), their votes, flags and
-watchlist rows. Entities are de-linked, not listed; audit history is immutable
-and retained for integrity.
+Erasure follows the data fate matrix: report **bodies are tombstoned** (kept
+countable for scoring integrity), original quarantine evidence is purged (redacted
+public copies kept), and the user's votes/flags/watchlist/notifications are
+removed. `payment_entities` HMAC rows are **never deleted** (others' safety depends
+on lookup) and the hash-chained `audit_logs` are immutable.
 """
 
 from __future__ import annotations
 
+import contextlib
+from datetime import UTC, datetime
+
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.audit import append_audit
 from app.models import (
     FraudReport,
     PaymentEntity,
+    ReportEvidence,
     ReportVote,
     ReviewFlag,
     User,
+    UserNotification,
     WatchlistEntry,
 )
+from app.storage import StorageError, get_storage
 
 
 async def export_user_data(db: AsyncSession, user: User) -> dict:
     reports = list(
-        await db.scalars(select(FraudReport).where(FraudReport.reporter_user_id == user.id))
+        await db.scalars(
+            select(FraudReport).where(
+                FraudReport.reporter_user_id == user.id,
+                FraudReport.deleted_at.is_(None),
+            )
+        )
     )
     entity_ids = [r.payment_entity_id for r in reports]
     entities: dict = {}
@@ -65,16 +79,50 @@ async def export_user_data(db: AsyncSession, user: User) -> dict:
 
 
 async def erase_user_data(db: AsyncSession, user: User) -> dict:
-    # Votes/flags by the user on any report.
+    storage = get_storage()
+    now = datetime.now(UTC)
+
+    reports = list(
+        await db.scalars(select(FraudReport).where(FraudReport.reporter_user_id == user.id))
+    )
+    evidence_purged = 0
+    reports_tombstoned = 0
+    for report in reports:
+        for item in await db.scalars(
+            select(ReportEvidence).where(ReportEvidence.report_id == report.id)
+        ):
+            if item.original_quarantine_url:
+                with contextlib.suppress(StorageError):
+                    storage.delete(item.original_quarantine_url)
+                item.original_quarantine_url = None
+                evidence_purged += 1
+        if report.deleted_at is None:
+            report.description = None
+            report.loss_amount = None
+            report.deleted_at = now
+            reports_tombstoned += 1
+
     votes = await db.execute(delete(ReportVote).where(ReportVote.voter_user_id == user.id))
     flags = await db.execute(delete(ReviewFlag).where(ReviewFlag.flagged_by_user_id == user.id))
     watches = await db.execute(delete(WatchlistEntry).where(WatchlistEntry.user_id == user.id))
-    # The user's own reports (evidence cascades); their votes/flags cascade too.
-    reports = await db.execute(delete(FraudReport).where(FraudReport.reporter_user_id == user.id))
+    notifications = await db.execute(
+        delete(UserNotification).where(UserNotification.user_id == user.id)
+    )
     await db.commit()
+
+    await append_audit(
+        db,
+        action="dsar.erased",
+        actor_user_id=user.id,
+        subject_type="user",
+        subject_id=user.id,
+        note=f"reports_tombstoned={reports_tombstoned} evidence_purged={evidence_purged}",
+    )
     return {
-        "reports_deleted": reports.rowcount or 0,
+        "reports_tombstoned": reports_tombstoned,
+        "evidence_purged": evidence_purged,
         "votes_deleted": votes.rowcount or 0,
         "flags_deleted": flags.rowcount or 0,
         "watchlist_deleted": watches.rowcount or 0,
+        "notifications_deleted": notifications.rowcount or 0,
     }
