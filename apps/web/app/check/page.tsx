@@ -14,6 +14,7 @@ import {
   getToken,
   screenAccount,
   screenQr,
+  type GovCheck,
   type ScreenResult,
 } from "@/lib/api";
 
@@ -244,6 +245,7 @@ function ResultCard({ result }: { result: ScreenResult }) {
             )}
           </dl>
         )}
+        <GovCheckBanner check={result.data.gov_check} />
       </div>
     );
   }
@@ -256,6 +258,7 @@ function ResultCard({ result }: { result: ScreenResult }) {
     ai_summary,
     related_fact_checks,
     search_intelligence,
+    gov_check,
   } = result.data;
   const reports = result.data.reports ?? [];
   return (
@@ -346,6 +349,8 @@ function ResultCard({ result }: { result: ScreenResult }) {
           ⚠ Unusual reporting spike detected — signals dampened pending review.
         </p>
       )}
+
+      <GovCheckBanner check={gov_check} />
 
       {risk.factors && risk.factors.length > 0 && (
         <div className="mt-3 rounded-lg border border-slate-700 bg-slate-800/50 p-3">
@@ -639,6 +644,27 @@ function AmountFriction() {
           <li>1 rule: never pay under pressure or secrecy.</li>
         </ul>
       )}
+    </div>
+  );
+}
+
+function GovCheckBanner({ check }: { check?: GovCheck | null }) {
+  if (!check || !check.available) return null;
+  const kind = check.category === "phone" ? "phone number" : "bank account";
+  if (check.found) {
+    return (
+      <div className="mt-3 rounded-lg border border-rose-500/40 bg-rose-500/10 px-3 py-2 text-xs text-rose-200">
+        <p className="font-semibold">🏛 Match on {check.source}</p>
+        <p className="mt-0.5">
+          This {kind} appears in the national mule registry ({check.report_count} report
+          {check.report_count === 1 ? "" : "s"}). Do not pay.
+        </p>
+      </div>
+    );
+  }
+  return (
+    <div className="mt-3 rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-200">
+      No match on the {check.source} national registry.
     </div>
   );
 }

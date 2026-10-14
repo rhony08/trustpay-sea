@@ -52,6 +52,26 @@ async def _published_reports(db, entity_id) -> list[dict]:
     return feed
 
 
+async def _government_check(country: str, institution, value: str) -> dict | None:
+    """PDRM Semak Mule lookup for Malaysian identifiers (non-persistent, exact-match).
+
+    Picks the *bank* or *telefon* checker by institution type (e-wallets are
+    phone-based). Anonymous lookups never mutate rows (§10.3) — the gov signal is
+    surfaced in the response only; persistence happens at report time.
+    """
+    if country.upper() != "MY":
+        return None
+    from app.services.semakmule import get_semakmule_client, infer_category
+
+    client = get_semakmule_client()
+    if not client.enabled:
+        return None
+    category = infer_category(bank_type=institution.bank_type, value=value)
+    data = (await client.check(category=category, value=value)).to_dict()
+    data["category"] = category
+    return data
+
+
 class AccountLookupResponse(BaseModel):
     status: str = "success"
     data: dict
@@ -120,8 +140,12 @@ async def lookup_account(
         "institution": institution.name,
         "account_masked": masked,
     }
+    gov_check = await _government_check(country, institution, account)
     if entity is None:
-        return {"status": "not_found", "data": not_found_profile(query)}
+        data = not_found_profile(query)
+        if gov_check is not None:
+            data["gov_check"] = gov_check
+        return {"status": "not_found", "data": data}
 
     await record_search(db, entity.id)
     total, verified, velocity = await _report_stats(db, entity.id)
@@ -133,20 +157,20 @@ async def lookup_account(
         admin_verified_reports=verified,
         report_velocity_7d=velocity,
     )
-    return {
-        "status": "success",
-        "data": {
-            **build_profile(
-                entity,
-                total_reports=total,
-                admin_verified_reports=verified,
-                report_velocity_7d=velocity,
-                reports=await _published_reports(db, entity.id),
-            ),
-            **intel,
-            "query": query,
-        },
+    data = {
+        **build_profile(
+            entity,
+            total_reports=total,
+            admin_verified_reports=verified,
+            report_velocity_7d=velocity,
+            reports=await _published_reports(db, entity.id),
+        ),
+        **intel,
+        "query": query,
     }
+    if gov_check is not None:
+        data["gov_check"] = gov_check
+    return {"status": "success", "data": data}
 
 
 @router.post("/entities/qr", response_model=AccountLookupResponse)
