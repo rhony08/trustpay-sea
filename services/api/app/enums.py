@@ -27,6 +27,22 @@ class EntityType(StrEnum):
     PHONE_ALIAS = "PHONE_ALIAS"
 
 
+class BankType(StrEnum):
+    """Controlled vocabulary for the SEA bank/e-wallet reference directory."""
+
+    COMMERCIAL = "COMMERCIAL"
+    ISLAMIC = "ISLAMIC"
+    DIGITAL = "DIGITAL"
+    E_WALLET = "E_WALLET"
+    STATE = "STATE"
+    POLICY = "POLICY"
+    THRIFT = "THRIFT"
+    RURAL = "RURAL"
+    COOPERATIVE = "COOPERATIVE"
+    FOREIGN = "FOREIGN"
+    WHOLESALE = "WHOLESALE"
+
+
 class Scheme(StrEnum):
     QRIS = "QRIS"
     DUITNOW = "DUITNOW"

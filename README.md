@@ -52,6 +52,18 @@ npm install
 npm run typecheck && npm run lint && npm run build
 ```
 
+### Bank reference (controlled vocabulary)
+
+The SEA bank/e-wallet directory lives in `services/api/app/data/banks/*.json`
+(single source of truth for both the resolver and the reporting UI). Seed it
+into Postgres before reporting works:
+
+```bash
+cd services/api
+python -m app.seeds.seed_banks        # idempotent upsert
+# → GET /api/v1/banks?country=ID&bank_type=E_WALLET  (public dropdown feed)
+```
+
 ## Project layout
 
 ```

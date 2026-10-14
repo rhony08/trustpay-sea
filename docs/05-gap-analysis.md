@@ -85,7 +85,7 @@ These are **explicit confirm-later items** — a future agent must ask the produ
 | G-5 | Launch market seed data (R-5) | Product decision | Owner | ✅ **RESOLVED 2026-10-14 — Indonesia first** |
 | G-6 | Team/admin model for MVP — who are the admins in the demo? | Ops | Owner | Open (Phase 0/seed) |
 | G-7 | Hosting/cloud preference (Vercel/Railway/Fly.io/R2 vs AWS) | Tech ops | Owner | Open (Phase 7) |
-| G-8 | Real bank directory licensing — using real bank code maps OK in demo? | Legal/compliance | Owner + Legal | Open (Phase 1) |
+| G-8 | Real bank directory licensing — using real bank code maps OK in demo? | Legal/compliance | Owner + Legal | Open (Phase 1) — 393-institution SEA reference seeded demo-grade (`app/data/banks/*.json` → `banks` table); confirm licensing before production |
 | G-9 | Gemini API key / Google Cloud project for the demo (or mock-only?) | Ops | Owner | ✅ **RESOLVED 2026-10-14 — mock AI, no key** |
 | G-10 | Language scope for MVP UI (`en` + `id` only, or more?) — i18n §10.1 | Product | Owner | ✅ **RESOLVED 2026-10-14 — `en` + `id`** |
 | G-11 | Currency scope — is IDR the only demo currency, or multi-currency in seed data? | Product | Owner | Open (assume IDR-primary per G-5) |
