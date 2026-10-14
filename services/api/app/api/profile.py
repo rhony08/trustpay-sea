@@ -16,6 +16,7 @@ from app.deps import get_current_user
 from app.enums import BadgeType, RiskLevel
 from app.models import PaymentEntity, User
 from app.services import reputation, scam_quiz, watchlist_service
+from app.services.dsar import erase_user_data, export_user_data
 
 router = APIRouter(prefix="/profile", tags=["profile"])
 
@@ -166,3 +167,15 @@ async def submit_quiz(
     if passed:
         await reputation.grant_badge(db, user.id, BadgeType.ANTI_SCAM_AWARE)
     return {"status": "success", "data": {"correct": correct, "passed": passed}}
+
+
+@router.get("/export")
+async def export_data(user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+    """DSAR: self-serve export of everything we hold about the user (Phase 4B.7)."""
+    return {"status": "success", "data": await export_user_data(db, user)}
+
+
+@router.delete("/data", status_code=status.HTTP_200_OK)
+async def erase_data(user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+    """DSAR: erase the user's reports (evidence cascades), votes, flags, watchlist."""
+    return {"status": "success", "data": await erase_user_data(db, user)}

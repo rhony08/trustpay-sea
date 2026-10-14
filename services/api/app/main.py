@@ -17,6 +17,7 @@ from app.api.moderation import router as moderation_router
 from app.api.profile import router as profile_router
 from app.api.reports import router as reports_router
 from app.api.system import router as system_router
+from app.api.tools import router as tools_router
 from app.config import get_settings
 from app.core.rate_limit import enforce_rate_limit
 from app.jobs.scheduler import shutdown_scheduler, start_scheduler
@@ -63,6 +64,7 @@ def create_app() -> FastAPI:
     app.include_router(profile_router, prefix=settings.api_v1_prefix)
     app.include_router(community_router, prefix=settings.api_v1_prefix)
     app.include_router(moderation_router, prefix=settings.api_v1_prefix)
+    app.include_router(tools_router, prefix=settings.api_v1_prefix)
 
     # Dev-only: serve redacted public evidence as static files. Production uses a
     # separate cookieless media domain (Doc 02 §9.1); quarantine is never mounted.
