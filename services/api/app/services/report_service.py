@@ -245,6 +245,9 @@ def serialize_report(
         "processing_status": report.processing_status,
         "admin_verification_status": report.admin_verification_status,
         "status": report.status,
+        "upvotes": report.upvotes_count,
+        "downvotes": report.downvotes_count,
+        "flags": report.flags_count,
         "ai_risk_score": report.ai_risk_score,
         "ai_tampering_detected": bool(
             report.ai_forensic_notes and report.ai_forensic_notes.get("tampering_detected")

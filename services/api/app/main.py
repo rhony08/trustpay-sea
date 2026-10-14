@@ -13,6 +13,7 @@ from app.api.auth import router as auth_router
 from app.api.banks import router as banks_router
 from app.api.community import router as community_router
 from app.api.entities import router as entities_router
+from app.api.moderation import router as moderation_router
 from app.api.profile import router as profile_router
 from app.api.reports import router as reports_router
 from app.api.system import router as system_router
@@ -61,6 +62,7 @@ def create_app() -> FastAPI:
     app.include_router(reports_router, prefix=settings.api_v1_prefix)
     app.include_router(profile_router, prefix=settings.api_v1_prefix)
     app.include_router(community_router, prefix=settings.api_v1_prefix)
+    app.include_router(moderation_router, prefix=settings.api_v1_prefix)
 
     # Dev-only: serve redacted public evidence as static files. Production uses a
     # separate cookieless media domain (Doc 02 §9.1); quarantine is never mounted.

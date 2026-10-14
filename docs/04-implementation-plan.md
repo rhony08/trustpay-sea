@@ -158,6 +158,8 @@ This plan is structured so each phase produces a **verifiable, demo-able increme
 ### Phase 4 Demo
 - Flag a review as spam → admin upholds → review hidden, score recalibrated, reporter warned.
 
+- **Status 2026-10-14**: ✅ DONE — up/down votes on reports (per-user PK, idempotent, counts denormalized); `POST /reports/{id}/flags` with reason enum + per-user unique + Redis hourly rate cap; admin queue + `resolve` gated to ANALYST+ (UPHELD hides the report + warns the reporter, DISMISSED keeps it); bad-faith flagger auto-warn at ≥90% dismissed (min 5); every resolution written to the hash-chained `audit_logs` (with a chain verifier); banned reporters blocked from submitting. Web: vote + "report this review" controls with status feedback on the entity feed. 114 API tests green; web typecheck/lint/build green.
+
 ---
 
 ## Phase 4B — Security-Awareness Features (Web)
