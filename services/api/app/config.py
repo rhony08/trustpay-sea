@@ -77,6 +77,10 @@ class Settings(BaseSettings):
     # AI summary cache (Phase 3.4): invalidated when the entity's signal version changes.
     ai_summary_cache_ttl_seconds: int = 3600
 
+    # Community engagement (Phase 3B)
+    receipt_signing_key: str = "dev-only-insecure-receipt-key"
+    quiz_pass_threshold: int = 2  # correct answers out of 3 for Anti-Scam Aware
+
     # AI fail-closed test hook (Phase 2.3): force PII redaction to fail.
     ai_redaction_always_fail: bool = False
 

@@ -18,8 +18,9 @@ from sqlalchemy import select
 from app.ai import forensics, nlp
 from app.ai.providers import get_ai_provider
 from app.enums import ProcessingStatus
-from app.models import FraudReport, ReportEvidence
+from app.models import FraudReport, PaymentEntity, ReportEvidence
 from app.services.report_service import list_evidence
+from app.services.watchlist_service import notify_watchers
 from app.storage import get_storage
 
 log = logging.getLogger("trustpay.worker.report")
@@ -112,6 +113,12 @@ async def process_report(db, report_id: uuid.UUID) -> str:
     report.processing_status = ProcessingStatus.PUBLISHED
     await db.commit()
     log.info("report %s published via %s (typology=%s)", report_id, provider.name, typology)
+
+    entity = await db.get(PaymentEntity, report.payment_entity_id)
+    if entity is not None:
+        notified = await notify_watchers(db, entity, report)
+        if notified:
+            log.info("notified %d watcher(s) of report %s", notified, report_id)
     return "published"
 
 
