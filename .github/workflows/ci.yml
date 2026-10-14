@@ -1,0 +1,80 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  api:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: trustpay
+          POSTGRES_PASSWORD: trustpay
+          POSTGRES_DB: trustpay_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U trustpay -d trustpay_test"
+          --health-interval 3s
+          --health-timeout 3s
+          --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports: ["6379:6379"]
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 3s
+          --health-timeout 3s
+          --health-retries 10
+    defaults:
+      run:
+        working-directory: services/api
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install
+        run: pip install -e ".[dev]"
+      - name: Ruff lint
+        run: ruff check app tests
+      - name: Ruff format check
+        run: ruff format --check app tests
+      - name: Unit + integration tests
+        env:
+          DATABASE_URL: postgresql+asyncpg://trustpay:trustpay@localhost:5432/trustpay_test
+          REDIS_URL: redis://localhost:6379/1
+          ENVIRONMENT: test
+          SCHEDULER_ENABLED: "false"
+        run: pytest -q
+
+  web:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Install
+        run: npm install
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Lint
+        run: npm run lint
+      - name: Build
+        run: npm run build
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build API image
+        run: docker build -t trustpay-api ./services/api
+      - name: Build Web image
+        run: docker build -t trustpay-web ./apps/web

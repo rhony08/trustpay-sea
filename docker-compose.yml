@@ -1,0 +1,55 @@
+name: trustpay-sea
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: trustpay
+      POSTGRES_PASSWORD: trustpay
+      POSTGRES_DB: trustpay
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U trustpay -d trustpay"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build: ./services/api
+    environment:
+      DATABASE_URL: postgresql+asyncpg://trustpay:trustpay@postgres:5432/trustpay
+      REDIS_URL: redis://redis:6379/0
+      ENVIRONMENT: dev
+      SCHEDULER_ENABLED: "true"
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  web:
+    build: ./apps/web
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8000
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api
+
+volumes:
+  pgdata:
