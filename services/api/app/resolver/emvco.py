@@ -202,6 +202,16 @@ _NAME_LOOKALIKE_RE = re.compile(
 )
 
 
+def normalize_merchant_name(name: str | None) -> str | None:
+    """NFKC-fold and strip zero-width chars for stable comparison/display."""
+    if not name:
+        return name
+    import unicodedata
+
+    cleaned = "".join(ch for ch in name if ch not in "\u200b\u200c\u200d\ufeff")
+    return unicodedata.normalize("NFKC", cleaned).strip()
+
+
 def has_homoglyph_risk(name: str | None) -> bool:
     """H12: unicode normalization + lookalike-name detector."""
     if not name:

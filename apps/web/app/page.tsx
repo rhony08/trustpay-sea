@@ -68,6 +68,21 @@ export default function HomePage() {
         </Link>
       </div>
 
+      <div className="flex flex-wrap gap-3 text-sm">
+        <Link href="/playbook" className="rounded-full border border-slate-700 px-4 py-1.5 text-slate-300 hover:border-emerald-400">
+          Scam playbooks
+        </Link>
+        <Link href="/simulator" className="rounded-full border border-slate-700 px-4 py-1.5 text-slate-300 hover:border-emerald-400">
+          Scam simulator
+        </Link>
+        <Link href="/receipt" className="rounded-full border border-slate-700 px-4 py-1.5 text-slate-300 hover:border-emerald-400">
+          Diligence receipt
+        </Link>
+        <Link href="/profile" className="rounded-full border border-slate-700 px-4 py-1.5 text-slate-300 hover:border-emerald-400">
+          My profile
+        </Link>
+      </div>
+
       <p className="text-xs text-slate-500">{t(locale, "phase")}</p>
     </main>
   );

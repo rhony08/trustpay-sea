@@ -165,3 +165,28 @@ class RiskLevel(StrEnum):
         if score <= 79:
             return cls.HIGH_RISK
         return cls.CRITICAL_FRAUD
+
+
+class TrustTier(StrEnum):
+    """Public Trust Rank Ladder (lite), derived from `users.reputation_score`."""
+
+    NEWCOMER = "NEWCOMER"
+    CONTRIBUTOR = "CONTRIBUTOR"
+    TRUSTED = "TRUSTED"
+    GUARDIAN = "GUARDIAN"
+
+    @classmethod
+    def from_reputation(cls, score: int) -> "TrustTier":
+        if score >= 90:
+            return cls.GUARDIAN
+        if score >= 75:
+            return cls.TRUSTED
+        if score >= 50:
+            return cls.CONTRIBUTOR
+        return cls.NEWCOMER
+
+
+class BadgeType(StrEnum):
+    VERIFIED_REPORTER = "VERIFIED_REPORTER"
+    PIONEER_WARN = "PIONEER_WARN"
+    ANTI_SCAM_AWARE = "ANTI_SCAM_AWARE"

@@ -178,10 +178,15 @@ async def test_fail_closed_redaction_never_publishes(
         headers=_auth(token),
     )
 
-    def _boom(_: bytes) -> bytes:
-        raise report_pipeline.vision.RedactionError("simulated failure")
+    from app.ai.errors import RedactionError
 
-    monkeypatch.setattr(report_pipeline.vision, "redact_image", _boom)
+    class _FailingProvider:
+        name = "failing"
+
+        async def redact_image(self, data: bytes) -> bytes:
+            raise RedactionError("simulated failure")
+
+    monkeypatch.setattr(report_pipeline, "get_ai_provider", lambda: _FailingProvider())
 
     async with SessionLocal() as db:
         result = await report_pipeline.process_report(db, uuid.UUID(report_id))
@@ -204,6 +209,24 @@ async def test_evidence_upload_rejects_non_image(client: httpx.AsyncClient) -> N
         headers=_auth(token),
     )
     assert resp.status_code == 400
+
+
+async def test_lookup_includes_intelligence(client: httpx.AsyncClient) -> None:
+    token = await _token(client, "intelapi@trustpay.dev")
+    account = "7980001234"
+    created = await client.post("/api/v1/reports", json=_payload(account), headers=_auth(token))
+    report_id = created.json()["data"]["report_id"]
+    async with SessionLocal() as db:
+        await report_pipeline.process_report(db, uuid.UUID(report_id))
+
+    resp = await client.get(
+        "/api/v1/entities/account", params={"country": "ID", "bank": "014", "account": account}
+    )
+    data = resp.json()["data"]
+    assert data["ai_summary"]["text"]
+    assert data["ai_summary"]["grounded"] is True
+    assert data["related_fact_checks"] == []
+    assert data["search_intelligence"]["threshold_gated"] is True
 
 
 async def test_duplicate_evidence_detected(client: httpx.AsyncClient) -> None:

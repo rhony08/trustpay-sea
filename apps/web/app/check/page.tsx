@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ApiError,
   BANKS,
   COUNTRIES,
+  addWatch,
   decodeQrImage,
+  getToken,
   screenAccount,
   screenQr,
   type ScreenResult,
@@ -49,6 +51,16 @@ export default function CheckPage() {
       setBusy(false);
     }
   }
+
+  // Share-to-Check: a shared QR lands here as ?qr=<payload>.
+  useEffect(() => {
+    const shared = new URLSearchParams(window.location.search).get("qr");
+    if (!shared) return;
+    setTab("qr");
+    setPayload(shared);
+    void run(() => screenQr(shared));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const input =
     "w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-slate-100 outline-none focus:border-emerald-400";
@@ -198,8 +210,15 @@ function ResultCard({ result }: { result: ScreenResult }) {
     );
   }
 
-  const { entity, risk_assessment: risk, community_signals: community, qr_metadata: meta } =
-    result.data;
+  const {
+    entity,
+    risk_assessment: risk,
+    community_signals: community,
+    qr_metadata: meta,
+    ai_summary,
+    related_fact_checks,
+    search_intelligence,
+  } = result.data;
   const reports = result.data.reports ?? [];
   return (
     <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-5">
@@ -231,6 +250,20 @@ function ResultCard({ result }: { result: ScreenResult }) {
         </div>
       )}
 
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        <WatchButton entityId={entity.id} />
+        <Link
+          href="/receipt"
+          className="rounded-full border border-slate-600 px-3 py-1 text-xs text-slate-300 hover:border-emerald-400"
+        >
+          Diligence receipt
+        </Link>
+      </div>
+
+      {(risk.risk_level === "HIGH_RISK" || risk.risk_level === "CRITICAL_FRAUD") && (
+        <CoolingOff level={risk.risk_level} />
+      )}
+
       <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
         <div className="rounded-lg bg-slate-800/60 p-3">
           <p className="text-xs text-slate-400">Risk score</p>
@@ -247,6 +280,48 @@ function ResultCard({ result }: { result: ScreenResult }) {
         </div>
       </div>
 
+      {(search_intelligence?.total_searches_display || ai_summary?.text) && (
+        <div className="mt-3 space-y-2">
+          {search_intelligence?.total_searches_display && (
+            <p className="text-xs text-slate-400">
+              Searched {search_intelligence.total_searches_display} times
+              {search_intelligence.searches_7d > 0
+                ? ` · ${search_intelligence.searches_7d} this week`
+                : ""}
+            </p>
+          )}
+          {ai_summary?.text && (
+            <div className="rounded-lg border border-slate-700 bg-slate-800/50 p-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                AI summary
+              </p>
+              <p className="mt-1 text-sm text-slate-200">{ai_summary.text}</p>
+            </div>
+          )}
+          {related_fact_checks && related_fact_checks.length > 0 && (
+            <div className="rounded-lg border border-slate-700 bg-slate-800/50 p-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                Related fact-checks
+              </p>
+              <ul className="mt-1 space-y-1 text-sm text-slate-200">
+                {related_fact_checks.map((fc, i) => (
+                  <li key={i}>
+                    <a
+                      href={fc.url ?? "#"}
+                      className="underline"
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      {fc.text} {fc.rating ? `— ${fc.rating}` : ""}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      )}
+
       {(entity.merchant_name || meta?.merchant_name) && (
         <dl className="mt-3 space-y-1 text-sm text-slate-300">
           <Row k="Merchant" v={entity.merchant_name ?? meta?.merchant_name ?? null} />
@@ -258,6 +333,13 @@ function ResultCard({ result }: { result: ScreenResult }) {
       {meta?.homoglyph_warning && (
         <p className="mt-3 text-sm text-amber-300">
           ⚠ Lookalike characters detected in merchant name — verify carefully
+        </p>
+      )}
+
+      {meta?.qr_changed_since_last_seen && (
+        <p className="mt-3 text-sm text-rose-300">
+          ⚠ This QR payload differs from the one previously reported for this merchant — verify
+          carefully.
         </p>
       )}
 
@@ -298,6 +380,72 @@ function Row({ k, v }: { k: string; v: string | null }) {
     <div className="flex justify-between gap-4">
       <dt className="text-slate-400">{k}</dt>
       <dd className="text-right font-medium">{v}</dd>
+    </div>
+  );
+}
+
+function WatchButton({ entityId }: { entityId: string }) {
+  const [state, setState] = useState<"idle" | "saving" | "done">("idle");
+  const token = getToken();
+  if (!token) {
+    return (
+      <Link
+        href="/profile"
+        className="rounded-full border border-slate-600 px-3 py-1 text-xs text-slate-300 hover:border-emerald-400"
+      >
+        Watch (sign in)
+      </Link>
+    );
+  }
+  return (
+    <button
+      className="rounded-full border border-slate-600 px-3 py-1 text-xs text-slate-300 hover:border-emerald-400 disabled:opacity-60"
+      disabled={state !== "idle"}
+      onClick={async () => {
+        setState("saving");
+        try {
+          await addWatch(token, entityId);
+          setState("done");
+        } catch {
+          setState("idle");
+        }
+      }}
+    >
+      {state === "done" ? "Watching ✓" : "Watch account"}
+    </button>
+  );
+}
+
+function CoolingOff({ level }: { level: string }) {
+  const [remaining, setRemaining] = useState(10);
+  const [ack, setAck] = useState(false);
+
+  useEffect(() => {
+    if (ack || remaining <= 0) return;
+    const timer = setTimeout(() => setRemaining((r) => r - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [remaining, ack]);
+
+  return (
+    <div className="mt-3 rounded-lg border border-rose-500/40 bg-rose-500/10 p-3 text-sm text-rose-200">
+      <p className="font-semibold">Cooling-off — {level.replaceAll("_", " ").toLowerCase()}</p>
+      <ul className="mt-1 list-disc pl-5 text-xs">
+        <li>Have you verified the recipient independently?</li>
+        <li>Are you being rushed or pressured?</li>
+        <li>Is the deal too good to be true?</li>
+      </ul>
+      {!ack && remaining > 0 ? (
+        <p className="mt-2 text-xs">You can acknowledge in {remaining}s…</p>
+      ) : ack ? (
+        <p className="mt-2 text-xs">Acknowledged — proceed only if you have verified the recipient.</p>
+      ) : (
+        <button
+          className="mt-2 rounded bg-rose-500/20 px-3 py-1 text-xs"
+          onClick={() => setAck(true)}
+        >
+          I understand the risk
+        </button>
+      )}
     </div>
   );
 }

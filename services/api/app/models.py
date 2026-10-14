@@ -35,6 +35,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 from app.db import Base
 from app.enums import (
     AdminVerificationStatus,
+    BadgeType,
     BankType,
     DisputeStatus,
     EntityVerificationStatus,
@@ -400,6 +401,54 @@ class Bank(Base):
             name="ck_banks_bank_type",
         ),
         Index("ix_banks_country_code", "country_code"),
+    )
+
+
+class UserBadge(Base):
+    """Community badges (Phase 3B): verified reporter, pioneer warn, scam-aware."""
+
+    __tablename__ = "user_badges"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, **GEN_UUID)
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
+    badge: Mapped[str] = mapped_column(String(40), nullable=False)
+    scope: Mapped[str] = mapped_column(String(64), default="", nullable=False)  # e.g. entity id
+    granted_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+
+    __table_args__ = (
+        UniqueConstraint("user_id", "badge", "scope", name="uq_user_badges"),
+        CheckConstraint(
+            f"badge IN ({','.join(repr(b.value) for b in BadgeType)})",
+            name="ck_user_badges_badge",
+        ),
+        Index("ix_user_badges_user", "user_id"),
+    )
+
+
+class WatchlistEntry(Base):
+    """Saved entities a user follows for report/band/dispute/gov alerts (Phase 3B.4)."""
+
+    __tablename__ = "watchlist_entries"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, **GEN_UUID)
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
+    payment_entity_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("payment_entities.id", ondelete="CASCADE"), nullable=False
+    )
+    notify_reports: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    notify_band: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+    __table_args__ = (
+        UniqueConstraint("user_id", "payment_entity_id", name="uq_watchlist_user_entity"),
+        Index("ix_watchlist_user", "user_id"),
+        Index("ix_watchlist_entity", "payment_entity_id"),
     )
 
 
