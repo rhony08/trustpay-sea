@@ -413,7 +413,7 @@ The hackathon requires running on GCP **Compute Engine** (docs/07), which parked
 ### Decision
 - **One portable deploy unit**: the repo-root `docker-compose.yml` (postgres + redis + api + web) runs unchanged on a GCE `e2-small` VM *and* on a plain VPS. GCP is treated as "a bigger docker host", not a special case.
 - **GCE is the primary cloud target**; the Cloud Run kit in `gcp/cloudrun` is retained as an optional alternative, not the primary path.
-- **Dev conveniences are isolated** in `docker-compose.override.yml` (host-published DB/Redis ports), auto-loaded locally; production runs `docker compose -f docker-compose.yml` to skip them.
+- **Datastores are reused, not duplicated**: the VPS compose connects to the host's existing Postgres (`host.docker.internal:5432`) and the shared `rr-redis` (via its docker network, isolated DB index) instead of starting new DB/Redis containers. This is env-driven, so a self-contained compose can be restored for a fresh host.
 - **`NEXT_PUBLIC_API_URL` is a build arg** (inlined into the client bundle at build time) — documented, not a runtime env.
 - Managed DB/cache (Cloud SQL + Memorystore) and a MIG are deferred to post-demo scale; the compose monolith (ADR-008) stays monolithic.
 

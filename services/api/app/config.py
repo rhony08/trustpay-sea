@@ -30,6 +30,9 @@ class Settings(BaseSettings):
     rate_limit_capacity: int = 60
     rate_limit_refill_per_minute: int = 60
 
+    # CORS (comma-separated origins). Same-origin deploys behind nginx need only their own URL.
+    cors_allow_origins: str = "http://localhost:3000"
+
     # Scheduler placeholder (Phase 0.5)
     scheduler_enabled: bool = True
 
