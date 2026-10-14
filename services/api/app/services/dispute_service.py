@@ -233,6 +233,22 @@ async def resolve_dispute(
     from app.services.risk_scorer import recompute_entity_score
 
     await recompute_entity_score(db, entity)
+    if dispute.claimed_by_user_id:
+        from app.services.notifications import notify
+
+        pretty = decision.lower().replace("_", " ")
+        await notify(
+            db,
+            user_id=dispute.claimed_by_user_id,
+            type="DISPUTE_RESOLVED",
+            entity_id=entity.id,
+            payload={"dispute_id": str(dispute.id), "decision": decision},
+            email_subject=f"Your dispute was {pretty}",
+            email_body=(
+                f"Your ownership dispute for {entity.account_masked} was resolved: "
+                f"{pretty}. See the entity page for details."
+            ),
+        )
     await db.refresh(dispute)
     return dispute
 
