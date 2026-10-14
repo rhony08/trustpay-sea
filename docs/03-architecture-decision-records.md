@@ -23,6 +23,8 @@ This document captures the key engineering decisions with their context, options
 - [ADR-013: HSM/KMS-Keyed Account Hash + Prompt-Injection-Proof AI Boundary](#adr-013-hsmkms-keyed-account-hash--prompt-injection-proof-ai-boundary)
 - [ADR-014: Identity-Graph Anti-Brigading & Freeze-Thats-Rise-Only](#adr-014-identity-graph-anti-brigading--freeze-thats-rise-only)
 - [ADR-015: Web-First Scope for Hackathon MVP (No Chat Bots)](#adr-015-web-first-scope-for-hackathon-mvp-no-chat-bots)
+- [ADR-016: Contextual Exact-Match Name Disclosure (Masking + Holder-Name Reveal)](#adr-016-contextual-exact-match-name-disclosure-masking--holder-name-reveal)
+- [ADR-017: Python Backend Runtime & Security Primitives](#adr-017-python-backend-runtime--security-primitives)
 
 ---
 
@@ -342,6 +344,62 @@ Competing ideas (WhatsApp/Telegram check bot, IVR line, mobile-extension overlay
 ### Consequences
 - **+**: Single focused demo surface; faster delivery; the Public API keeps future channel options open.
 - **−**: No WA/TG quick-check in the MVP demo (trade-off accepted for hackathon quality).
+
+---
+
+## ADR-016: Contextual Exact-Match Name Disclosure (Masking + Holder-Name Reveal)
+
+**Status**: Accepted (owner-confirmed 2026-10-14 — closes G-1 / R-1)
+
+### Context
+The registry's most valuable anti-scam signal is a **name mismatch**: a scammer says the recipient is "Joko," but the account/QR holder is actually "Budi." Full masking (the pre-decision default) hides this signal. But unqualified name disclosure creates a doxing/defamation surface (UU ITE / PDPA / POFMA) and enables reverse-scraping into a "reported names" database.
+
+### Options Considered
+1. **Full masking everywhere (status quo)**: maximum legal safety, loses the name-mismatch signal — rejected as under-delivering on core value.
+2. **Full name disclosure on every lookup**: strongest utility, highest defamation/doxing/enumeration risk — rejected.
+3. **Contextual exact-match disclosure (Selected)**: the name is only revealed when the user *already holds the identifier in full* (typed the complete account number, or scanned the QR). Partial/autocomplete/list views stay masked forever — those are the enumerable surfaces.
+
+### Decision
+Adopt **contextual exact-match disclosure**:
+- **Exact-match surface** (full account number submitted, or QR scanned/pasted EMVCo payload) → reveal holder/merchant name with a confidence label:
+  - `"Verified owner name"` — only when ownership is proven (T1/T2/T3 or analyst-set `is_owner_verified`).
+  - `"Reported recipient name (from N reports) — verify independently"` — otherwise.
+- **Partial / autocomplete / any listing surface** → masked, forever. No "list of reported accounts" view ships in MVP (G-14 = NO).
+- **Admin / `GOV_BLACKLISTED` / `ADMIN_CONFIRMED_FRAUD`** entities → full disclosure allowed.
+- The reveal is conditional on *the requester already possessing the identifier* — we do not leak identifiers; we only confirm/refute the name against one the payer already holds.
+
+### Consequences
+- **+**: Catches the dominant SEA scam pattern (mule account under a different name) at the moment of payment decision.
+- **−**: Name data sits closer to the public surface; mitigated by confidence labelling, exact-match-only gating, rate limiting, and the standing prohibition on bulk/list views.
+- The `payment_entities.merchant_name` (QR merchant name from the EMVCo payload) was always shown — this ADR extends disclosure to the **holder name for bank-account lookups**, sourced from owner-KYC proof (verified) or report narratives (unverified, labelled as such).
+
+---
+
+## ADR-017: Python Backend Runtime & Security Primitives
+
+**Status**: Accepted (2026-10-14 — Phase 0 implementation record)
+
+### Context
+Doc 02 fixes the stack at FastAPI / Python 3.11 / PostgreSQL 16 / Redis 7 / SQLAlchemy 2.0 / Alembic, but leaves the concrete runtime and security-primitive choices open. Phase 0 needs these pinned so the scaffold, auth, rate limiter, and tests are consistent from commit one.
+
+### Decisions
+
+| Area | Choice | Rationale / rejected alternatives |
+|------|--------|-----------------------------------|
+| DB access | **Async SQLAlchemy 2.0 + asyncpg + async Alembic** | FastAPI is async-native; sync SQLAlchemy would block the event loop under load. aiosqlite rejected for tests — we test against real PG (compose/CI services) so migrations and CHECK constraints are exercised. |
+| JWT | **PyJWT, RS256 pinned, keypair on disk (`/run/secrets/*.pem`)** | Doc 02 §9.2 requires RS256/ES256 pinned and alg-confusion resistance; algorithm comes from config, never from the token header. python-jose rejected (historical CVEs). HS256 rejected (shared secret = verification key leakage risk). Dev keypair generated at container start; prod keys injected via secret manager. |
+| Password hashing | **argon2id via `argon2-cffi`** (`time_cost=2, memory_cost=64MiB, parallelism=2`) | Doc 02 schema specifies argon2id. bcrypt rejected (no memory hardness). Params tunable via env later if needed. |
+| Refresh-token rotation | **Token *family* tracked in Redis** (`auth:family:<id>` set of used refresh `jti`s, TTL 7d) | §9.2 requires rotation + reuse detection. No DB table exists for sessions in Doc 02's schema and adding one would drift from the approved data model; Redis is already infrastructure. Reuse of a burned `jti` → revoke the whole family (all tokens from that login session). Logout = family delete. |
+| Scheduler | **APScheduler in-process (`AsyncIOScheduler`, UTC)** | Phase 0.5 acceptance only requires "clock job exists & runs on schedule". Airflow/cron containers rejected for MVP as infra overhead; jobs are written as plain async functions so a later move to a cron container or Celery beat is a config change, not a rewrite. Scheduler disable flag (`SCHEDULER_ENABLED=false`) for tests. |
+| Canonical enums | **Shared `app/enums.py` (`StrEnum`)** mirroring DB CHECK constraints | Invariant: one taxonomy shared by DB, NLP, API. Python StrEnum is imported by models (CHECK constraint generation), API schemas, and later the NLP worker; DB CHECKs are generated from the same enum members so drift is a test failure, not a prod surprise. Native PG ENUM types rejected (harder to evolve; Alembic migration noise). |
+| Rate limiting | **Redis Lua token bucket** (`rl:<scope>:<identity>`, continuous refill) | Matches ADR-007. Fixed-window rejected (burst-at-edge). Middleware implemented as a FastAPI dependency so it is testable per-route. |
+| Tests | **pytest + pytest-asyncio + httpx ASGI client; real Postgres + Redis from compose / CI service containers** | Acceptance criteria demand migration-clean DB and real Redis rate limiting; mocking either would let schema/CHECK regressions slip through. |
+| Web server | **uvicorn[standard]** behind Docker; single process for MVP | Modular monolith (ADR-008): one deployable. Multi-worker/process manager deferred to deploy phase. |
+
+### Consequences
+- **+**: Phase 0 scaffold is fully consistent with the security invariants (pinned alg, rotation with reuse detection, canonical enums); every primitive is directly testable.
+- **−**: Local dev requires Docker (PG + Redis) — no pure-py fallback; APScheduler in-process means jobs don't survive multi-replica deployments (fine for MVP single-instance; documented as a Phase 7 deploy concern).
+- Dev JWT keypair must never be reused in prod — the container generates one only when no key files are mounted.
 
 ---
 
