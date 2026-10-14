@@ -39,7 +39,7 @@
 ## 3. Not Done / Deferred (by area)
 
 1. **Live AI validation** — enable `AI_PROVIDER=gcp` (Vertex + ADC) or `openrouter`, add keys, run the report pipeline against real slips, validate JSON parsing/grounding/fail-closed.
-2. **Storage hardening** — R2/S3 presigned POST, quarantine encryption (AES-GCM), ClamAV, cookieless public media domain, retention purge job (`is_legal_hold` exempt).
+2. **Storage hardening** — R2/S3 presigned POST, quarantine encryption (AES-GCM), ClamAV, cookieless public media domain (retention purge job ✅ done — `docs/10`).
 3. **Auth hardening** — docs §9.2 specify HttpOnly/Secure cookies + CSRF; current API returns bearer tokens and the PWA stores them in `localStorage`. **WebAuthn MFA for ANALYST/SENIOR_ANALYST/SUPERADMIN is required and not implemented.**
 4. **Admin portal UI** — backend endpoints exist (`/admin/dashboard`, `/admin/audit`, `/admin/approvals`, `/admin/flags`, `/admin/disputes`), but the `/admin` page is a read-only dashboard. No queue action UI, no side-by-side evidence review, no approvals UI.
 5. **Partner/Open API** — **screen API keys implemented** (`docs/09`): `api_keys` table, `X-API-Key` auth, tiers (visitor keyless / demo / partner / enterprise), per-tier daily quotas + `X-RateLimit-*`, distinct-entity probe detection, issue/rotate/revoke/usage endpoints, audit-logged; public `/api/v1/screen/account|qr` are privacy-safe (no holder names). **Still deferred**: App Check/reCAPTCHA handoff, partner webhooks, freshness labels, key-scoped `reports:write` ingestion endpoint.
@@ -97,7 +97,7 @@ npx playwright install chromium && npm run test:e2e
 ## 7. Recommended Next Work (ordered)
 
 1. **Live AI validation** — run the pipeline against a real invoice/slip on Vertex; verify JSON schema, grounding, fail-closed (ADR-019 records the provider design).
-2. **Storage hardening** — S3/R2 presigned uploads, AV scan, cookieless media domain, retention/legal-hold job.
+2. **Storage hardening** — S3/R2 presigned uploads, AV scan, cookieless media domain, retention/legal-hold job. **Retention/legal-hold job now implemented (`docs/10`, Phase 10; dry-run by default).** Remaining: S3/R2 presigned uploads, AV scan, cookieless media domain.
 3. **Auth hardening** — HttpOnly cookie sessions + CSRF; WebAuthn MFA mandatory for admins.
 4. **Admin portal UI** — flag/dispute queues, approve/resolve actions, approvals UI, side-by-side evidence.
 5. **Conversions/keys** — partner API keys + scopes + rotation; move `/check` off the static bank mirror.

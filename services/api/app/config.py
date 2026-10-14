@@ -101,6 +101,11 @@ class Settings(BaseSettings):
     quiz_pass_threshold: int = 2  # correct answers out of 3 for Anti-Scam Aware
     flag_rate_per_hour: int = 10  # per-user review-flag cap (Phase 4.2)
 
+    # Data retention (Phase 10 / docs/10). Original evidence purged and report
+    # bodies tombstoned after N days post-publication; legal hold + dispute freeze exempt.
+    retention_evidence_days: int = 90
+    retention_dry_run: bool = True  # safe default — logs candidates without deleting
+
     # AI fail-closed test hook (Phase 2.3): force PII redaction to fail.
     ai_redaction_always_fail: bool = False
 

@@ -1,4 +1,10 @@
-# 10 — Data Fate Matrix: Retention vs Legal Hold vs Erasure vs Dispute Freeze (PROPOSED)
+# 10 — Data Fate Matrix: Retention vs Legal Hold vs Erasure vs Dispute Freeze
+
+**Status**: ✅ **IMPLEMENTED (2026-10-14)** — `app/services/retention.py` (daily
+scheduler job, **dry-run by default** via `RETENTION_DRY_RUN=true`), `RETENTION_EVIDENCE_DAYS=90`;
+DSAR erasure now **tombstones** reports (not hard-delete), purges original evidence,
+keeps `payment_entities` HMAC rows and immutable `audit_logs`. Precedence enforced:
+**legal hold > dispute freeze > retention**.
 
 Reconciles 06 **NG-6/NG-11** (and sharpens G-13) into one per-table spec for the Phase 7.8
 DSAR/retention build. Default: **N = 90 days** post-verification for original evidence

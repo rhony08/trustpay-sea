@@ -32,6 +32,7 @@ class Storage(Protocol):
     def put_quarantine(self, *, data: bytes, content_type: str) -> StoredObject: ...
     def put_public(self, *, data: bytes, content_type: str) -> StoredObject: ...
     def read(self, key: str) -> bytes: ...
+    def delete(self, key: str) -> None: ...
     def public_url(self, key: str) -> str: ...
     def presign_put(self, *, content_type: str) -> dict: ...
 
@@ -74,6 +75,12 @@ class LocalStorage:
             raise StorageError(f"missing object: {key}")
         return path.read_bytes()
 
+    def delete(self, key: str) -> None:
+        path = (self._root / key).resolve()
+        if self._root.resolve() not in path.parents:
+            raise StorageError("invalid storage key")
+        path.unlink(missing_ok=True)
+
     def public_url(self, key: str) -> str:
         if not key.startswith("public/"):
             raise StorageError("only public objects have a public URL")
@@ -95,6 +102,9 @@ class S3Storage:  # pragma: no cover - wired in Phase 7 hardening
         raise NotImplementedError
 
     def read(self, key: str) -> bytes:
+        raise NotImplementedError
+
+    def delete(self, key: str) -> None:
         raise NotImplementedError
 
     def public_url(self, key: str) -> str:

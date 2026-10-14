@@ -233,6 +233,7 @@ async def list_published_reports(
             FraudReport.payment_entity_id == entity_id,
             FraudReport.processing_status == ProcessingStatus.PUBLISHED,
             FraudReport.status == ReportStatus.ACTIVE,
+            FraudReport.deleted_at.is_(None),
         )
         .order_by(FraudReport.created_at.desc())
         .limit(limit)

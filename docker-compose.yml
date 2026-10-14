@@ -25,6 +25,9 @@ services:
       CORS_ALLOW_ORIGINS: ${CORS_ALLOW_ORIGINS:-https://trustpay.quesitive.com}
       # Optional integrations (set in .env; empty = disabled)
       SEMAKMULE_API_KEY: ${SEMAKMULE_API_KEY:-}
+      # Retention (Phase 10): dry-run by default; set RETENTION_DRY_RUN=false to enforce
+      RETENTION_DRY_RUN: ${RETENTION_DRY_RUN:-true}
+      RETENTION_EVIDENCE_DAYS: ${RETENTION_EVIDENCE_DAYS:-90}
     extra_hosts:
       - "host.docker.internal:host-gateway"
     volumes:
