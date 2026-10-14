@@ -7,7 +7,7 @@ from datetime import UTC, datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel, Field
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import get_settings
@@ -47,6 +47,15 @@ def _badge_view(badges) -> list[dict]:
 @router.get("/me")
 async def profile_me(user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
     badges = await reputation.list_badges(db, user.id)
+    unread = int(
+        await db.scalar(
+            select(func.count(UserNotification.id)).where(
+                UserNotification.user_id == user.id,
+                UserNotification.read_at.is_(None),
+            )
+        )
+        or 0
+    )
     return {
         "status": "success",
         "data": {
@@ -57,6 +66,7 @@ async def profile_me(user: User = Depends(get_current_user), db: AsyncSession = 
             "tier": reputation.tier_for(user).value,
             "phone_verified": user.phone_verified,
             "badges": _badge_view(badges),
+            "unread_notifications": unread,
         },
     }
 

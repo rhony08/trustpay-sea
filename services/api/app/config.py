@@ -106,6 +106,16 @@ class Settings(BaseSettings):
     retention_evidence_days: int = 90
     retention_dry_run: bool = True  # safe default — logs candidates without deleting
 
+    # Notifications (G-15 / NG-4). In-app rows are always written; email is opt-in.
+    # Dev default = console sender (logged, nothing leaves the box).
+    notifications_email_enabled: bool = False
+    smtp_host: str | None = None
+    smtp_port: int = 587
+    smtp_user: str | None = None
+    smtp_password: str | None = None
+    smtp_starttls: bool = True
+    notifications_from_email: str = "TrustPay SEA <no-reply@trustpay.quesitive.com>"
+
     # AI fail-closed test hook (Phase 2.3): force PII redaction to fail.
     ai_redaction_always_fail: bool = False
 

@@ -53,6 +53,10 @@ No PII in screen responses at any tier (counts + band + masked profile only —
 PenipuMY parity, 08 §15). Exact-match holder-name reveal (ADR-016) is a **UI**
 privilege for authenticated first-party users, never exposed via API keys in MVP.
 
+**Endpoints**: `GET /api/v1/screen/account`, `POST /api/v1/screen/qr`, and
+`GET /api/v1/screen/phone` (e-wallet **phone** search — aggregates reports across
+*all* wallets for one number; visitor tier buckets the counts).
+
 ## Owner questions
 
 1. Visitor tier: allow unauthenticated screening at all for the demo? (Recommend yes —

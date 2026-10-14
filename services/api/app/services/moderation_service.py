@@ -197,8 +197,22 @@ async def resolve_flag(
     )
     await _check_bad_faith(db, flag.flagged_by_user_id)
     if report is not None:
+        from app.services.notifications import notify
         from app.services.risk_scorer import recompute_entity_score
 
+        if decision == ReviewFlagStatus.UPHELD and report.reporter_user_id:
+            await notify(
+                db,
+                user_id=report.reporter_user_id,
+                type="REPORT_UPHELD_WARNING",
+                entity_id=report.payment_entity_id,
+                payload={"report_id": str(report.id)},
+                email_subject="A review you filed was removed",
+                email_body=(
+                    "A review you submitted was upheld as violating policy and has been "
+                    "hidden. Repeated violations may suspend your account."
+                ),
+            )
         entity = await db.get(PaymentEntity, report.payment_entity_id)
         if entity is not None:
             await recompute_entity_score(db, entity)

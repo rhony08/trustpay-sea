@@ -32,6 +32,7 @@ from app.services.entity_service import (
     not_found_profile,
 )
 from app.services.intel_service import get_entity_intel
+from app.services.phone_search import search_phone
 from app.services.report_service import (
     evidence_for_reports,
     list_published_reports,
@@ -103,6 +104,22 @@ def _qr_metadata(parsed: ParsedQR, *, payload: str | None = None, entity=None) -
         "normalized_merchant_name": normalize_merchant_name(parsed.merchant_name),
         "qr_changed_since_last_seen": changed,
     }
+
+
+@router.get("/entities/phone", response_model=AccountLookupResponse)
+async def lookup_phone(country: str, phone: str, db: AsyncSession = Depends(get_db)):
+    """E-wallet check by phone number — aggregates reports across all wallets."""
+    data = await search_phone(db, country=country, phone=phone)
+    if country.upper() == "MY":
+        from app.services.semakmule import get_semakmule_client
+
+        client = get_semakmule_client()
+        if client.enabled:
+            data["gov_check"] = {
+                **(await client.check_phone(phone)).to_dict(),
+                "category": "phone",
+            }
+    return {"status": "success" if data["wallet_count"] else "not_found", "data": data}
 
 
 @router.get("/entities/account", response_model=AccountLookupResponse)

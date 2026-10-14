@@ -7,17 +7,20 @@ import {
   addWatch,
   eraseData,
   exportData,
+  getNotifications,
   getProfile,
   getQuiz,
   getToken,
   getWatchlist,
   login,
+  markNotificationRead,
   removeWatch,
   setToken,
   signup,
   submitQuiz,
   verifyPhoneConfirm,
   verifyPhoneStart,
+  type NotificationItem,
   type QuizQuestion,
   type TrustProfile,
   type WatchlistItem,
@@ -42,6 +45,7 @@ export default function ProfilePage() {
 
   const [profile, setProfile] = useState<TrustProfile | null>(null);
   const [watchlist, setWatchlist] = useState<WatchlistItem[]>([]);
+  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
   const [answers, setAnswers] = useState<number[]>([]);
   const [quizResult, setQuizResult] = useState<string | null>(null);
@@ -52,6 +56,7 @@ export default function ProfilePage() {
   const refresh = useCallback(async (t: string) => {
     setProfile(await getProfile(t));
     setWatchlist(await getWatchlist(t));
+    setNotifications(await getNotifications(t));
   }, []);
 
   useEffect(() => setTokenState(getToken()), []);
@@ -179,6 +184,46 @@ export default function ProfilePage() {
           </div>
         </div>
       )}
+
+      <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-5">
+        <div className="flex items-center justify-between">
+          <p className="font-semibold">Notifications</p>
+          {profile && (profile.unread_notifications ?? 0) > 0 && (
+            <span className="rounded-full bg-emerald-500/20 px-2 py-0.5 text-xs text-emerald-300">
+              {profile.unread_notifications} unread
+            </span>
+          )}
+        </div>
+        {notifications.length === 0 ? (
+          <p className="mt-1 text-xs text-slate-400">
+            Alerts about accounts you watch and reports you file appear here.
+          </p>
+        ) : (
+          <ul className="mt-3 space-y-2">
+            {notifications.slice(0, 10).map((n) => (
+              <li
+                key={n.id}
+                className={`flex items-center justify-between rounded-lg px-3 py-2 text-sm ${
+                  n.read_at ? "bg-slate-800/40 text-slate-400" : "bg-slate-800/70 text-slate-100"
+                }`}
+              >
+                <span>{n.type.replaceAll("_", " ").toLowerCase()}</span>
+                {!n.read_at && (
+                  <button
+                    className="text-xs text-emerald-300 underline"
+                    onClick={async () => {
+                      await markNotificationRead(token, n.id);
+                      await refresh(token);
+                    }}
+                  >
+                    Mark read
+                  </button>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
 
       <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-5">
         <p className="font-semibold">Watchlist</p>

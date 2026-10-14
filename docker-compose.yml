@@ -28,6 +28,9 @@ services:
       # Retention (Phase 10): dry-run by default; set RETENTION_DRY_RUN=false to enforce
       RETENTION_DRY_RUN: ${RETENTION_DRY_RUN:-true}
       RETENTION_EVIDENCE_DAYS: ${RETENTION_EVIDENCE_DAYS:-90}
+      # Notifications (G-15): in-app always; email opt-in via SMTP
+      NOTIFICATIONS_EMAIL_ENABLED: ${NOTIFICATIONS_EMAIL_ENABLED:-false}
+      SMTP_HOST: ${SMTP_HOST:-}
     extra_hosts:
       - "host.docker.internal:host-gateway"
     volumes:
