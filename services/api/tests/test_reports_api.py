@@ -178,10 +178,15 @@ async def test_fail_closed_redaction_never_publishes(
         headers=_auth(token),
     )
 
-    def _boom(_: bytes) -> bytes:
-        raise report_pipeline.vision.RedactionError("simulated failure")
+    from app.ai.errors import RedactionError
 
-    monkeypatch.setattr(report_pipeline.vision, "redact_image", _boom)
+    class _FailingProvider:
+        name = "failing"
+
+        async def redact_image(self, data: bytes) -> bytes:
+            raise RedactionError("simulated failure")
+
+    monkeypatch.setattr(report_pipeline, "get_ai_provider", lambda: _FailingProvider())
 
     async with SessionLocal() as db:
         result = await report_pipeline.process_report(db, uuid.UUID(report_id))

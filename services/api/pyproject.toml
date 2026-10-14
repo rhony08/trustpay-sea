@@ -20,6 +20,8 @@ dependencies = [
     "opencv-python-headless>=4.10.0,<5",  # 5.0.0 QRCodeEncoder segfaults on macOS arm64
     "numpy>=2.0.0",
     "python-multipart>=0.0.9",
+    "google-genai>=1.0.0",  # Vertex AI (GCP provider)
+    "openai>=1.50.0",  # OpenRouter (OpenAI-compatible provider)
 ]
 
 [project.optional-dependencies]

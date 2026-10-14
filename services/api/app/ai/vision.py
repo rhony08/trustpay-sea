@@ -11,11 +11,10 @@ from __future__ import annotations
 import cv2
 import numpy as np
 
+from app.ai.errors import RedactionError
 from app.config import get_settings
 
-
-class RedactionError(Exception):
-    pass
+__all__ = ["RedactionError", "redact_image"]
 
 
 def redact_image(data: bytes) -> bytes:

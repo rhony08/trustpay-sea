@@ -22,7 +22,7 @@ tells the next agent exactly what to read and which invariants must not regress.
 | Backend | FastAPI (Python 3.11) modular monolith |
 | DB | PostgreSQL 16 |
 | Cache/Queue | Redis 7 |
-| AI | Gemini (mock-first — no key required for dev) |
+| AI | Gemini via pluggable provider (`AI_PROVIDER=mock|gcp|openrouter`) |
 
 ## Quick start
 
