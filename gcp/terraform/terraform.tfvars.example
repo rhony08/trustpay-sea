@@ -1,0 +1,13 @@
+# Copy to terraform.tfvars (gitignored). Fill project_id, then:
+#   terraform init && terraform apply
+project_id    = "trustpay-sea-dev"
+region        = "asia-southeast2" # Jakarta — PDP data residency
+environment   = "dev"
+
+sql_tier        = "db-g1-small" # prod: db-custom-2-4096 or higher
+sql_disk_size_gb = 20
+redis_memory_gb  = 1
+
+# First apply: leave blank (infra only). After first docker push, set:
+# api_image = "asia-southeast2-docker.pkg.dev/trustpay-sea-dev/trustpay-dev-images/api:0.1.0"
+# web_image = "asia-southeast2-docker.pkg.dev/trustpay-sea-dev/trustpay-dev-images/web:0.1.0"

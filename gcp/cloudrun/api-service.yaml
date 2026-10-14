@@ -1,0 +1,106 @@
+# TrustPay SEA — Cloud Run API service.
+# Deploy: gcp/scripts/deploy.sh (envsubst fills ${...} from terraform outputs).
+# Mirrors docker-compose `api` (port 8000, DATABASE_URL + REDIS_URL, scheduler on).
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: trustpay-API
+  namespace: "${PROJECT_NUMBER}"
+  labels:
+    app: trustpay-api
+    env: "${ENVIRONMENT}"
+  annotations:
+    run.googleapis.com/ingress: all
+    run.googleapis.com/vpc-access-connector: "${VPC_CONNECTOR}"
+    run.googleapis.com/vpc-access-egress: private-ranges-only
+spec:
+  template:
+    metadata:
+      annotations:
+        autoscaling.knative.dev/minScale: "${API_MIN_SCALE}" # dev 0, prod 1
+        autoscaling.knative.dev/maxScale: "10"
+        run.googleapis.com/cloudsql-instances: "${SQL_CONNECTION_NAME}"
+        run.googleapis.com/service-account: "${API_SERVICE_ACCOUNT}"
+    spec:
+      containerConcurrency: 80
+      timeoutSeconds: 60
+      serviceAccountName: "${API_SERVICE_ACCOUNT}"
+      volumes:
+        - name: jwt-private
+          secret:
+            secretName: "${PREFIX}-jwt-private-pem"
+            items:
+              - key: latest
+                path: jwt_private.pem
+        - name: jwt-public
+          secret:
+            secretName: "${PREFIX}-jwt-public-pem"
+            items:
+              - key: latest
+                path: jwt_public.pem
+      containers:
+        - name: api
+          image: "${API_IMAGE}"
+          ports:
+            - containerPort: 8000
+          resources:
+            limits:
+              cpu: "1"
+              memory: 512Mi
+          env:
+            - name: ENVIRONMENT
+              value: "${ENVIRONMENT}"
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: "${PREFIX}-database-url"
+                  key: latest
+            - name: REDIS_URL
+              valueFrom:
+                secretKeyRef:
+                  name: "${PREFIX}-redis-url"
+                  key: latest
+            - name: JWT_PRIVATE_KEY_PATH
+              value: /run/secrets/jwt_private.pem
+            - name: JWT_PUBLIC_KEY_PATH
+              value: /run/secrets/jwt_public.pem
+            - name: ACCOUNT_HMAC_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: "${PREFIX}-account-hmac-key"
+                  key: latest
+            - name: GEMINI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: "${PREFIX}-gemini-api-key"
+                  key: latest
+            - name: FACTCHECK_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: "${PREFIX}-factcheck-api-key"
+                  key: latest
+            - name: SCHEDULER_ENABLED
+              value: "true"
+          volumeMounts:
+            - name: jwt-private
+              mountPath: /run/secrets/jwt_private.pem
+              subPath: jwt_private.pem
+              readOnly: true
+            - name: jwt-public
+              mountPath: /run/secrets/jwt_public.pem
+              subPath: jwt_public.pem
+              readOnly: true
+          startupProbe:
+            httpGet:
+              path: /healthz
+              port: 8000
+            periodSeconds: 5
+            failureThreshold: 12
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8000
+            periodSeconds: 30
+  traffic:
+    - percent: 100
+      latestRevision: true

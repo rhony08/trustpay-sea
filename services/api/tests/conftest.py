@@ -60,6 +60,20 @@ async def prepare_db() -> None:
     await engine.dispose()
 
 
+@pytest_asyncio.fixture(autouse=True)
+async def _isolate_redis() -> None:
+    """Fresh Redis per test: the global anon rate-limiter and report-quota
+    counters share this DB, so without isolation later tests inherit a drained
+    bucket and flake with cascading 429s."""
+    import redis.asyncio as aioredis
+
+    client = aioredis.from_url(os.environ["REDIS_URL"], decode_responses=True)
+    await client.flushdb()
+    yield
+    await client.flushdb()
+    await client.aclose()
+
+
 @pytest_asyncio.fixture
 async def client() -> AsyncClient:
     from app.main import app

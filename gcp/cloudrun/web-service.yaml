@@ -1,0 +1,38 @@
+# TrustPay SEA — Cloud Run Web (Next.js 15 standalone PWA).
+# Mirrors docker-compose `web` (port 3000, NEXT_PUBLIC_API_URL).
+# NOTE: set NEXT_PUBLIC_API_URL at BUILD time (baked into .next) AND
+# runtime for SSR fetches — rebuild on API URL change.
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: trustpay-web
+  namespace: "${PROJECT_NUMBER}"
+  labels:
+    app: trustpay-web
+    env: "${ENVIRONMENT}"
+  annotations:
+    run.googleapis.com/ingress: all
+spec:
+  template:
+    metadata:
+      annotations:
+        autoscaling.knative.dev/minScale: "0"
+        autoscaling.knative.dev/maxScale: "5"
+    spec:
+      containerConcurrency: 80
+      timeoutSeconds: 30
+      containers:
+        - name: web
+          image: "${WEB_IMAGE}"
+          ports:
+            - containerPort: 3000
+          resources:
+            limits:
+              cpu: "1"
+              memory: 512Mi
+          env:
+            - name: NEXT_PUBLIC_API_URL
+              value: "${PUBLIC_API_URL}" # e.g. https://trustpay-api-xxx.a.run.app
+  traffic:
+    - percent: 100
+      latestRevision: true
