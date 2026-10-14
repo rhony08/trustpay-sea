@@ -25,3 +25,5 @@ out/
 # Local data
 *.sqlite3
 *.db
+# Python build artifacts
+*.egg-info/
