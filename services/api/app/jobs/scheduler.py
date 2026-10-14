@@ -29,9 +29,33 @@ async def audit_chain_reconcile_job() -> None:
     log.info("audit_chain_reconcile: placeholder run (reconciler lands in Phase 7)")
 
 
+async def report_processing_job() -> None:
+    """Publish any reports left PROCESSING (Phase 2.3 async worker safety-net)."""
+    from app.config import get_settings
+    from app.db import SessionLocal
+    from app.workers.report_pipeline import process_pending_reports
+
+    if not get_settings().report_worker_interval_seconds:
+        return
+    async with SessionLocal() as db:
+        published = await process_pending_reports(db)
+    if published:
+        log.info("report_processing: published %d report(s)", published)
+
+
 def start_scheduler() -> None:
     if scheduler.running:
         return
+    from app.config import get_settings
+
+    settings = get_settings()
+    scheduler.add_job(
+        report_processing_job,
+        "interval",
+        seconds=settings.report_worker_interval_seconds,
+        id="report_processing",
+        replace_existing=True,
+    )
     scheduler.add_job(
         search_stats_rollup_job,
         "cron",

@@ -98,20 +98,24 @@ async def _report_stats(db: AsyncSession, entity_id: uuid.UUID) -> tuple[int, in
     """(total published reports, admin-verified, reports last 7d)."""
     from datetime import timedelta
 
-    total, verified = await db.scalar(
-        select(
-            func.count(FraudReport.id),
-            func.sum(
-                (FraudReport.admin_verification_status == "APPROVED").cast(
-                    __import__("sqlalchemy").Integer
-                )
-            ),
-        ).where(
-            FraudReport.payment_entity_id == entity_id,
-            FraudReport.status == ReportStatus.ACTIVE,
-            FraudReport.processing_status == "PUBLISHED",
+    row = (
+        await db.execute(
+            select(
+                func.count(FraudReport.id),
+                func.sum(
+                    (FraudReport.admin_verification_status == "APPROVED").cast(
+                        __import__("sqlalchemy").Integer
+                    )
+                ),
+            ).where(
+                FraudReport.payment_entity_id == entity_id,
+                FraudReport.status == ReportStatus.ACTIVE,
+                FraudReport.processing_status == "PUBLISHED",
+            )
         )
-    ) or (0, 0)
+    ).one()
+    total = int(row[0] or 0)
+    verified = int(row[1] or 0)
     week_ago = datetime.now(UTC) - timedelta(days=7)
     last_7d = (
         await db.scalar(
@@ -150,6 +154,7 @@ def build_profile(
     total_reports: int,
     admin_verified_reports: int,
     report_velocity_7d: int,
+    reports: list[dict] | None = None,
 ) -> dict:
     badge_color, badge_label = _BADGE_BY_STATUS.get(
         entity.verification_status, ("AMBER", "Unverified")
@@ -183,6 +188,7 @@ def build_profile(
             "report_velocity_7d": report_velocity_7d,
             "total_loss_by_currency": entity.total_loss_by_currency,
         },
+        "reports": reports or [],
         "in_registry": True,
     }
 

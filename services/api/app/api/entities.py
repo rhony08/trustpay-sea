@@ -25,8 +25,23 @@ from app.services.entity_service import (
     get_entity_by_hash,
     not_found_profile,
 )
+from app.services.report_service import (
+    evidence_for_reports,
+    list_published_reports,
+    serialize_report,
+)
 
 router = APIRouter(tags=["resolver"])
+
+
+async def _published_reports(db, entity_id) -> list[dict]:
+    reports = await list_published_reports(db, entity_id)
+    evidence = await evidence_for_reports(db, [r.id for r in reports])
+    feed = []
+    for report in reports:
+        items = evidence.get(report.id, [])
+        feed.append(serialize_report(report, items, public_urls={e.id: e.media_url for e in items}))
+    return feed
 
 
 class AccountLookupResponse(BaseModel):
@@ -100,6 +115,7 @@ async def lookup_account(
                 total_reports=total,
                 admin_verified_reports=verified,
                 report_velocity_7d=velocity,
+                reports=await _published_reports(db, entity.id),
             ),
             "query": query,
         },
@@ -144,6 +160,7 @@ async def screen_qr(body: QRScreenRequest, db: AsyncSession = Depends(get_db)):
                 total_reports=total,
                 admin_verified_reports=verified,
                 report_velocity_7d=velocity,
+                reports=await _published_reports(db, entity.id),
             ),
             "qr_metadata": metadata,
             "query": query,

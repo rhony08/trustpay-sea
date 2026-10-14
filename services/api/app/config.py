@@ -43,6 +43,24 @@ class Settings(BaseSettings):
     account_hmac_key: str = "dev-only-insecure-key-change-me"
     account_hash_version: int = 1
 
+    # Evidence storage (Phase 2.2). Dev default is a local-disk shim; R2/S3
+    # presigned uploads land behind the same Storage interface in Phase 7.
+    evidence_storage_backend: str = "local"  # local | s3
+    evidence_local_dir: str = "/tmp/trustpay-evidence"
+    evidence_max_bytes: int = 8 * 1024 * 1024  # 8 MiB
+    evidence_max_pixels: int = 25_000_000  # decompression-bomb guard
+    evidence_public_base_url: str = "http://localhost:8000/media"  # cookieless domain in prod
+
+    # Report quotas (Phase 2.1 / Doc 02 §5.2, §9)
+    report_daily_quota_per_user: int = 20
+    report_hourly_quota_per_entity: int = 5
+
+    # Async worker cadence (Phase 2.3); scheduler safety-net poll interval.
+    report_worker_interval_seconds: int = 20
+
+    # AI fail-closed test hook (Phase 2.3): force PII redaction to fail.
+    ai_redaction_always_fail: bool = False
+
 
 @lru_cache
 def get_settings() -> Settings:
