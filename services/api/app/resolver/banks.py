@@ -46,6 +46,7 @@ class Institution:
     bic: str | None
     min_length: int
     max_length: int
+    bank_type: str | None = None  # COMMERCIAL | E_WALLET | ... (from the reference)
 
 
 @lru_cache(maxsize=1)
@@ -77,6 +78,7 @@ def _build_directory() -> dict[tuple[str, str], Institution]:
             bic=record.get("bic"),
             min_length=min_len,
             max_length=max_len,
+            bank_type=record.get("bank_type"),
         )
     return directory
 

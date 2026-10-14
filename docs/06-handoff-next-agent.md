@@ -25,13 +25,13 @@
 
 ## 2. What Is Real vs Mocked (read before trusting a demo)
 
-**Real**: bank directory + seeder, HMAC account hashing/normalization, EMVCo parser + CRC, QR image decode, report lifecycle + quotas + idempotency, evidence upload guards (magic bytes, pixel cap, EXIF-strip re-encode), pHash duplicate detection, grounded AI **summary** (fact template + grounding check), search stats + rollup, votes/flags/admin resolution, hash-chained audit, badge/trust/watchlist/quiz/playbook/receipts, claim/dispute/safe-harbor, explainable scorer + factor breakdown, anti-brigading dampen, mock gov override, four-eyes approvals.
+**Real**: bank directory + seeder, HMAC account hashing/normalization, EMVCo parser + CRC, QR image decode, report lifecycle + quotas + idempotency, evidence upload guards (magic bytes, pixel cap, EXIF-strip re-encode), pHash duplicate detection, grounded AI **summary** (fact template + grounding check), search stats + rollup, votes/flags/admin resolution, hash-chained audit, badge/trust/watchlist/quiz/playbook/receipts, claim/dispute/safe-harbor, explainable scorer + factor breakdown, anti-brigading dampen, mock gov override, four-eyes approvals, **Malaysia gov checker (PDRM Semak Mule — bank + telefon)**.
 
 **Mocked / stubbed** (swap before production):
 - **AI inference**: `AI_PROVIDER=mock` is the default. `gcp` (Vertex AI) and `openrouter` providers are implemented but have **never been exercised against live models** (no keys in this repo). OCR, tamper detection and PII-redaction *detection* are mock; the real providers request JSON (PII boxes / slip fields / tamper signals) and redaction is drawn locally.
 - **Evidence storage**: local-disk shim (`app/storage.py`). S3/R2 presigned uploads, ClamAV AV scan, and the separate cookieless media domain are **not** implemented (Phase 7 target).
 - **Notifications**: in-app `user_notifications` only. Email/SMS/PWA-push delivery not implemented.
-- **Gov registry**: mock in-memory feed (`gov_adapter`); real cekrekening.id / PDRM Semak Mule / SPF ASC connectors are post-MVP.
+- **Gov registry**: **Malaysia (PDRM Semak Mule) is real** — bank + telefon checkers (`app/services/semakmule.py`), surfaced on MY lookups and persisted at report time; enabled only when `SEMAKMULE_API_KEY` is set (env-only secret). All other countries use the in-memory mock feed (`gov_adapter`). Real cekrekening.id / SG / TH / VN / PH connectors remain post-MVP.
 - **Account ownership proof**: mock verification (NMID tier is deterministic; document tiers auto-accept). Micro-deposit OTP is real but delivered in-band (dev).
 
 ---

@@ -37,6 +37,14 @@ class Settings(BaseSettings):
     gemini_api_key: str | None = None
     factcheck_api_key: str | None = None
 
+    # --- Malaysia gov checker: PDRM Semak Mule (Phase G-MY) ---
+    # Env-only secret — never commit the key. Checker is disabled when unset.
+    semakmule_api_key: str | None = None
+    semakmule_base_url: str = "https://semakmule.rmp.gov.my/api/mule/get_search_data.php"
+    semakmule_timeout_seconds: float = 8.0
+    # PDRM's chain is sometimes incomplete; keep True and mount a full CA bundle.
+    semakmule_verify_tls: bool = True
+
     # --- AI provider (Phase 2/3 real model wiring) ---
     # mock (default, no key) | gcp (Vertex AI via ADC) | openrouter (OpenAI-compatible).
     # An unavailable/unconfigured provider transparently falls back to mock;

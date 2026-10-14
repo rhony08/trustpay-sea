@@ -44,6 +44,7 @@ export interface EntityProfile {
   ai_summary?: { text: string; cached: boolean; grounded: boolean } | null;
   related_fact_checks?: FactCheck[] | null;
   search_intelligence?: SearchIntelligence | null;
+  gov_check?: GovCheck | null;
   in_registry: true;
 }
 
@@ -54,6 +55,16 @@ export interface SearchIntelligence {
   searches_30d: number;
   last_searched_at: string | null;
   threshold_gated: boolean;
+}
+
+export interface GovCheck {
+  source: string;
+  available: boolean;
+  found: boolean;
+  report_count: number;
+  reports: { value: string; report_count: number }[];
+  status_message: string | null;
+  category?: "bank" | "phone" | "company";
 }
 
 export interface FactCheck {
@@ -142,6 +153,7 @@ export type ScreenResult =
         message: string;
         query: unknown;
         qr_metadata?: QrMetadata;
+        gov_check?: GovCheck | null;
       };
     };
 

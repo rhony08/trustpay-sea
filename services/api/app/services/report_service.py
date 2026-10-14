@@ -50,7 +50,7 @@ async def resolve_bank_target(
         account_raw=account,
         kms_key=settings.account_hmac_key,
     )
-    return await upsert_entity(
+    entity = await upsert_entity(
         db,
         entity_type=EntityType.BANK_ACCOUNT,
         scheme=Scheme.BANK,
@@ -59,6 +59,43 @@ async def resolve_bank_target(
         account_hash=account_hash,
         account_masked=masked,
     )
+    await _apply_government_signal(
+        db, entity, country=country, account=account, bank_type=institution.bank_type
+    )
+    return entity
+
+
+async def _apply_government_signal(
+    db: AsyncSession,
+    entity: PaymentEntity,
+    *,
+    country: str,
+    account: str,
+    bank_type: str | None = None,
+) -> None:
+    """Best-effort gov check at report time (authenticated path): flag + rescore.
+
+    Only Malaysia (PDRM Semak Mule) for now; e-wallets use the *telefon* checker.
+    Failures are ignored — a gov outage must never block report submission.
+    """
+    if country.upper() != "MY":
+        return
+    from app.services.risk_scorer import recompute_entity_score
+    from app.services.semakmule import get_semakmule_client, infer_category
+
+    client = get_semakmule_client()
+    if not client.enabled:
+        return
+    category = infer_category(bank_type=bank_type, value=account)
+    try:
+        result = await client.check(category=category, value=account)
+    except Exception:  # noqa: BLE001 — never block the report
+        return
+    if result.available and result.found and not entity.is_gov_blacklisted:
+        entity.is_gov_blacklisted = True
+        entity.gov_source = result.source
+        await db.commit()
+        await recompute_entity_score(db, entity)
 
 
 async def resolve_qr_target(db: AsyncSession, *, qr_payload: str) -> PaymentEntity:
