@@ -341,6 +341,31 @@ function ResultCard({ result }: { result: ScreenResult }) {
         </div>
       </div>
 
+      {risk.anomaly_spike_detected && (
+        <p className="mt-3 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs text-amber-200">
+          ⚠ Unusual reporting spike detected — signals dampened pending review.
+        </p>
+      )}
+
+      {risk.factors && risk.factors.length > 0 && (
+        <div className="mt-3 rounded-lg border border-slate-700 bg-slate-800/50 p-3">
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+            Score breakdown
+          </p>
+          <ul className="mt-1 space-y-0.5 text-xs text-slate-300">
+            {risk.factors.map((f) => (
+              <li key={f.label} className="flex justify-between">
+                <span>
+                  {f.label.replaceAll("_", " ")}
+                  {f.dampened ? " (dampened)" : ""}
+                </span>
+                <span>{f.weight > 0 ? `+${f.weight}` : f.weight}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       {(search_intelligence?.total_searches_display || ai_summary?.text) && (
         <div className="mt-3 space-y-2">
           {search_intelligence?.total_searches_display && (

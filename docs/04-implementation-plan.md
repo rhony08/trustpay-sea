@@ -235,6 +235,8 @@ This plan is structured so each phase produces a **verifiable, demo-able increme
 ### Phase 6 Demo
 - Surface an entity with factor breakdown "72 = admin + community, dampened 0.45×" and a mock gov-blacklisted account showing 100.
 
+- **Status 2026-10-14**: ✅ DONE — explainable scorer with persisted factor breakdown (base/gov/admin/community(dampened)/forensics/merchant-KYC/resolution + rise-only dispute cap); anti-brigading (3h burst + 7d EWMA z-score → 0.45 dampen + ANOMALY flag); gov mock feed → score 100 with source; admin portal dashboard + audit viewer (chain check) + four-eyes approvals gating gov-override/ban. Web: score breakdown + spike warning on the entity card, `/admin` dashboard. 133 API tests green; web build green.
+
 ---
 
 ## Phase 7 — MVP Hardening, Tests & Launch Demo
