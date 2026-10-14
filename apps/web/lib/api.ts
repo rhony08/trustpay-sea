@@ -320,3 +320,165 @@ export async function getReport(reportId: string): Promise<ReportView> {
   return body.data;
 }
 
+// --- Phase 3B: profile, watchlist, quiz, playbook, receipts ---
+
+export interface Badge {
+  badge: string;
+  scope: string;
+  granted_at: string;
+}
+
+export interface TrustProfile {
+  email: string;
+  display_name: string | null;
+  reputation_score: number;
+  identity_trust: number;
+  tier: string;
+  phone_verified: boolean;
+  badges: Badge[];
+}
+
+export interface WatchlistItem {
+  entity_id: string;
+  entity_type: string;
+  country: string;
+  institution: string | null;
+  account_masked: string;
+  risk_score: number;
+  risk_level: string;
+}
+
+export interface QuizQuestion {
+  id: string;
+  archetype: string;
+  scenario: string;
+  options: string[];
+}
+
+export interface PlaybookEntry {
+  category: string;
+  title: string;
+  summary: string;
+  red_flags: string[];
+  checklist: string[];
+}
+
+export interface Receipt {
+  v: number;
+  at: number;
+  entity_type: string;
+  scheme: string | null;
+  country: string;
+  institution: string | null;
+  account_masked: string;
+  risk_score: number;
+  risk_level: string;
+}
+
+export async function getProfile(token: string): Promise<TrustProfile> {
+  const body = await authed<{ data: TrustProfile }>("/api/v1/profile/me", token);
+  return body.data;
+}
+
+export async function verifyPhoneStart(
+  token: string,
+  phone: string,
+): Promise<{ dev_code?: string }> {
+  const body = await authed<{ data: { dev_code?: string } }>(
+    "/api/v1/profile/verify/phone/start",
+    token,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ phone }),
+    },
+  );
+  return body.data;
+}
+
+export async function verifyPhoneConfirm(
+  token: string,
+  code: string,
+): Promise<TrustProfile> {
+  const body = await authed<{ data: TrustProfile }>(
+    "/api/v1/profile/verify/phone/confirm",
+    token,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ code }),
+    },
+  );
+  return body.data;
+}
+
+export async function getWatchlist(token: string): Promise<WatchlistItem[]> {
+  const body = await authed<{ data: { watchlist: WatchlistItem[] } }>(
+    "/api/v1/profile/watchlist",
+    token,
+  );
+  return body.data.watchlist;
+}
+
+export async function addWatch(token: string, entityId: string): Promise<void> {
+  await authed("/api/v1/profile/watchlist", token, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ entity_id: entityId }),
+  });
+}
+
+export async function removeWatch(token: string, entityId: string): Promise<void> {
+  await authed(`/api/v1/profile/watchlist/${entityId}`, token, { method: "DELETE" });
+}
+
+export async function getQuiz(): Promise<QuizQuestion[]> {
+  const body = await request<{ data: { questions: QuizQuestion[] } }>("/api/v1/quiz");
+  return body.data.questions;
+}
+
+export async function submitQuiz(
+  token: string,
+  answers: number[],
+): Promise<{ correct: number; passed: boolean }> {
+  const body = await authed<{ data: { correct: number; passed: boolean } }>(
+    "/api/v1/profile/quiz/submit",
+    token,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ answers }),
+    },
+  );
+  return body.data;
+}
+
+export async function getPlaybooks(): Promise<PlaybookEntry[]> {
+  const body = await request<{ data: { playbooks: PlaybookEntry[] } }>("/api/v1/playbook");
+  return body.data.playbooks;
+}
+
+export async function getPlaybook(category: string): Promise<PlaybookEntry> {
+  const body = await request<{ data: PlaybookEntry }>(`/api/v1/playbook/${category}`);
+  return body.data;
+}
+
+export async function createReceipt(params: {
+  country: string;
+  bank: string;
+  account: string;
+}): Promise<Receipt> {
+  const qs = new URLSearchParams(params).toString();
+  const body = await request<{ data: { receipt: Receipt; token: string } }>(
+    `/api/v1/receipts/account?${qs}`,
+    { method: "POST" },
+  );
+  return body.data.receipt;
+}
+
+export async function getReceipt(token: string): Promise<Receipt> {
+  const body = await request<{ data: Receipt }>(`/api/v1/receipts/${token}`);
+  return body.data;
+}
+
+

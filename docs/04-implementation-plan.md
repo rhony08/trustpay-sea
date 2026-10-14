@@ -136,6 +136,8 @@ This plan is structured so each phase produces a **verifiable, demo-able increme
 ### Phase 3B Demo
 - Watch it work together: share a QR from a chat app → scanned → cooling-off timer on a high-risk entity → generate a Diligence Receipt.
 
+- **Status 2026-10-14**: ✅ DONE — Trust Rank Ladder (tier from `reputation_score`), Verified Reporter via dev phone-OTP (+identity trust/reputation, badge), Pioneer Warn badge on entity verification, Watchlist + in-app watcher notifications on publish, Scam Vaccine quiz (Anti-Scam Aware badge), Scam Playbook library keyed to the canonical taxonomy, HMAC-signed Diligence Receipts, cooling-off timer on high/critical entities, Scam Simulator, and PWA Share-to-Check (`/share` → QR decode → `/check?qr=`). Backend: `user_badges` + `watchlist_entries` (migration `d8352d63f0c3`), `GET/POST /api/v1/profile/*`, `GET /api/v1/playbook`, `POST /api/v1/receipts/account`. 107 API tests green; web typecheck/lint/build green.
+
 ---
 
 ## Phase 4 — Community Moderation (Review Flags & Upvotes)

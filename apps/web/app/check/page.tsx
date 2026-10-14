@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ApiError,
   BANKS,
   COUNTRIES,
+  addWatch,
   decodeQrImage,
+  getToken,
   screenAccount,
   screenQr,
   type ScreenResult,
@@ -49,6 +51,16 @@ export default function CheckPage() {
       setBusy(false);
     }
   }
+
+  // Share-to-Check: a shared QR lands here as ?qr=<payload>.
+  useEffect(() => {
+    const shared = new URLSearchParams(window.location.search).get("qr");
+    if (!shared) return;
+    setTab("qr");
+    setPayload(shared);
+    void run(() => screenQr(shared));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const input =
     "w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-slate-100 outline-none focus:border-emerald-400";
@@ -238,6 +250,20 @@ function ResultCard({ result }: { result: ScreenResult }) {
         </div>
       )}
 
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        <WatchButton entityId={entity.id} />
+        <Link
+          href="/receipt"
+          className="rounded-full border border-slate-600 px-3 py-1 text-xs text-slate-300 hover:border-emerald-400"
+        >
+          Diligence receipt
+        </Link>
+      </div>
+
+      {(risk.risk_level === "HIGH_RISK" || risk.risk_level === "CRITICAL_FRAUD") && (
+        <CoolingOff level={risk.risk_level} />
+      )}
+
       <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
         <div className="rounded-lg bg-slate-800/60 p-3">
           <p className="text-xs text-slate-400">Risk score</p>
@@ -354,6 +380,72 @@ function Row({ k, v }: { k: string; v: string | null }) {
     <div className="flex justify-between gap-4">
       <dt className="text-slate-400">{k}</dt>
       <dd className="text-right font-medium">{v}</dd>
+    </div>
+  );
+}
+
+function WatchButton({ entityId }: { entityId: string }) {
+  const [state, setState] = useState<"idle" | "saving" | "done">("idle");
+  const token = getToken();
+  if (!token) {
+    return (
+      <Link
+        href="/profile"
+        className="rounded-full border border-slate-600 px-3 py-1 text-xs text-slate-300 hover:border-emerald-400"
+      >
+        Watch (sign in)
+      </Link>
+    );
+  }
+  return (
+    <button
+      className="rounded-full border border-slate-600 px-3 py-1 text-xs text-slate-300 hover:border-emerald-400 disabled:opacity-60"
+      disabled={state !== "idle"}
+      onClick={async () => {
+        setState("saving");
+        try {
+          await addWatch(token, entityId);
+          setState("done");
+        } catch {
+          setState("idle");
+        }
+      }}
+    >
+      {state === "done" ? "Watching ✓" : "Watch account"}
+    </button>
+  );
+}
+
+function CoolingOff({ level }: { level: string }) {
+  const [remaining, setRemaining] = useState(10);
+  const [ack, setAck] = useState(false);
+
+  useEffect(() => {
+    if (ack || remaining <= 0) return;
+    const timer = setTimeout(() => setRemaining((r) => r - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [remaining, ack]);
+
+  return (
+    <div className="mt-3 rounded-lg border border-rose-500/40 bg-rose-500/10 p-3 text-sm text-rose-200">
+      <p className="font-semibold">Cooling-off — {level.replaceAll("_", " ").toLowerCase()}</p>
+      <ul className="mt-1 list-disc pl-5 text-xs">
+        <li>Have you verified the recipient independently?</li>
+        <li>Are you being rushed or pressured?</li>
+        <li>Is the deal too good to be true?</li>
+      </ul>
+      {!ack && remaining > 0 ? (
+        <p className="mt-2 text-xs">You can acknowledge in {remaining}s…</p>
+      ) : ack ? (
+        <p className="mt-2 text-xs">Acknowledged — proceed only if you have verified the recipient.</p>
+      ) : (
+        <button
+          className="mt-2 rounded bg-rose-500/20 px-3 py-1 text-xs"
+          onClick={() => setAck(true)}
+        >
+          I understand the risk
+        </button>
+      )}
     </div>
   );
 }
