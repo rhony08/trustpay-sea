@@ -1,0 +1,13 @@
+# Dev-only overlay — auto-loaded by `docker compose up` locally.
+# Publishes DB/Redis to the host so tests and tools can reach them; prod uses
+# `docker compose -f docker-compose.yml ...` to skip this file.
+services:
+  postgres:
+    ports:
+      - "5432:5432"
+  redis:
+    ports:
+      - "6379:6379"
+  api:
+    environment:
+      ENVIRONMENT: dev

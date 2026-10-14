@@ -11,10 +11,15 @@ This folder contains the complete planning, design, and implementation documenta
 |---|----------|---------|
 | 01 | [Product Blueprint](01-product-blueprint.md) | Vision, problem context, personas, workflows, feature spec (incl. search intelligence, AI augmentation, web-first community features, security-awareness features), MVP scope, success metrics, roadmap |
 | 02 | [Technical Design Document](02-technical-design.md) | System architecture, data model, API contracts, AI/forensics pipeline, risk scoring, security & hardening appendix, non-functional requirements, operations |
-| 03 | [Architecture Decision Records](03-architecture-decision-records.md) | 15 engineering decisions (ADRs) with context, options, and rationale |
+| 03 | [Architecture Decision Records](03-architecture-decision-records.md) | 19 engineering decisions (ADRs) with context, options, and rationale |
 | 04 | [Implementation Plan](04-implementation-plan.md) | Phased delivery plan (Phase 0–7 + 3B/4B) with granular tasks, acceptance criteria, and verification plan |
 | 05 | [Gap Analysis & Open Decisions](05-gap-analysis.md) | Resolved gaps, current recommendations (incl. masking-policy recommendation), all open questions needing owner confirmation, handoff notes |
-| 06 | [Handoff: Status, Gaps & Notes](06-handoff-next-agent.md) | Post-implementation status (Phases 0–7 core), what's mocked/deferred, gaps found, next-work order, do-not-regress invariants |
+| 06 | [Gap Research Notes](06-gap-research-notes.md) | Second-pass audit: NG-1…NG-20 (quishing, screen-oracle, OJK perimeter, retention vs hold vs erasure, GCE drift, currency, …) |
+| 07 | [Cheapest GCE Usecase Notes](07-gce-cheap-usecase-notes.md) | Hackathon compute plan: single `e2-small` VM running `docker-compose.yml` (~$21/mo) + bring-up |
+| 08 | [Continued Research Notes (B2)](08-continued-research-notes.md) | Fact Check API, cekrekening.id, reCAPTCHA/App Check, Gemini Batch, IASC/LAPOR!, PenipuMY API, grounding economics |
+| 09 | [Screen API Key Tiers & Anti-Probing](09-screen-api-keys.md) | PROPOSED key tiers, quotas, probe-pattern detection (closes NG-3/NG-9) |
+| 10 | [Data Fate Matrix](10-data-fate-matrix.md) | PROPOSED retention × legal-hold × erasure × dispute-freeze per table (NG-6/NG-11, G-13) |
+| 11 | [Handoff: Status, Gaps & Notes](11-handoff-next-agent.md) | Post-implementation status (Phases 0–7 core + MY gov checker), real-vs-mocked, deferred work, invariants, next-work order |
 
 ## Quick Summary
 
@@ -69,4 +74,4 @@ The long-term vision turns this into a **B2G/B2B infrastructure**: syncing with 
 
 **Phases 0–7 core are implemented and merged to `main`** (resolver + 393-institution SEA bank reference, reporting pipeline with fail-closed redaction, search intel + grounded AI summary, pluggable AI provider `mock|gcp|openrouter`, community engagement, moderation, safety-awareness, owner disputes, risk engine + admin portal, demo seed, coverage gate + E2E).
 
-👉 **Before starting new work, read [`06-handoff-next-agent.md`](06-handoff-next-agent.md)** — it lists what is real vs mocked, what's deferred (live AI validation, S3/R2 storage, WebAuthn MFA, admin-portal UI, partner API keys, retention job), gaps/deviation notes, the recommended next-work order, and the invariants that must not regress.
+👉 **Before starting new work, read [`11-handoff-next-agent.md`](11-handoff-next-agent.md)** — it lists what is real vs mocked, what's deferred (live AI validation, S3/R2 storage, WebAuthn MFA, admin-portal UI, partner API keys, retention job), gaps/deviation notes, the recommended next-work order, and the invariants that must not regress. The research notes (`06`–`10`) and `05` hold the open owner questions.

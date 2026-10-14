@@ -37,7 +37,8 @@ function WarningInner() {
             <p className="text-xs uppercase tracking-wide text-rose-300">Payment warning</p>
             <p className="mt-2 font-mono text-2xl text-rose-100">{receipt.account_masked}</p>
             <p className="mt-2 text-sm text-rose-200">
-              Risk {receipt.risk_score} · {receipt.risk_level.replaceAll("_", " ")}
+              Risk {receipt.risk_score} · {receipt.risk_level.replaceAll("_", " ")} · higher =
+              riskier
             </p>
             <p className="mt-1 text-xs text-rose-300">
               {receipt.institution ?? receipt.entity_type} · {receipt.country}

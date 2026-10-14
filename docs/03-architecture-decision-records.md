@@ -403,4 +403,49 @@ Doc 02 fixes the stack at FastAPI / Python 3.11 / PostgreSQL 16 / Redis 7 / SQLA
 
 ---
 
+## ADR-018: Hosting — GCE-first with a Portable Docker Compose
+
+**Status**: Accepted (2026-10-14 — resolves G-7; owner-confirmed: must run on GCP, must also run on the owner's VPS)
+
+### Context
+The hackathon requires running on GCP **Compute Engine** (docs/07), which parked the earlier Cloud Run/Cloud SQL/Memorystore kit (`gcp/`). The same artifact must also deploy on the owner's plain VPS. Two hosting surfaces (managed vs single VM) and a "must work in both" constraint.
+
+### Decision
+- **One portable deploy unit**: the repo-root `docker-compose.yml` (postgres + redis + api + web) runs unchanged on a GCE `e2-small` VM *and* on a plain VPS. GCP is treated as "a bigger docker host", not a special case.
+- **GCE is the primary cloud target**; the Cloud Run kit in `gcp/cloudrun` is retained as an optional alternative, not the primary path.
+- **Dev conveniences are isolated** in `docker-compose.override.yml` (host-published DB/Redis ports), auto-loaded locally; production runs `docker compose -f docker-compose.yml` to skip them.
+- **`NEXT_PUBLIC_API_URL` is a build arg** (inlined into the client bundle at build time) — documented, not a runtime env.
+- Managed DB/cache (Cloud SQL + Memorystore) and a MIG are deferred to post-demo scale; the compose monolith (ADR-008) stays monolithic.
+
+### Consequences
+- **+**: identical image/runtime everywhere; no code paths specialised for GCP; the demo can be validated locally and on the VPS before GCP.
+- **+**: satisfies the GCE-mandatory constraint while keeping the Cloud Run kit available.
+- **−**: self-hosted Postgres on the boot/data disk means backups are snapshot-based (docs/07 §3, §6b), not managed PITR; single-VM means no horizontal scale (acceptable at demo scale).
+- **−**: prod must remember `-f docker-compose.yml` to avoid the dev override.
+
+---
+
+## ADR-019: Pluggable AI Provider (mock | gcp | openrouter)
+
+**Status**: Accepted (2026-10-14 — supersedes the "mock-only" reading of ADR-012)
+
+### Context
+ADR-012 fixed mock-first AI (no key required for dev). Real Gemini access is now available and the product deploys on GCP, so the forensics/classification/summary pipeline must be able to call a real model — while dev/CI keep running with no key and no network.
+
+### Decision
+- `AI_PROVIDER = mock | gcp | openrouter` (default `mock`). `gcp` = **Vertex AI via Application Default Credentials** (google-genai SDK, SEA region-pinned); `openrouter` = OpenAI-compatible gateway (openai SDK). SDKs lazy-imported.
+- A configured provider that **cannot initialise** (missing creds/SDK) falls back to `mock` with a warning — dev/CI never need cloud credentials.
+- All capabilities (PII-region detection, slip OCR, tamper signals, taxonomy classification, NER) go through one `StructuredAIProvider` contract: fixed prompt → JSON → validated domain objects + PII masking.
+- **Redaction is fail-closed regardless of provider**: a provider error leaves the report `PROCESSING`/`FAILED`, never publishing unredacted evidence. Non-critical enrichment (OCR/tamper/typology/NER) degrades to the local heuristics on outage.
+- The grounded entity **summary stays server-templated** (facts-only + grounding check), not model-generated.
+
+### Consequences
+- **+**: one switch for all AI; prod uses Vertex, alternatives use OpenRouter, dev/tests use mock — no code divergence.
+- **+**: preserves ADR-012's "runs with no key" property and the fail-closed/grounded security invariants.
+- **−**: real providers are not exercised in CI (no keys) — live validation is an explicit follow-up task.
+- **−**: prompt/JSON parsing and masking must stay robust to arbitrary model output (fences, wrong categories) — covered by unit tests with fake providers.
+
+---
+
+
 *Next: [04 — Implementation Plan](04-implementation-plan.md)*

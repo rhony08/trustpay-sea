@@ -18,7 +18,7 @@ function ReceiptView({ receipt }: { receipt: Receipt }) {
       <dl className="mt-2 space-y-1 text-sm text-slate-300">
         <Row k="Country" v={receipt.country} />
         <Row k="Institution" v={receipt.institution} />
-        <Row k="Risk at check time" v={`${receipt.risk_score} (${receipt.risk_level})`} />
+        <Row k="Risk at check time" v={`${receipt.risk_score} (${receipt.risk_level}) · higher = riskier`} />
         <Row k="Checked at" v={new Date(receipt.at * 1000).toLocaleString()} />
       </dl>
       <p className="mt-3 text-xs text-slate-500">
