@@ -8,6 +8,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.auth import router as auth_router
+from app.api.entities import router as entities_router
 from app.api.system import router as system_router
 from app.config import get_settings
 from app.core.rate_limit import enforce_rate_limit
@@ -49,6 +50,7 @@ def create_app() -> FastAPI:
     )
     app.include_router(system_router)  # /healthz, /protected-ping
     app.include_router(auth_router, prefix=settings.api_v1_prefix)
+    app.include_router(entities_router, prefix=settings.api_v1_prefix)
     return app
 
 

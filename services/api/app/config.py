@@ -37,6 +37,12 @@ class Settings(BaseSettings):
     gemini_api_key: str | None = None
     factcheck_api_key: str | None = None
 
+    # Account hashing (ADR-002/013). MVP: key from env stands in for KMS/HSM;
+    # real KMS wiring lands in Phase 7 hardening. hash_version on every row
+    # makes rotation a re-encrypt, not a re-collect.
+    account_hmac_key: str = "dev-only-insecure-key-change-me"
+    account_hash_version: int = 1
+
 
 @lru_cache
 def get_settings() -> Settings:
