@@ -230,6 +230,9 @@ async def resolve_dispute(
         after={"decision": decision, "entity_id": str(entity.id)},
         note=notes,
     )
+    from app.services.risk_scorer import recompute_entity_score
+
+    await recompute_entity_score(db, entity)
     await db.refresh(dispute)
     return dispute
 

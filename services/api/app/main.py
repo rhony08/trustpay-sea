@@ -9,6 +9,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
+from app.api.admin import router as admin_router
 from app.api.auth import router as auth_router
 from app.api.banks import router as banks_router
 from app.api.community import router as community_router
@@ -67,6 +68,7 @@ def create_app() -> FastAPI:
     app.include_router(moderation_router, prefix=settings.api_v1_prefix)
     app.include_router(tools_router, prefix=settings.api_v1_prefix)
     app.include_router(disputes_router, prefix=settings.api_v1_prefix)
+    app.include_router(admin_router, prefix=settings.api_v1_prefix)
 
     # Dev-only: serve redacted public evidence as static files. Production uses a
     # separate cookieless media domain (Doc 02 §9.1); quarantine is never mounted.

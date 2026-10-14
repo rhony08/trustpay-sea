@@ -103,6 +103,12 @@ class PaymentEntity(Base):
         String(30), default=EntityVerificationStatus.UNVERIFIED, nullable=False
     )
     is_gov_blacklisted: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    gov_source: Mapped[str | None] = mapped_column(String(100))  # attribution when gov-listed
+    anomaly_spike_detected: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    dampen_factor: Mapped[Decimal] = mapped_column(
+        Numeric(4, 2), default=Decimal("1.00"), nullable=False
+    )
+    risk_factors: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
     is_owner_verified: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     total_reports: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     total_loss_reported: Mapped[Decimal] = mapped_column(
@@ -449,6 +455,34 @@ class WatchlistEntry(Base):
         UniqueConstraint("user_id", "payment_entity_id", name="uq_watchlist_user_entity"),
         Index("ix_watchlist_user", "user_id"),
         Index("ix_watchlist_entity", "payment_entity_id"),
+    )
+
+
+class AdminApproval(Base):
+    """Four-eyes dual-control queue for destructive/trust-altering admin actions (Phase 6.5)."""
+
+    __tablename__ = "admin_approvals"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, **GEN_UUID)
+    action: Mapped[str] = mapped_column(String(50), nullable=False)
+    subject_type: Mapped[str] = mapped_column(String(30), nullable=False)
+    subject_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
+    payload: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
+    requested_by: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id"), nullable=False
+    )
+    approved_by: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id")
+    )
+    status: Mapped[str] = mapped_column(String(20), default="PENDING", nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    approved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+    __table_args__ = (
+        CheckConstraint(
+            "status IN ('PENDING','APPROVED','CANCELLED')", name="ck_admin_approvals_status"
+        ),
+        Index("ix_admin_approvals_status", "status"),
     )
 
 

@@ -31,6 +31,8 @@ export interface EntityProfile {
     is_gov_blacklisted: boolean;
     is_under_dispute: boolean;
     is_verified_legit: boolean;
+    anomaly_spike_detected?: boolean;
+    factors?: { label: string; weight: number; dampened?: boolean }[];
   };
   community_signals: {
     total_reports: number;
@@ -723,6 +725,30 @@ export async function setOwnerResponse(
     },
   );
   return resp.data;
+}
+
+// --- Phase 6: admin portal ---
+
+export interface AdminDashboard {
+  pending_reports: number;
+  processing_reports: number;
+  pending_flags: number;
+  open_disputes: number;
+  pending_approvals: number;
+}
+
+export async function getAdminDashboard(token: string): Promise<AdminDashboard> {
+  const body = await authed<{ data: AdminDashboard }>("/api/v1/admin/dashboard", token);
+  return body.data;
+}
+
+export async function getAdminAudit(
+  token: string,
+): Promise<{ chain_ok: boolean; entries: { id: number; action: string; note: string | null; created_at: string | null }[] }> {
+  const body = await authed<{
+    data: { chain_ok: boolean; entries: { id: number; action: string; note: string | null; created_at: string | null }[] };
+  }>("/api/v1/admin/audit", token);
+  return body.data;
 }
 
 

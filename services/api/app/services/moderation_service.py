@@ -16,7 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.audit import append_audit
 from app.enums import ReportStatus, ReviewFlagStatus, UserStatus
-from app.models import FraudReport, ReportVote, ReviewFlag, User
+from app.models import FraudReport, PaymentEntity, ReportVote, ReviewFlag, User
 
 # A flagger with this ratio of dismissed flags (min sample) is abusing flags.
 BAD_FAITH_MIN_SAMPLE = 5
@@ -196,5 +196,11 @@ async def resolve_flag(
         note=notes,
     )
     await _check_bad_faith(db, flag.flagged_by_user_id)
+    if report is not None:
+        from app.services.risk_scorer import recompute_entity_score
+
+        entity = await db.get(PaymentEntity, report.payment_entity_id)
+        if entity is not None:
+            await recompute_entity_score(db, entity)
     await db.refresh(flag)
     return flag

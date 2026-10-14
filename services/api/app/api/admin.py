@@ -1,0 +1,110 @@
+"""Admin portal API (Phase 6.5): dashboard, audit viewer, four-eyes approvals."""
+
+from __future__ import annotations
+
+import uuid
+
+from fastapi import APIRouter, Depends, HTTPException, status
+from pydantic import BaseModel, Field
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.db import get_db
+from app.deps import require_role
+from app.enums import Role
+from app.models import AdminApproval, User
+from app.services import admin_service as svc
+
+router = APIRouter(prefix="/admin", tags=["admin"])
+
+
+class ApprovalRequest(BaseModel):
+    action: str = Field(pattern="^(gov_override|ban_user)$")
+    subject_type: str = Field(min_length=1, max_length=30)
+    subject_id: uuid.UUID
+    payload: dict | None = None
+
+
+def _approval_view(a: AdminApproval) -> dict:
+    return {
+        "id": str(a.id),
+        "action": a.action,
+        "subject_type": a.subject_type,
+        "subject_id": str(a.subject_id),
+        "status": a.status,
+        "requested_by": str(a.requested_by),
+        "approved_by": str(a.approved_by) if a.approved_by else None,
+        "created_at": a.created_at.isoformat() if a.created_at else None,
+    }
+
+
+@router.get("/dashboard")
+async def dashboard(
+    _admin: User = Depends(require_role(Role.ANALYST)), db: AsyncSession = Depends(get_db)
+):
+    return {"status": "success", "data": await svc.dashboard_counts(db)}
+
+
+@router.get("/audit")
+async def audit(
+    limit: int = 50,
+    _admin: User = Depends(require_role(Role.ANALYST)),
+    db: AsyncSession = Depends(get_db),
+):
+    return {"status": "success", "data": await svc.audit_view(db, limit=min(limit, 200))}
+
+
+@router.get("/approvals")
+async def list_approvals(
+    status_filter: str | None = "PENDING",
+    _admin: User = Depends(require_role(Role.ANALYST)),
+    db: AsyncSession = Depends(get_db),
+):
+    stmt = select(AdminApproval).order_by(AdminApproval.created_at)
+    if status_filter:
+        stmt = stmt.where(AdminApproval.status == status_filter)
+    rows = await db.scalars(stmt)
+    return {"status": "success", "data": {"approvals": [_approval_view(a) for a in rows]}}
+
+
+@router.post("/approvals", status_code=status.HTTP_201_CREATED)
+async def create_approval(
+    body: ApprovalRequest,
+    admin: User = Depends(require_role(Role.ANALYST)),
+    db: AsyncSession = Depends(get_db),
+):
+    try:
+        approval = await svc.request_approval(
+            db,
+            admin=admin,
+            action=body.action,
+            subject_type=body.subject_type,
+            subject_id=body.subject_id,
+            payload=body.payload,
+        )
+    except svc.AdminError as exc:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, str(exc)) from exc
+    return {"status": "success", "data": _approval_view(approval)}
+
+
+@router.post("/approvals/{approval_id}/approve")
+async def approve(
+    approval_id: uuid.UUID,
+    admin: User = Depends(require_role(Role.ANALYST)),
+    db: AsyncSession = Depends(get_db),
+):
+    approval = await db.get(AdminApproval, approval_id)
+    if approval is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "approval not found")
+    try:
+        resolved = await svc.approve(db, approval=approval, admin=admin)
+    except svc.AdminError as exc:
+        raise HTTPException(status.HTTP_409_CONFLICT, str(exc)) from exc
+    return {"status": "success", "data": _approval_view(resolved)}
+
+
+@router.post("/gov/sync")
+async def gov_sync(
+    _admin: User = Depends(require_role(Role.SUPERADMIN)), db: AsyncSession = Depends(get_db)
+):
+    return {"status": "success", "data": {"applied": await svc.sync_gov_feed(db)}}
