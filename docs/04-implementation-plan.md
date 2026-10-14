@@ -181,6 +181,8 @@ This plan is structured so each phase produces a **verifiable, demo-able increme
 ### Phase 4B Demo
 - Fresh-bad-review modal → cooling-off → SOS button → recovery wizard, all in one narrative against a seeded active-spike entity.
 
+- **Status 2026-10-14**: ✅ DONE — fresh bad-review interstitial (blocking acknowledgment when reports land within 72h), too-good-to-be-true deal checker, geo-aware SOS hotlines, "I just got scammed" recovery wizard with per-country freeze steps + police/gov referral, signed Warning Cards (`/warning?token=`) with re-check link, 3-2-1 large-transfer friction, and a privacy/DSAR dashboard (export + erase). Backend: `POST /tools/too-good-to-be-true`, `GET /hotlines`, `GET /recovery`, `GET /tools/warning-card`, `GET /profile/export`, `DELETE /profile/data`. 119 API tests green; web typecheck/lint/build green.
+
 ---
 
 ## Phase 5 — Owner Claim, Dispute & Safe-Harbor Freeze

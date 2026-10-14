@@ -538,5 +538,76 @@ export async function getMyFlags(token: string): Promise<FlagView[]> {
   return body.data.flags;
 }
 
+// --- Phase 4B: security-awareness tools ---
+
+export interface DealCheckResult {
+  suspicious: boolean;
+  score: number;
+  signals: { code: string; tip: string }[];
+  tips: string[];
+}
+
+export interface Hotline {
+  name: string;
+  number?: string;
+  url?: string;
+}
+
+export interface RecoveryPlan {
+  country: string;
+  immediate_steps: string[];
+  freeze_steps: string[];
+  referral: { name: string; url: string };
+  dossier_hint: string;
+  bank: string | null;
+}
+
+export async function checkDeal(text: string): Promise<DealCheckResult> {
+  const body = await request<{ data: DealCheckResult }>("/api/v1/tools/too-good-to-be-true", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ text }),
+  });
+  return body.data;
+}
+
+export async function getHotlines(country: string): Promise<Hotline[]> {
+  const body = await request<{ data: { hotlines: Hotline[] } }>(
+    `/api/v1/hotlines?country=${country}`,
+  );
+  return body.data.hotlines;
+}
+
+export async function getRecovery(country: string, bank?: string): Promise<RecoveryPlan> {
+  const qs = new URLSearchParams({ country, ...(bank ? { bank } : {}) }).toString();
+  const body = await request<{ data: RecoveryPlan }>(`/api/v1/recovery?${qs}`);
+  return body.data;
+}
+
+export async function getWarningCard(params: {
+  country: string;
+  bank: string;
+  account: string;
+}): Promise<{ share_path: string; receipt: Receipt }> {
+  const qs = new URLSearchParams(params).toString();
+  const body = await request<{ data: { share_path: string; receipt: Receipt } }>(
+    `/api/v1/tools/warning-card?${qs}`,
+  );
+  return body.data;
+}
+
+export async function exportData(token: string): Promise<Record<string, unknown>> {
+  const body = await authed<{ data: Record<string, unknown> }>("/api/v1/profile/export", token);
+  return body.data;
+}
+
+export async function eraseData(token: string): Promise<Record<string, number>> {
+  const body = await authed<{ data: Record<string, number> }>("/api/v1/profile/data", token, {
+    method: "DELETE",
+  });
+  return body.data;
+}
+
+
 
 

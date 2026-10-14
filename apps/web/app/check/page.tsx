@@ -32,6 +32,16 @@ const LEVEL_LABELS: Record<string, string> = {
   CRITICAL_FRAUD: "Critical fraud",
 };
 
+const AMOUNT_THRESHOLD_IDR = 5_000_000;
+
+function hasFreshReports(result: ScreenResult): boolean {
+  if (result.status !== "success") return false;
+  const cutoff = Date.now() - 72 * 3600 * 1000;
+  return (result.data.reports ?? []).some(
+    (r) => r.created_at !== null && Date.parse(r.created_at) > cutoff,
+  );
+}
+
 export default function CheckPage() {
   const [tab, setTab] = useState<Tab>("account");
   const [country, setCountry] = useState("ID");
@@ -41,13 +51,16 @@ export default function CheckPage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<ScreenResult | null>(null);
+  const [acknowledged, setAcknowledged] = useState(true);
 
   async function run(fn: () => Promise<ScreenResult>) {
     setBusy(true);
     setError(null);
     setResult(null);
     try {
-      setResult(await fn());
+      const next = await fn();
+      setResult(next);
+      setAcknowledged(!hasFreshReports(next));
     } catch (e) {
       setError(e instanceof ApiError ? e.message : "Request failed");
     } finally {
@@ -186,7 +199,29 @@ export default function CheckPage() {
         </div>
       )}
 
-      {result && <ResultCard result={result} />}
+      {result && !acknowledged && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-6">
+          <div className="max-w-md rounded-xl border border-rose-500/50 bg-slate-900 p-6">
+            <p className="text-lg font-bold text-rose-200">Recent fraud reports</p>
+            <p className="mt-2 text-sm text-slate-300">
+              This identifier has new fraud reports in the last 72 hours. Pause before you pay.
+            </p>
+            <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-slate-300">
+              <li>Verify the recipient independently (call a known number).</li>
+              <li>Are you being rushed or pressured?</li>
+              <li>Understand you may not recover a fraudulent transfer.</li>
+            </ul>
+            <button
+              className="mt-4 w-full rounded-lg bg-rose-500 px-4 py-2 font-semibold text-slate-950"
+              onClick={() => setAcknowledged(true)}
+            >
+              I understand — show the details
+            </button>
+          </div>
+        </div>
+      )}
+
+      {result && acknowledged && <ResultCard result={result} />}
     </main>
   );
 }
@@ -266,6 +301,8 @@ function ResultCard({ result }: { result: ScreenResult }) {
       {(risk.risk_level === "HIGH_RISK" || risk.risk_level === "CRITICAL_FRAUD") && (
         <CoolingOff level={risk.risk_level} />
       )}
+
+      <AmountFriction />
 
       <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
         <div className="rounded-lg bg-slate-800/60 p-3">
@@ -531,6 +568,30 @@ function ReportActions({
         >
           Report this review
         </button>
+      )}
+    </div>
+  );
+}
+
+function AmountFriction() {
+  const [amount, setAmount] = useState("");
+  const large = Number(amount || 0) >= AMOUNT_THRESHOLD_IDR;
+  return (
+    <div className="mt-3 rounded-lg border border-slate-700 bg-slate-800/50 p-3 text-sm">
+      <p className="text-xs text-slate-400">Large-transfer check (3-2-1)</p>
+      <input
+        className="mt-1 w-full rounded border border-slate-700 bg-slate-900 px-2 py-1 text-slate-100"
+        inputMode="numeric"
+        placeholder="Amount you're about to send (IDR)"
+        value={amount}
+        onChange={(e) => setAmount(e.target.value.replace(/[^\d]/g, ""))}
+      />
+      {large && (
+        <ul className="mt-2 list-disc space-y-1 pl-5 text-xs text-amber-200">
+          <li>3 people: verify with two others before paying.</li>
+          <li>2 checks: confirm the recipient on TrustPay and by phone.</li>
+          <li>1 rule: never pay under pressure or secrecy.</li>
+        </ul>
       )}
     </div>
   );
