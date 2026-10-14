@@ -1,7 +1,13 @@
-# 09 — Screen API Key Tiers & Anti-Probing (PROPOSED — needs owner confirm)
+# 09 — Screen API Key Tiers & Anti-Probing
 
-Closes the design hole behind 06 **NG-3** (screen oracle) and **NG-9** (missing key
-design for 04 §7.4). Tier shape modeled on PenipuMY's live ladder (08 §15):
+**Status**: ✅ **IMPLEMENTED (2026-10-14)** — `api_keys` table, `X-API-Key` auth,
+per-tier daily quotas with `X-RateLimit-*` headers, distinct-entity probe detection,
+issue/list/usage/rotate/revoke endpoints, audit-logged. Visitor tier stays keyless
+(bucketed counts). **Deferred**: App Check / reCAPTCHA challenge handoff, partner
+webhooks, freshness labels (`live/cached/unavailable`), 24h rotation grace.
+
+Closes 06 **NG-3** (screen oracle) and **NG-9** (missing key design for 04 §7.4).
+Tier shape modeled on PenipuMY's live ladder (08 §15):
 Free 100/day → paid 1k/10k/day → Enterprise unlimited.
 
 ## 1. Tiers

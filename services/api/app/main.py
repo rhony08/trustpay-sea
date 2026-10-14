@@ -15,9 +15,11 @@ from app.api.banks import router as banks_router
 from app.api.community import router as community_router
 from app.api.disputes import router as disputes_router
 from app.api.entities import router as entities_router
+from app.api.keys import router as keys_router
 from app.api.moderation import router as moderation_router
 from app.api.profile import router as profile_router
 from app.api.reports import router as reports_router
+from app.api.screen import router as screen_router
 from app.api.system import router as system_router
 from app.api.tools import router as tools_router
 from app.config import get_settings
@@ -51,9 +53,10 @@ def create_app() -> FastAPI:
         dependencies=[Depends(enforce_rate_limit)],  # noqa: F821 — see import below
     )
     # CORS for the first-party PWA (BFF/proxy preferred for prod keys, §9.5)
+    allow_origins = [o.strip() for o in settings.cors_allow_origins.split(",") if o.strip()]
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["http://localhost:3000"],
+        allow_origins=allow_origins,
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
@@ -69,6 +72,8 @@ def create_app() -> FastAPI:
     app.include_router(tools_router, prefix=settings.api_v1_prefix)
     app.include_router(disputes_router, prefix=settings.api_v1_prefix)
     app.include_router(admin_router, prefix=settings.api_v1_prefix)
+    app.include_router(keys_router, prefix=settings.api_v1_prefix)
+    app.include_router(screen_router, prefix=settings.api_v1_prefix)
 
     # Dev-only: serve redacted public evidence as static files. Production uses a
     # separate cookieless media domain (Doc 02 §9.1); quarantine is never mounted.

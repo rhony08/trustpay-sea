@@ -1,52 +1,35 @@
 name: trustpay-sea
 
-# Portable production compose — runs identically on a GCE VM and a plain VPS.
-# Dev conveniences (host-published DB/Redis ports, hot reload) live in
-# docker-compose.override.yml, which Compose auto-loads locally.
-#
-#   dev :  docker compose up --build            (auto-loads override)
-#   prod:  docker compose -f docker-compose.yml up -d --build
+# Reuses the datastores already running on this host — no new DB/Redis containers:
+#   - Postgres: existing `trustpay-sea-postgres-1` (published on host :5432)
+#   - Redis:    shared `rr-redis` (remote-reporter), joined via its docker network, DB 2
+# `host.docker.internal` needs `extra_hosts: host-gateway` (below).
+
+networks:
+  shared:
+    external: true
+    name: be-remote-reporter_default
+
+volumes:
+  trustpay_secrets:
 
 services:
-  postgres:
-    image: postgres:16-alpine
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER:-trustpay}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-trustpay}
-      POSTGRES_DB: ${POSTGRES_DB:-trustpay}
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U trustpay -d trustpay"]
-      interval: 5s
-      timeout: 3s
-      retries: 10
-    restart: unless-stopped
-
-  redis:
-    image: redis:7-alpine
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 3s
-      retries: 10
-    restart: unless-stopped
-
   api:
     build: ./services/api
     environment:
-      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-trustpay}:${POSTGRES_PASSWORD:-trustpay}@postgres:5432/${POSTGRES_DB:-trustpay}
-      REDIS_URL: redis://redis:6379/0
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-trustpay}:${POSTGRES_PASSWORD:-trustpay}@host.docker.internal:5432/${POSTGRES_DB:-trustpay}
+      REDIS_URL: redis://rr-redis:6379/2
       ENVIRONMENT: ${ENVIRONMENT:-dev}
       SCHEDULER_ENABLED: "true"
       AI_PROVIDER: ${AI_PROVIDER:-mock}
+      CORS_ALLOW_ORIGINS: ${CORS_ALLOW_ORIGINS:-https://trustpay.quesitive.com}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - trustpay_secrets:/run/secrets
     ports:
-      - "8000:8000"
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
+      - "127.0.0.1:8010:8000"
+    networks: [default, shared]
     healthcheck:
       test:
         - CMD
@@ -63,12 +46,12 @@ services:
     build:
       context: ./apps/web
       args:
-        # Baked into the client bundle at build time — must be the PUBLIC API URL.
-        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
+        # Baked into the client bundle at build time — the PUBLIC API URL (same origin behind nginx).
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-https://trustpay.quesitive.com}
     environment:
-      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-https://trustpay.quesitive.com}
     ports:
-      - "3000:3000"
+      - "127.0.0.1:3011:3000"
     depends_on:
       api:
         condition: service_healthy
@@ -79,6 +62,3 @@ services:
       retries: 6
       start_period: 20s
     restart: unless-stopped
-
-volumes:
-  pgdata:

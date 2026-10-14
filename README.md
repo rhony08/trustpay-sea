@@ -35,23 +35,28 @@ docker compose up --build
 - API + Swagger: http://localhost:8000/docs
 - Health: `curl http://localhost:8000/healthz` → `{"status":"ok","version":"0.1.0"}`
 
-## Deploy (VPS or GCE)
+## Deploy (VPS / GCE)
 
-One portable `docker-compose.yml` runs on both a GCE VM and a plain VPS. Dev
-auto-loads `docker-compose.override.yml` (publishes DB/Redis); production skips it.
+This deployment **reuses the host's already-running datastores** — no new DB/Redis
+containers are created:
+
+- **Postgres** — existing `trustpay-sea-postgres-1` (host `:5432`), reached via `host.docker.internal`.
+- **Redis** — shared `rr-redis` (remote-reporter), joined via its docker network `be-remote-reporter_default`, **DB 2**.
 
 ```bash
-# dev (local)
-docker compose up --build
+# build + start (api on 127.0.0.1:8010, web on 127.0.0.1:3011)
+export NEXT_PUBLIC_API_URL="https://trustpay.quesitive.com"   # PUBLIC API URL, baked into the web build
+export CORS_ALLOW_ORIGINS="https://trustpay.quesitive.com"
+docker compose up -d --build
 
-# production (VPS or GCE VM) — set the PUBLIC API URL first (baked into the web build)
-export NEXT_PUBLIC_API_URL="https://api.example.com"   # or http://<server-ip>:8000
-docker compose -f docker-compose.yml up -d --build
+# seed once (banks + demo data)
+docker compose exec api python -m app.seeds.seed_banks
+docker compose exec api python -m app.seeds.seed_demo
 ```
 
-- `NEXT_PUBLIC_API_URL` is a **build arg** (inlined into the client bundle at build time) — rebuild the web image when it changes.
-- Seed once after first boot: `docker compose exec api python -m app.seeds.seed_banks && docker compose exec api python -m app.seeds.seed_demo`.
-- GCE: see [`docs/07`](docs/07-gce-cheap-usecase-notes.md) and `gcp/gce/` (single `e2-small` VM, snapshot + budget alert).
+- `NEXT_PUBLIC_API_URL`/`CORS_ALLOW_ORIGINS` default to `https://trustpay.quesitive.com` in compose.
+- nginx reverse-proxy config: [`deploy/nginx/trustpay.quesitive.com.conf`](deploy/nginx/trustpay.quesitive.com.conf) — `/api/`, `/media/`, `/docs`, `/openapi.json` → `:8010`; everything else → `:3011`.
+- GCE alternative: see [`docs/07`](docs/07-gce-cheap-usecase-notes.md) and `gcp/gce/`.
 
 ### Backend tests
 

@@ -30,6 +30,9 @@ class Settings(BaseSettings):
     rate_limit_capacity: int = 60
     rate_limit_refill_per_minute: int = 60
 
+    # CORS (comma-separated origins). Same-origin deploys behind nginx need only their own URL.
+    cors_allow_origins: str = "http://localhost:3000"
+
     # Scheduler placeholder (Phase 0.5)
     scheduler_enabled: bool = True
 
@@ -78,6 +81,14 @@ class Settings(BaseSettings):
     # Report quotas (Phase 2.1 / Doc 02 §5.2, §9)
     report_daily_quota_per_user: int = 20
     report_hourly_quota_per_entity: int = 5
+
+    # Public screen API keys + anti-probing (Phase 9 / docs/09)
+    api_key_prefix: str = "tpk_live_"
+    screen_visitor_daily_limit: int = 20  # keyless, per IP
+    screen_demo_daily_limit: int = 100
+    screen_partner_daily_limit: int = 1000
+    screen_probe_visitor_distinct_per_hour: int = 50
+    screen_probe_key_distinct_per_hour: int = 500
 
     # Async worker cadence (Phase 2.3); scheduler safety-net poll interval.
     report_worker_interval_seconds: int = 20
