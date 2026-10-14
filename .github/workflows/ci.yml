@@ -43,13 +43,13 @@ jobs:
         run: ruff check app tests
       - name: Ruff format check
         run: ruff format --check app tests
-      - name: Unit + integration tests
+      - name: Unit + integration tests (with coverage gate)
         env:
           DATABASE_URL: postgresql+asyncpg://trustpay:trustpay@localhost:5432/trustpay_test
           REDIS_URL: redis://localhost:6379/1
           ENVIRONMENT: test
           SCHEDULER_ENABLED: "false"
-        run: pytest -q
+        run: pytest -q --cov=app --cov-report=term-missing --cov-fail-under=70
 
   web:
     runs-on: ubuntu-latest
@@ -69,6 +69,10 @@ jobs:
         run: npm run lint
       - name: Build
         run: npm run build
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+      - name: E2E smoke
+        run: npx playwright test
 
   docker:
     runs-on: ubuntu-latest

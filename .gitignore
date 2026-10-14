@@ -30,3 +30,11 @@ out/
 
 # TS incremental build info
 tsconfig.tsbuildinfo
+
+# Test / coverage artifacts
+.coverage
+coverage.xml
+htmlcov/
+apps/web/test-results/
+apps/web/playwright-report/
+apps/web/playwright/.cache/
