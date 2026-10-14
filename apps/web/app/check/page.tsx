@@ -198,8 +198,15 @@ function ResultCard({ result }: { result: ScreenResult }) {
     );
   }
 
-  const { entity, risk_assessment: risk, community_signals: community, qr_metadata: meta } =
-    result.data;
+  const {
+    entity,
+    risk_assessment: risk,
+    community_signals: community,
+    qr_metadata: meta,
+    ai_summary,
+    related_fact_checks,
+    search_intelligence,
+  } = result.data;
   const reports = result.data.reports ?? [];
   return (
     <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-5">
@@ -247,6 +254,48 @@ function ResultCard({ result }: { result: ScreenResult }) {
         </div>
       </div>
 
+      {(search_intelligence?.total_searches_display || ai_summary?.text) && (
+        <div className="mt-3 space-y-2">
+          {search_intelligence?.total_searches_display && (
+            <p className="text-xs text-slate-400">
+              Searched {search_intelligence.total_searches_display} times
+              {search_intelligence.searches_7d > 0
+                ? ` · ${search_intelligence.searches_7d} this week`
+                : ""}
+            </p>
+          )}
+          {ai_summary?.text && (
+            <div className="rounded-lg border border-slate-700 bg-slate-800/50 p-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                AI summary
+              </p>
+              <p className="mt-1 text-sm text-slate-200">{ai_summary.text}</p>
+            </div>
+          )}
+          {related_fact_checks && related_fact_checks.length > 0 && (
+            <div className="rounded-lg border border-slate-700 bg-slate-800/50 p-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                Related fact-checks
+              </p>
+              <ul className="mt-1 space-y-1 text-sm text-slate-200">
+                {related_fact_checks.map((fc, i) => (
+                  <li key={i}>
+                    <a
+                      href={fc.url ?? "#"}
+                      className="underline"
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      {fc.text} {fc.rating ? `— ${fc.rating}` : ""}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      )}
+
       {(entity.merchant_name || meta?.merchant_name) && (
         <dl className="mt-3 space-y-1 text-sm text-slate-300">
           <Row k="Merchant" v={entity.merchant_name ?? meta?.merchant_name ?? null} />
@@ -258,6 +307,13 @@ function ResultCard({ result }: { result: ScreenResult }) {
       {meta?.homoglyph_warning && (
         <p className="mt-3 text-sm text-amber-300">
           ⚠ Lookalike characters detected in merchant name — verify carefully
+        </p>
+      )}
+
+      {meta?.qr_changed_since_last_seen && (
+        <p className="mt-3 text-sm text-rose-300">
+          ⚠ This QR payload differs from the one previously reported for this merchant — verify
+          carefully.
         </p>
       )}
 

@@ -110,6 +110,8 @@ This plan is structured so each phase produces a **verifiable, demo-able increme
 ### Phase 3 Demo
 - Lookup an account → see "~1.2k times searched, 48 this week, last searched 3 hours ago", AI summary, and (if key present) fact-check links.
 
+- **Status 2026-10-14**: ✅ DONE — every lookup records `search_events_daily` + `entity_search_stats`; `search_intelligence` returned rounded + threshold-gated (ADR-011); daily rollup job recomputes 7d/30d/total; grounded AI entity summary (templated from validated facts only + grounding check, Redis-cached with version invalidation); Google Fact Check Tools wrapper (keyless-safe); unicode NFKC + zero-width/homoglyph hardening and `qr_changed_since_last_seen` alert; `/check` UI renders search stats + AI summary + fact-check links. 88 API tests green; web typecheck/lint/build green.
+
 ---
 
 ## Phase 3B — Web-First Community & Engagement Features

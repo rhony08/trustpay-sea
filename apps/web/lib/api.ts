@@ -38,7 +38,26 @@ export interface EntityProfile {
     total_loss_by_currency: Record<string, number>;
   };
   reports?: ReportView[];
+  ai_summary?: { text: string; cached: boolean; grounded: boolean } | null;
+  related_fact_checks?: FactCheck[] | null;
+  search_intelligence?: SearchIntelligence | null;
   in_registry: true;
+}
+
+export interface SearchIntelligence {
+  total_searches: number | null;
+  total_searches_display: string | null;
+  searches_7d: number;
+  searches_30d: number;
+  last_searched_at: string | null;
+  threshold_gated: boolean;
+}
+
+export interface FactCheck {
+  text: string | null;
+  claimant: string | null;
+  rating: string | null;
+  url: string | null;
 }
 
 export interface ReportEvidence {
@@ -88,6 +107,8 @@ export interface QrMetadata {
   amount: string | null;
   country: string | null;
   homoglyph_warning: boolean;
+  normalized_merchant_name?: string | null;
+  qr_changed_since_last_seen?: boolean;
 }
 
 export type ScreenResult =
