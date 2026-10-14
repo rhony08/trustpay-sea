@@ -309,6 +309,7 @@ Phase0 ─▶ Phase1 ─▶ Phase2 ─▶ Phase3 ─▶ Phase3B ─▶ Phase4 �
 - Lint + typecheck + tests pass locally.
 - Workflows/state transitions verified by tests (not just manually).
 - UI (where applicable) renders the feature with graceful empty/error states.
+- Every rendered risk score carries its **band label + direction cue** ("higher = riskier") — never a bare number (NG-2).
 
 ---
 

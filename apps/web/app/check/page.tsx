@@ -337,6 +337,7 @@ function ResultCard({ result }: { result: ScreenResult }) {
               {LEVEL_LABELS[risk.risk_level] ?? risk.risk_level}
             </span>
           </p>
+          <p className="text-[11px] text-slate-500">higher = riskier</p>
         </div>
         <div className="rounded-lg bg-slate-800/60 p-3">
           <p className="text-xs text-slate-400">Reports</p>

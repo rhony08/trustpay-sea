@@ -35,6 +35,24 @@ docker compose up --build
 - API + Swagger: http://localhost:8000/docs
 - Health: `curl http://localhost:8000/healthz` → `{"status":"ok","version":"0.1.0"}`
 
+## Deploy (VPS or GCE)
+
+One portable `docker-compose.yml` runs on both a GCE VM and a plain VPS. Dev
+auto-loads `docker-compose.override.yml` (publishes DB/Redis); production skips it.
+
+```bash
+# dev (local)
+docker compose up --build
+
+# production (VPS or GCE VM) — set the PUBLIC API URL first (baked into the web build)
+export NEXT_PUBLIC_API_URL="https://api.example.com"   # or http://<server-ip>:8000
+docker compose -f docker-compose.yml up -d --build
+```
+
+- `NEXT_PUBLIC_API_URL` is a **build arg** (inlined into the client bundle at build time) — rebuild the web image when it changes.
+- Seed once after first boot: `docker compose exec api python -m app.seeds.seed_banks && docker compose exec api python -m app.seeds.seed_demo`.
+- GCE: see [`docs/07`](docs/07-gce-cheap-usecase-notes.md) and `gcp/gce/` (single `e2-small` VM, snapshot + budget alert).
+
 ### Backend tests
 
 ```bash

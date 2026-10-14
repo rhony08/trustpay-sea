@@ -74,7 +74,7 @@ gcloud compute firewall-rules create trustpay-web \
   --allow=tcp:80,tcp:443 --target-tags=http-server,https-server
 
 # 3. on the VM: clone, env, up (same flow as local dev)
-git clone <repo> && cd ai-builder-cup
+git clone <repo> && cd trustpay-sea
 cp .env.example .env   # contends: dev JWT self-gen is fine on throwaway VM
 docker compose up -d --build
 curl localhost:8000/healthz  # {"status":"ok","version":"0.1.0"}

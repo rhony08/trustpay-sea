@@ -1,39 +1,45 @@
 name: trustpay-sea
 
+# Portable production compose — runs identically on a GCE VM and a plain VPS.
+# Dev conveniences (host-published DB/Redis ports, hot reload) live in
+# docker-compose.override.yml, which Compose auto-loads locally.
+#
+#   dev :  docker compose up --build            (auto-loads override)
+#   prod:  docker compose -f docker-compose.yml up -d --build
+
 services:
   postgres:
     image: postgres:16-alpine
     environment:
-      POSTGRES_USER: trustpay
-      POSTGRES_PASSWORD: trustpay
-      POSTGRES_DB: trustpay
-    ports:
-      - "5432:5432"
+      POSTGRES_USER: ${POSTGRES_USER:-trustpay}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-trustpay}
+      POSTGRES_DB: ${POSTGRES_DB:-trustpay}
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U trustpay -d trustpay"]
-      interval: 3s
+      interval: 5s
       timeout: 3s
       retries: 10
+    restart: unless-stopped
 
   redis:
     image: redis:7-alpine
-    ports:
-      - "6379:6379"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
-      interval: 3s
+      interval: 5s
       timeout: 3s
       retries: 10
+    restart: unless-stopped
 
   api:
     build: ./services/api
     environment:
-      DATABASE_URL: postgresql+asyncpg://trustpay:trustpay@postgres:5432/trustpay
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-trustpay}:${POSTGRES_PASSWORD:-trustpay}@postgres:5432/${POSTGRES_DB:-trustpay}
       REDIS_URL: redis://redis:6379/0
-      ENVIRONMENT: dev
+      ENVIRONMENT: ${ENVIRONMENT:-dev}
       SCHEDULER_ENABLED: "true"
+      AI_PROVIDER: ${AI_PROVIDER:-mock}
     ports:
       - "8000:8000"
     depends_on:
@@ -41,15 +47,38 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/healthz', timeout=3).status==200 else 1)"
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 30s
+    restart: unless-stopped
 
   web:
-    build: ./apps/web
+    build:
+      context: ./apps/web
+      args:
+        # Baked into the client bundle at build time — must be the PUBLIC API URL.
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
     environment:
-      NEXT_PUBLIC_API_URL: http://localhost:8000
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
     ports:
       - "3000:3000"
     depends_on:
-      - api
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 20s
+    restart: unless-stopped
 
 volumes:
   pgdata:

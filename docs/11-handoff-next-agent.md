@@ -53,7 +53,7 @@
 
 ## 4. Gaps & Deviations Found
 
-- **ADR-012 superseded in practice**: mock-first is now a *pluggable provider* (`mock|gcp|openrouter`). No ADR records this — write **ADR-017 (AI provider abstraction)**.
+- **ADR-012 superseded in practice**: mock-first is now a *pluggable provider* (`mock|gcp|openrouter`) — recorded as **ADR-019**. GCP hosting (GCE-first + portable compose) is **ADR-018**.
 - **Scorer is not the ADR-003 Bayesian model**: it's a transparent weighted sum with the documented factors. Exact weights are approximate; the public "rounded factor labels" rule (§5.3) is not enforced (raw weights are returned).
 - **Anti-brigading is simplified**: uses distinct reporter identities + `identity_trust` + a 7-day z-score. The full device/IP/phone identity graph and hashed fingerprint store (ADR-014) are not built.
 - **`media_url` sentinel**: evidence rows use `media_url = ""` until fail-closed redaction produces the public copy (`NOT NULL` preserved). Public serializers only expose evidence when a report is `PUBLISHED`.
@@ -96,7 +96,7 @@ npx playwright install chromium && npm run test:e2e
 
 ## 7. Recommended Next Work (ordered)
 
-1. **Live AI validation + ADR-017** — run the pipeline against a real invoice/slip on Vertex; verify JSON schema, grounding, fail-closed; record the ADR.
+1. **Live AI validation** — run the pipeline against a real invoice/slip on Vertex; verify JSON schema, grounding, fail-closed (ADR-019 records the provider design).
 2. **Storage hardening** — S3/R2 presigned uploads, AV scan, cookieless media domain, retention/legal-hold job.
 3. **Auth hardening** — HttpOnly cookie sessions + CSRF; WebAuthn MFA mandatory for admins.
 4. **Admin portal UI** — flag/dispute queues, approve/resolve actions, approvals UI, side-by-side evidence.
