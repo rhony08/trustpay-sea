@@ -763,6 +763,151 @@ export async function getAdminAudit(
   return body.data;
 }
 
+export interface AdminEntityBrief {
+  id: string;
+  entity_type: string;
+  country: string;
+  institution: string | null;
+  account_masked: string;
+  risk_score: number;
+  is_gov_blacklisted: boolean;
+}
+
+export interface AdminReportBrief {
+  id: string;
+  category: string;
+  severity: number;
+  description: string | null;
+  status: string;
+  admin_verification_status: string;
+  upvotes: number;
+  downvotes: number;
+  created_at: string | null;
+}
+
+export interface AdminFlag {
+  id: string;
+  reason: string;
+  details: string | null;
+  status: string;
+  created_at: string | null;
+  report: AdminReportBrief | null;
+  entity: AdminEntityBrief | null;
+}
+
+export interface AdminDispute {
+  id: string;
+  claim_stage: string;
+  status: string;
+  proof_type: string;
+  dispute_reason: string | null;
+  justification: string | null;
+  counter_evidence_urls: string[] | null;
+  target_report_id: string | null;
+  created_at: string | null;
+  entity: AdminEntityBrief | null;
+}
+
+export interface AdminApproval {
+  id: string;
+  action: string;
+  subject_type: string;
+  subject_id: string;
+  status: string;
+  requested_by: string;
+  approved_by: string | null;
+  created_at: string | null;
+}
+
+export async function getAdminFlags(token: string, status = "PENDING"): Promise<AdminFlag[]> {
+  const body = await authed<{ data: { flags: AdminFlag[] } }>(
+    `/api/v1/admin/flags?status_filter=${status}`,
+    token,
+  );
+  return body.data.flags;
+}
+
+export async function resolveFlag(
+  token: string,
+  flagId: string,
+  decision: "UPHELD" | "DISMISSED",
+  notes?: string,
+): Promise<void> {
+  await authed(`/api/v1/admin/flags/${flagId}/resolve`, token, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ decision, notes }),
+  });
+}
+
+export async function getAdminDisputes(token: string, status = "UNDER_REVIEW"): Promise<AdminDispute[]> {
+  const body = await authed<{ data: { disputes: AdminDispute[] } }>(
+    `/api/v1/admin/disputes?status_filter=${status}`,
+    token,
+  );
+  return body.data.disputes;
+}
+
+export async function resolveDispute(
+  token: string,
+  disputeId: string,
+  decision: "APPROVED_REMOVED" | "REJECTED_UPHELD" | "SETTLEMENT",
+  notes?: string,
+): Promise<void> {
+  await authed(`/api/v1/admin/disputes/${disputeId}/resolve`, token, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ decision, notes }),
+  });
+}
+
+export async function getAdminApprovals(token: string, status = "PENDING"): Promise<AdminApproval[]> {
+  const body = await authed<{ data: { approvals: AdminApproval[] } }>(
+    `/api/v1/admin/approvals?status_filter=${status}`,
+    token,
+  );
+  return body.data.approvals;
+}
+
+export async function createApproval(
+  token: string,
+  body: { action: string; subject_type: string; subject_id: string; payload?: Record<string, unknown> },
+): Promise<AdminApproval> {
+  const resp = await authed<{ data: AdminApproval }>("/api/v1/admin/approvals", token, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  return resp.data;
+}
+
+export async function approveApproval(token: string, approvalId: string): Promise<AdminApproval> {
+  const resp = await authed<{ data: AdminApproval }>(
+    `/api/v1/admin/approvals/${approvalId}/approve`,
+    token,
+    { method: "POST" },
+  );
+  return resp.data;
+}
+
+export async function semakmuleCheck(
+  token: string,
+  bank: string,
+  account: string,
+): Promise<Record<string, unknown>> {
+  const resp = await authed<{ data: Record<string, unknown> }>(
+    "/api/v1/admin/gov/semakmule/check",
+    token,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ bank, account }),
+    },
+  );
+  return resp.data;
+}
+
+
 
 
 

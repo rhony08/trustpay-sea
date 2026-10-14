@@ -203,6 +203,32 @@ async def test_bad_faith_flagger_gets_warned(client: httpx.AsyncClient) -> None:
     assert user.status == UserStatus.WARNED
 
 
+async def test_admin_flag_queue_enriched_and_report_detail(client: httpx.AsyncClient) -> None:
+    reporter = await _signup(client, "aq-reporter@trustpay.dev")
+    flagger = await _signup(client, "aq-flagger@trustpay.dev")
+    admin = await _signup(client, "aq-admin@trustpay.dev")
+    await _make_admin("aq-admin@trustpay.dev")
+
+    report_id = await _report(client, reporter, "8100000009")
+    await client.post(
+        f"/api/v1/reports/{report_id}/flags",
+        json={"reason": "DEFAMATION_SPAM", "details": "looks fake"},
+        headers=_auth(flagger),
+    )
+
+    queue = (await client.get("/api/v1/admin/flags", headers=_auth(admin))).json()["data"]["flags"]
+    assert queue
+    entry = next(f for f in queue if f["report"] and f["report"]["id"] == report_id)
+    assert entry["entity"]["account_masked"]
+    assert entry["report"]["category"]
+
+    detail = (await client.get(f"/api/v1/admin/reports/{report_id}", headers=_auth(admin))).json()[
+        "data"
+    ]
+    assert detail["entity"]["account_masked"]
+    assert "evidence" in detail and "ai_forensic_notes" in detail
+
+
 async def test_banned_reporter_cannot_submit(client: httpx.AsyncClient) -> None:
     token = await _signup(client, "banned@trustpay.dev")
     async with SessionLocal() as db:
