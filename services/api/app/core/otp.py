@@ -13,19 +13,19 @@ from redis.asyncio import Redis
 _TTL_SECONDS = 300
 
 
-def _key(user_id: str) -> str:
-    return f"otp:phone:{user_id}"
+def _key(scope: str, subject: str) -> str:
+    return f"otp:{scope}:{subject}"
 
 
-async def start_otp(redis: Redis, user_id: str) -> str:
+async def start_otp(redis: Redis, subject: str, *, scope: str = "phone") -> str:
     code = f"{secrets.randbelow(1_000_000):06d}"
-    await redis.set(_key(user_id), code, ex=_TTL_SECONDS)
+    await redis.set(_key(scope, subject), code, ex=_TTL_SECONDS)
     return code
 
 
-async def confirm_otp(redis: Redis, user_id: str, code: str) -> bool:
-    stored = await redis.get(_key(user_id))
+async def confirm_otp(redis: Redis, subject: str, code: str, *, scope: str = "phone") -> bool:
+    stored = await redis.get(_key(scope, subject))
     if stored and stored == code:
-        await redis.delete(_key(user_id))
+        await redis.delete(_key(scope, subject))
         return True
     return False

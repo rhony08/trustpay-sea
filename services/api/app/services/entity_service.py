@@ -172,6 +172,7 @@ def build_profile(
             "mcc": entity.mcc,
             "nmid": entity.nmid,
             "holder": holder_name_disclosure(entity, total_reports),
+            "owner_response": entity.owner_response,
         },
         "risk_assessment": {
             "risk_score": entity.risk_score,

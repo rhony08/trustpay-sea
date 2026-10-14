@@ -214,6 +214,8 @@ This plan is structured so each phase produces a **verifiable, demo-able increme
 - Owner claims account with matching passbook → dispute badge + capped-rise score → admin approves removal → review hidden, spammer penalized.
 - Anti-gaming exhibit: mule-operator tries to claim and drop an 88-score entity → score stays 88 with "Dispute active" badge.
 
+- **Status 2026-10-14**: ✅ DONE — claim with proof tiers + mock AI doc verification, micro-deposit OTP tier, dispute submission, rise-only safe-harbor cap (`apply_dispute_cap`: 88 stays 88; a 15→70 rise caps at 45), admin queue + resolve (APPROVED_REMOVED/REJECTED_UPHELD/SETTLEMENT) with hash-chained audit + reporter penalty, verified-owner pinned response, anti-phishing note. Web: `/claim` wizard (prove ownership → dispute → respond), dispute badge + owner response on the entity card. 127 API tests green; web typecheck/lint/build green.
+
 ---
 
 ## Phase 6 — Risk Score Engine, Anti-Brigading & Admin Portal Polish

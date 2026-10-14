@@ -296,7 +296,28 @@ function ResultCard({ result }: { result: ScreenResult }) {
         >
           Diligence receipt
         </Link>
+        <Link
+          href={`/claim?entity=${entity.id}`}
+          className="rounded-full border border-slate-600 px-3 py-1 text-xs text-slate-300 hover:border-emerald-400"
+        >
+          Own this account?
+        </Link>
       </div>
+
+      {risk.is_under_dispute && (
+        <p className="mt-3 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs text-amber-200">
+          ⚖ Ownership dispute active — the reported owner is contesting this record.
+        </p>
+      )}
+
+      {entity.owner_response && (
+        <div className="mt-3 rounded-lg border border-sky-500/40 bg-sky-500/10 px-3 py-2 text-sm text-sky-100">
+          <p className="text-xs font-semibold uppercase tracking-wide text-sky-300">
+            Owner response (verified)
+          </p>
+          <p className="mt-1">{entity.owner_response}</p>
+        </div>
+      )}
 
       {(risk.risk_level === "HIGH_RISK" || risk.risk_level === "CRITICAL_FRAUD") && (
         <CoolingOff level={risk.risk_level} />
