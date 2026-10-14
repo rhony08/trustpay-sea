@@ -190,3 +190,11 @@ class BadgeType(StrEnum):
     VERIFIED_REPORTER = "VERIFIED_REPORTER"
     PIONEER_WARN = "PIONEER_WARN"
     ANTI_SCAM_AWARE = "ANTI_SCAM_AWARE"
+
+
+class ApiKeyTier(StrEnum):
+    """Public screen-API tiers (docs/09)."""
+
+    DEMO = "DEMO"
+    PARTNER = "PARTNER"
+    ENTERPRISE = "ENTERPRISE"

@@ -79,6 +79,14 @@ class Settings(BaseSettings):
     report_daily_quota_per_user: int = 20
     report_hourly_quota_per_entity: int = 5
 
+    # Public screen API keys + anti-probing (Phase 9 / docs/09)
+    api_key_prefix: str = "tpk_live_"
+    screen_visitor_daily_limit: int = 20  # keyless, per IP
+    screen_demo_daily_limit: int = 100
+    screen_partner_daily_limit: int = 1000
+    screen_probe_visitor_distinct_per_hour: int = 50
+    screen_probe_key_distinct_per_hour: int = 500
+
     # Async worker cadence (Phase 2.3); scheduler safety-net poll interval.
     report_worker_interval_seconds: int = 20
 

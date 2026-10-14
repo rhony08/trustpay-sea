@@ -35,6 +35,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 from app.db import Base
 from app.enums import (
     AdminVerificationStatus,
+    ApiKeyTier,
     BadgeType,
     BankType,
     DisputeStatus,
@@ -483,6 +484,37 @@ class AdminApproval(Base):
             "status IN ('PENDING','APPROVED','CANCELLED')", name="ck_admin_approvals_status"
         ),
         Index("ix_admin_approvals_status", "status"),
+    )
+
+
+class ApiKey(Base):
+    """Public screen-API key (Phase 9 / docs/09). Raw key is shown once; only the
+    SHA-256 hash + last-4 are stored."""
+
+    __tablename__ = "api_keys"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, **GEN_UUID)
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
+    name: Mapped[str] = mapped_column(String(100), default="default", nullable=False)
+    key_hash: Mapped[str] = mapped_column(String(64), unique=True, nullable=False)
+    last4: Mapped[str] = mapped_column(String(4), nullable=False)
+    tier: Mapped[str] = mapped_column(String(20), default=ApiKeyTier.DEMO, nullable=False)
+    scopes: Mapped[list[Any]] = mapped_column(
+        JSONB, default=lambda: ["screen:read"], nullable=False
+    )
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    last_used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    rotated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+    __table_args__ = (
+        CheckConstraint(
+            f"tier IN ({','.join(repr(t.value) for t in ApiKeyTier)})", name="ck_api_keys_tier"
+        ),
+        Index("ix_api_keys_user", "user_id"),
     )
 
 
