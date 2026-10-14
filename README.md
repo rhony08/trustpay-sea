@@ -61,8 +61,11 @@ into Postgres before reporting works:
 ```bash
 cd services/api
 python -m app.seeds.seed_banks        # idempotent upsert
+python -m app.seeds.seed_demo         # demo users/entities/reports/dispute/gov entry
 # → GET /api/v1/banks?country=ID&bank_type=E_WALLET  (public dropdown feed)
 ```
+
+Demo login after `seed_demo`: `analyst@trustpay.dev` / `demo-analyst-pass` (ANALYST role).
 
 ## Project layout
 
