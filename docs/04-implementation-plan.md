@@ -33,7 +33,8 @@ This plan is structured so each phase produces a **verifiable, demo-able increme
 | 0.6 | CI (GitHub Actions): lint (ruff + eslint), typecheck, unit tests, docker build | Green pipeline on PR |
 
 ### Phase 0 Demo
-- `GET /healthz` returns `{"status":"ok","version":"0.1.0"}` behind auth.
+- `GET /healthz` returns `{"status":"ok","version":"0.1.0"}`. (Public — compose/Docker healthchecks and uptime probes need it unauthenticated; the original "behind auth" wording is superseded. Auth is demonstrated by `GET /api/v1/auth/me` + the RBAC-gated `/protected-ping`.)
+- **Status 2026-10-14**: ✅ DONE — stack boots via `docker compose up`; 11-table schema migrates clean; argon2id + RS256 JWT with refresh-rotation/reuse-detection; token-bucket 429 verified; scheduler placeholders registered; 14 tests green; CI workflow in place. See ADR-017 for implementation choices.
 
 ---
 

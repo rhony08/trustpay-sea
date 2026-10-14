@@ -149,6 +149,8 @@ CREATE TABLE payment_entities (
     account_masked VARCHAR(50) NOT NULL,       -- '883-****-831'
     merchant_name VARCHAR(150),
     merchant_city VARCHAR(100),
+    holder_name VARCHAR(150),                   -- account holder name (ADR-016); null unless known
+    holder_name_source VARCHAR(30),             -- OWNER_KYC_PROOF | COMMUNITY_REPORTED | null (ADR-016)
     mcc VARCHAR(4),                            -- ISO 18245 merchant category code (clean QR extraction)
     nmid VARCHAR(100),
     emvco_payload TEXT,
@@ -688,6 +690,7 @@ class GovAdapter(ABC):
 
 1. **PII masking**:
    - Account numbers stored as **KMS-keyed `HMAC_SHA256(canonical_key)`** + `hash_version` (ADR-013), never cleartext, never exposed in API/autocomplete.
+   - **Contextual name disclosure (ADR-016, owner-confirmed 2026-10-14)**: exact-match surfaces (full account number entered, or QR scanned/pasted) reveal `holder_name` with a confidence label — `"Verified owner name"` only when `is_owner_verified=true`, else `"Reported recipient name (from N reports) — verify independently"`. Partial/autocomplete/list surfaces stay masked forever; no reported-accounts listing view in MVP. Admin/gov-blacklisted/admin-confirmed-fraud entities may be fully disclosed. `merchant_name` from QR payloads was always part of the public QR profile.
    - Public evidence images are **always AI-redacted** copies.
 2. **At-rest encryption**: AES-256/GCM for evidence quarantine; DSK envelope encryption for owner-KYC docs; DB credentials via secret manager/KMS (never `.env` in prod).
 3. **Upload security (H2)**:

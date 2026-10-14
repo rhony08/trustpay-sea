@@ -1,6 +1,6 @@
 # 05 — Gap Analysis & Open Decisions (Handoff Notes)
 
-**Doc Version**: 1.0 · **Status**: Living document — update as decisions are confirmed
+**Doc Version**: 1.1 · **Status**: Living document — update as decisions are confirmed
 **Purpose**: Records everything that is currently a **GAP / OPEN QUESTION / RECOMMENDATION / PENDING DECISION** so no future agent loses context. Built from the 3-subagent review (PM brainstorm, Security audit, Reviewer consistency audit) plus follow-up product discussion.
 
 ---
@@ -37,6 +37,10 @@ These gaps surfaced in review and were **already folded into the plan**:
 | MFA + dual-control + tamper-evident audit | WebAuthn, four-eyes, hash-chained `audit_logs` | 02 §9.3 |
 | `user_notifications` table | Events + anti-spam | 02 §10.4 |
 | Police / STPLP capture | `police_report_number` + `is_legal_hold` | 02 §3.3, §10.5 |
+| Masking policy (G-1/R-1) | **ADOPTED**: contextual exact-match name disclosure — see ADR-016 | ADR-016, 02 §9.1 |
+| MVP cut-list (G-2/R-2) | **DECIDED**: strong-recommend set — Recipient Name Check, fresh bad-review interstitial, cooling-off timer, hotline directory, Scam Playbook (1-2 pages), Scam Simulator, Trust Rank Ladder (lite), Pioneer Warn badge, Diligence Receipt. Optional set + post-MVP items → roadmap | 04 Phases 3B/4B |
+| Launch market (G-5/R-5) | **CONFIRMED**: Indonesia first (QRIS + BCA/BRI/Mandiri + GoPay/OVO); other SEA countries in schema, empty | 01 §11 |
+| Gemini / language (G-9/G-10) | **CONFIRMED**: mock AI (no key — fixtures, graceful degradation per ADR-012); UI ships `en` + `id` | 02 §10.1 |
 
 ---
 
@@ -44,28 +48,15 @@ These gaps surfaced in review and were **already folded into the plan**:
 
 These are recommendations **I currently endorse** but the product owner has **not yet confirmed**. Each needs a decision before implementation.
 
-### R-1 — Contextual Account/Name Masking (Discussion started — unresolved)
+### R-1 — Contextual Account/Name Masking ✅ ADOPTED 2026-10-14 → ADR-016
 
-**Question raised**: "Do we really need to mask account name & numbers if the goal is just to check whether an account has been reported?"
+Owner confirmed the recommendation: keep masking as default; reveal holder/merchant name on **exact-match** lookups only, with confidence labels ("Verified owner name" vs "Reported recipient name (from N reports) — verify independently"). Partial/list views masked forever; no reported-accounts listing in MVP (G-14 = NO). Full decision record: **ADR-016**.
 
-**My recommendation**:
-- Keep masking as the **default** (prevents reverse-scraping into a doxing database, defamation liability under UU ITE / PDPA / POFMA, and bulk enumeration).
-- **BUT add exact-match disclosure**: when a user checks an entity with the *full* account number or a scanned QR (i.e., they already hold the identifier), the profile SHOULD show the **holder / merchant name** — this is the **single most valuable anti-scam signal** (scammer says "Joko," account holder is "Budi" → obvious scam).
-- Distinguish name confidence: display **"Verified owner name"** only when owner-claimed/proven; otherwise **"Reported recipient name (from N reports) — verify independently."**
-- Surfaces: exact-match check → reveal; partial search/autocomplete → masked (search likely not needed in MVP); any "list of reported accounts" view → masked forever.
-- Admin/verified-fraud entities → full disclosure allowed.
+### R-2 — Final MVP Feature Scope ✅ DECIDED 2026-10-14
 
-> **⚠️ Needs confirmation**: adopt or reject revised masking policy. Pending, the *current* docs still default to full masking with only masked display.
-
-### R-2 — Final MVP Feature Scope (Phase 3B / 4B selection)
-
-Not decided which proposed features are **must-have** vs **stretch** for the hackathon. Candidates (all web-first; chat bots deferred via ADR-015):
-
-- **Strong recommend (build)**: Recipient Name Check (R-1), Fresh bad-review interstitial, High-risk cooling-off timer, Hotline one-tap directory, Scam Playbook library (1-2 pages), Scam Simulator, Trust Rank Ladder (lite), Pioneer Warn badge, Diligence Receipt.
-- **Good but optional**: Share-to-Check, Watchlist alerts, Verified Reporter badge, Warning card generator, Recovery wizard, too-good-to-be-true checker, 3-2-1 rule.
-- **Skip for hackathon MVP** (roadmap only): everything in post-MVP lists (bots, extension, IVR, syndicate graph, white-label widget, community squads, etc.).
-
-> **⚠️ Needs confirmation**: final MVP cut-list so Phase 0 scaffolding can proceed.
+Owner confirmed the **strong-recommend set** for Phases 3B/4B:
+- **Build**: Recipient Name Check (implements ADR-016), Fresh bad-review interstitial, High-risk cooling-off timer, Hotline one-tap directory, Scam Playbook library (1-2 pages), Scam Simulator, Trust Rank Ladder (lite), Pioneer Warn badge, Diligence Receipt.
+- **Roadmap only** (not hackathon): Share-to-Check, Watchlist alerts, Verified Reporter badge, Warning card generator, Recovery wizard, too-good-to-be-true checker, 3-2-1 rule, and all post-MVP lists.
 
 ### R-3 — Which reports move the risk score
 
@@ -75,9 +66,9 @@ Recommendation: only `admin_verified` or high-confidence-forensic reports ("evid
 
 Post-MVP, order suggested: **(1) cekrekening.id mock → (2) real cekrekening.id → (3) PDRM Semak Mule (MY) → (4) SPF ASC (SG)**. Confirm as the B2G roadmap sequence.
 
-### R-5 — Launch market for seed data
+### R-5 — Launch market for seed data ✅ CONFIRMED 2026-10-14
 
-Recommendation: **Indonesia (QRIS + BCA/BRI/Mandiri + GoPay/OVO)** first for the demo data; other countries in schema but empty. Confirm.
+**Indonesia first** (QRIS + BCA/BRI/Mandiri + GoPay/OVO) for demo seed data; other SEA countries present in schema but empty. Closes G-5.
 
 ---
 
@@ -85,33 +76,33 @@ Recommendation: **Indonesia (QRIS + BCA/BRI/Mandiri + GoPay/OVO)** first for the
 
 These are **explicit confirm-later items** — a future agent must ask the product owner before/while resolving:
 
-| # | Open item | Type | Who confirms |
-|---|-----------|------|--------------|
-| G-1 | Masking policy (R-1) — exact-match name disclosure | Product decision | Owner |
-| G-2 | Final MVP feature cut-list (R-2) | Product decision | Owner |
-| G-3 | Evidence-grade scoring weight (R-3) | Product/tech | Owner + Developer |
-| G-4 | B2G country priority (R-4) | Product decision | Owner |
-| G-5 | Launch market seed data (R-5) | Product decision | Owner |
-| G-6 | Team/admin model for MVP — who are the admins in the demo? | Ops | Owner |
-| G-7 | Hosting/cloud preference (Vercel/Railway/Fly.io/R2 vs AWS) | Tech ops | Owner |
-| G-8 | Real bank directory licensing — using real bank code maps OK in demo? | Legal/compliance | Owner + Legal |
-| G-9 | Gemini API key / Google Cloud project for the demo (or mock-only?) | Ops | Owner |
-| G-10 | Language scope for MVP UI (`en` + `id` only, or more?) — i18n §10.1 | Product | Owner |
-| G-11 | Currency scope — is IDR the only demo currency, or multi-currency in seed data? | Product | Owner |
-| G-12 | Do we need Terms/Privacy pages drafted for the demo, or placeholder links? | Legal/ops | Owner |
-| G-13 | Reviewer flagged "right to erasure" vs "HMAC index" tension — need erasure semantics spec confirmed (tombstone approach) | Tech/legal | Developer + Owner |
-| G-14 | Are we comfortable showing **reported-account listing** anywhere in MVP (doxxing surface)? Recommend NO. | Product | Owner |
-| G-15 | Notification provider (Resend/Postmark/Twilio for SMS?) — env-gated | Tech ops | Developer + Owner |
+| # | Open item | Type | Who confirms | Status |
+|---|-----------|------|--------------|--------|
+| G-1 | Masking policy (R-1) — exact-match name disclosure | Product decision | Owner | ✅ **RESOLVED 2026-10-14 — ADR-016** |
+| G-2 | Final MVP feature cut-list (R-2) | Product decision | Owner | ✅ **RESOLVED 2026-10-14 — strong-recommend set** |
+| G-3 | Evidence-grade scoring weight (R-3) | Product/tech | Owner + Developer | Open (Phase 6) |
+| G-4 | B2G country priority (R-4) | Product decision | Owner | Open (post-MVP) |
+| G-5 | Launch market seed data (R-5) | Product decision | Owner | ✅ **RESOLVED 2026-10-14 — Indonesia first** |
+| G-6 | Team/admin model for MVP — who are the admins in the demo? | Ops | Owner | Open (Phase 0/seed) |
+| G-7 | Hosting/cloud preference (Vercel/Railway/Fly.io/R2 vs AWS) | Tech ops | Owner | Open (Phase 7) |
+| G-8 | Real bank directory licensing — using real bank code maps OK in demo? | Legal/compliance | Owner + Legal | Open (Phase 1) |
+| G-9 | Gemini API key / Google Cloud project for the demo (or mock-only?) | Ops | Owner | ✅ **RESOLVED 2026-10-14 — mock AI, no key** |
+| G-10 | Language scope for MVP UI (`en` + `id` only, or more?) — i18n §10.1 | Product | Owner | ✅ **RESOLVED 2026-10-14 — `en` + `id`** |
+| G-11 | Currency scope — is IDR the only demo currency, or multi-currency in seed data? | Product | Owner | Open (assume IDR-primary per G-5) |
+| G-12 | Do we need Terms/Privacy pages drafted for the demo, or placeholder links? | Legal/ops | Owner | Open (Phase 7) |
+| G-13 | Reviewer flagged "right to erasure" vs "HMAC index" tension — need erasure semantics spec confirmed (tombstone approach) | Tech/legal | Developer + Owner | Open (Phase 7/DSAR) |
+| G-14 | Are we comfortable showing **reported-account listing** anywhere in MVP (doxxing surface)? Recommend NO. | Product | Owner | ✅ **RESOLVED via ADR-016 — NO listing view in MVP** |
+| G-15 | Notification provider (Resend/Postmark/Twilio for SMS?) — env-gated | Tech ops | Developer + Owner | Open (Phase 7) |
 
 ---
 
 ## 4. Recommended Next Steps (for whoever picks this up)
 
-1. **Confirm G-1/G-2 first** — they gate Phase 0/1 scope.
+1. ~~Confirm G-1/G-2 first~~ — ✅ **DONE 2026-10-14** (ADR-016 + strong-recommend cut-list). Phase 0/1 scope is unblocked.
 2. **Scaffold Phase 0** (repo, docker compose, alembic migrations for the full schema incl. `report_votes`, `user_notifications`, hash-chained `audit_logs`, `search_events_daily`, `entity_search_stats`).
-3. Build resolver (Phase 1) with **exact-match name disclosure** (if G-1 confirmed) + homoglyph guard.
+3. Build resolver (Phase 1) with **exact-match name disclosure** (G-1 confirmed → ADR-016) + homoglyph guard.
 4. Phase 2 reporting with fail-closed redaction + upload security + quotas.
-5. Then Phase 3/3B intel + engagement features per confirmed cut-list.
+5. Then Phase 3/3B intel + engagement features per confirmed cut-list (R-2 strong set).
 6. Re-run the 3-agent review at end of Phase 2 for course-correction.
 
 ---
