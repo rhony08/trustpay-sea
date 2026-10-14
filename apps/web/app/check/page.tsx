@@ -200,6 +200,7 @@ function ResultCard({ result }: { result: ScreenResult }) {
 
   const { entity, risk_assessment: risk, community_signals: community, qr_metadata: meta } =
     result.data;
+  const reports = result.data.reports ?? [];
   return (
     <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-5">
       <div className="flex items-center justify-between">
@@ -258,6 +259,34 @@ function ResultCard({ result }: { result: ScreenResult }) {
         <p className="mt-3 text-sm text-amber-300">
           ⚠ Lookalike characters detected in merchant name — verify carefully
         </p>
+      )}
+
+      {reports.length > 0 && (
+        <div className="mt-4 space-y-2">
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+            Published reports ({reports.length})
+          </p>
+          {reports.map((r) => (
+            <div key={r.id} className="rounded-lg border border-slate-700 bg-slate-800/50 p-3">
+              <div className="flex items-center justify-between text-xs text-slate-400">
+                <span>{r.category.replaceAll("_", " ")}</span>
+                <span>severity {r.severity}</span>
+              </div>
+              {r.description && <p className="mt-1 text-sm text-slate-200">{r.description}</p>}
+              {r.ai_tampering_detected && (
+                <p className="mt-1 text-xs text-rose-300">⚠ AI flagged possible tampering</p>
+              )}
+              {r.evidence?.[0]?.media_url && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={r.evidence[0].media_url}
+                  alt="Redacted evidence"
+                  className="mt-2 max-h-48 rounded border border-slate-700"
+                />
+              )}
+            </div>
+          ))}
+        </div>
       )}
     </div>
   );

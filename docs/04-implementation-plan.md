@@ -87,6 +87,8 @@ This plan is structured so each phase produces a **verifiable, demo-able increme
 - Submit report with slip image → watch it flip to "published with redacted evidence" + `ai_tampering_detected` displayed.
 - Bonus: submit a `.exe` masked as image → rejected at upload; submit 6 reports in 1h from a burner account → quota 429.
 
+- **Status 2026-10-14**: ✅ DONE — `POST /api/v1/reports` (auth + consent, `Idempotency-Key`, per-user/day + per-entity/hour quotas → 202 PROCESSING), `POST /api/v1/reports/{id}/evidence` (magic-byte + decompression-bomb pixel cap + EXIF-stripping re-encode → quarantine), async worker (fail-closed PII redaction, slip OCR/tamper heuristics, real pHash duplicate detection, canonical-taxonomy NLP + NER), `GET /api/v1/reports/{id}` status polling, published-reports feed on the entity profile, and the `/report` PWA page (auth → submit → processing→published polling) + report feed in `/check`. AI is mock-first per ADR-012 (no Gemini key). Evidence storage is a local-disk shim (S3/R2 presigned = Phase 7). 77 API tests green; web typecheck/lint/build green.
+
 ---
 
 ## Phase 3 — Search Intelligence, AI Summary & Fact-Check Enrichment
