@@ -50,6 +50,9 @@ services:
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-https://trustpay.quesitive.com}
     environment:
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-https://trustpay.quesitive.com}
+      # Next standalone binds to $HOSTNAME (container id) unless set; force all interfaces
+      # so the healthcheck (and host port-map) work.
+      HOSTNAME: "0.0.0.0"
     ports:
       - "127.0.0.1:3011:3000"
     depends_on:
