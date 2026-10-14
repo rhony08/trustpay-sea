@@ -2,13 +2,17 @@
 
 import logging
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 import redis.asyncio as aioredis
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from app.api.auth import router as auth_router
+from app.api.banks import router as banks_router
 from app.api.entities import router as entities_router
+from app.api.reports import router as reports_router
 from app.api.system import router as system_router
 from app.config import get_settings
 from app.core.rate_limit import enforce_rate_limit
@@ -51,6 +55,15 @@ def create_app() -> FastAPI:
     app.include_router(system_router)  # /healthz, /protected-ping
     app.include_router(auth_router, prefix=settings.api_v1_prefix)
     app.include_router(entities_router, prefix=settings.api_v1_prefix)
+    app.include_router(banks_router, prefix=settings.api_v1_prefix)
+    app.include_router(reports_router, prefix=settings.api_v1_prefix)
+
+    # Dev-only: serve redacted public evidence as static files. Production uses a
+    # separate cookieless media domain (Doc 02 §9.1); quarantine is never mounted.
+    if settings.evidence_storage_backend == "local":
+        public_dir = Path(settings.evidence_local_dir) / "public"
+        public_dir.mkdir(parents=True, exist_ok=True)
+        app.mount("/media", StaticFiles(directory=public_dir), name="media")
     return app
 
 

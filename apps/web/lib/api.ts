@@ -37,8 +37,45 @@ export interface EntityProfile {
     report_velocity_7d: number;
     total_loss_by_currency: Record<string, number>;
   };
+  reports?: ReportView[];
   in_registry: true;
 }
+
+export interface ReportEvidence {
+  media_type: string;
+  media_url: string | null;
+  is_blurred_pii: boolean;
+  ai_tampering_detected: boolean;
+}
+
+export interface ReportView {
+  id: string;
+  payment_entity_id: string;
+  category: string;
+  severity: number;
+  currency: string;
+  loss_amount: number | null;
+  incident_date: string | null;
+  description: string | null;
+  processing_status: "PROCESSING" | "PUBLISHED" | "FAILED";
+  admin_verification_status: string;
+  status: string;
+  ai_risk_score: number | null;
+  ai_tampering_detected: boolean;
+  evidence: ReportEvidence[];
+  created_at: string | null;
+}
+
+export interface Bank {
+  country: string;
+  code: string;
+  name: string;
+  short_name: string | null;
+  bank_type: string;
+  bic: string | null;
+  national_id: string | null;
+}
+
 
 export interface QrMetadata {
   scheme: string;
@@ -165,3 +202,100 @@ export const COUNTRIES = [
   { code: "VN", label: "Vietnam" },
   { code: "PH", label: "Philippines" },
 ];
+
+export const REPORT_CATEGORIES = [
+  { value: "ONLINE_SHOP_GHOSTING", label: "Online shop ghosting" },
+  { value: "FAKE_JOB", label: "Fake job" },
+  { value: "INVESTMENT_PIG_BUTCHERING", label: "Investment / pig butchering" },
+  { value: "PHISHING_PRETEXTING", label: "Phishing / pretexting" },
+  { value: "IMPERSONATION", label: "Impersonation" },
+  { value: "UNAUTHORIZED_LENDING_PINJOL", label: "Unauthorized lending / pinjol" },
+  { value: "NO_DELIVERY_GOODS", label: "No delivery of goods" },
+  { value: "EVENT_TICKET_FRAUD", label: "Event ticket fraud" },
+  { value: "OTHER", label: "Other" },
+];
+
+const TOKEN_KEY = "trustpay_token";
+
+export function getToken(): string | null {
+  if (typeof window === "undefined") return null;
+  return window.localStorage.getItem(TOKEN_KEY);
+}
+
+export function setToken(token: string | null): void {
+  if (typeof window === "undefined") return;
+  if (token) window.localStorage.setItem(TOKEN_KEY, token);
+  else window.localStorage.removeItem(TOKEN_KEY);
+}
+
+export interface CreateReportInput {
+  target:
+    | { kind: "ACCOUNT"; country: string; bank: string; account: string }
+    | { kind: "QR"; qr_payload: string };
+  category: string;
+  severity: number;
+  description: string;
+  currency?: string;
+  loss_amount?: number | null;
+  incident_date?: string | null;
+  consent: boolean;
+}
+
+export async function signup(email: string, password: string, displayName?: string): Promise<string> {
+  const body = await request<{ access_token: string }>("/api/v1/auth/signup", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password, display_name: displayName }),
+  });
+  setToken(body.access_token);
+  return body.access_token;
+}
+
+export async function login(email: string, password: string): Promise<string> {
+  const body = await request<{ access_token: string }>("/api/v1/auth/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password }),
+  });
+  setToken(body.access_token);
+  return body.access_token;
+}
+
+export async function listBanks(country: string): Promise<Bank[]> {
+  const body = await request<{ data: { banks: Bank[] } }>(
+    `/api/v1/banks?country=${country}`,
+  );
+  return body.data.banks;
+}
+
+async function authed<T>(path: string, token: string, init: RequestInit = {}): Promise<T> {
+  const headers = { ...(init.headers ?? {}), Authorization: `Bearer ${token}` };
+  return request<T>(path, { ...init, headers });
+}
+
+export async function createReport(
+  token: string,
+  input: CreateReportInput,
+): Promise<{ report_id: string; processing_status: string; entity_masked: string }> {
+  const body = await authed<{
+    data: { report_id: string; processing_status: string; entity_masked: string };
+  }>("/api/v1/reports", token, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "Idempotency-Key": crypto.randomUUID() },
+    body: JSON.stringify(input),
+  });
+  return body.data;
+}
+
+export async function uploadEvidence(token: string, reportId: string, file: File): Promise<void> {
+  const form = new FormData();
+  form.append("file", file);
+  form.append("media_type", "TRANSFER_SLIP");
+  await authed(`/api/v1/reports/${reportId}/evidence`, token, { method: "POST", body: form });
+}
+
+export async function getReport(reportId: string): Promise<ReportView> {
+  const body = await request<{ data: ReportView }>(`/api/v1/reports/${reportId}`);
+  return body.data;
+}
+

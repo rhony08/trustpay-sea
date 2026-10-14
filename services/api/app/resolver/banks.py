@@ -1,12 +1,34 @@
 """Bank / institution directory (Phase 1.1).
 
-Covers the six target markets. Code maps are demo-grade (G-8: real bank code
-maps OK in demo, licensing review pending for production). Institutions not in
-this directory must produce an explicit "unsupported bank" error — never a
-silent pass-through.
+Covers the six target markets (ID, MY, TH, SG, VN, PH). The canonical data
+lives in ``app/data/banks/*.json`` — one file per country — and is the single
+source of truth for both the resolver (canonical code used in the KMS-keyed
+HMAC) and the ``banks`` DB table (seeded via ``app.seeds.seed_banks``), so the
+reporting UI can only ever pick a controlled institution, never free text.
+
+G-8: real bank code maps are demo-grade; licensing review is pending for
+production. Institutions not in this directory must produce an explicit
+"unsupported bank" error — never a silent pass-through.
 """
 
+import json
 from dataclasses import dataclass
+from functools import lru_cache
+from pathlib import Path
+
+DATA_DIR = Path(__file__).resolve().parent.parent / "data" / "banks"
+
+# Fallback account-number length when a bank has no published rule. Deliberately
+# wide to avoid false rejections; per-bank overrides live in the JSON.
+LENGTH_FALLBACKS: dict[str, tuple[int, int]] = {
+    "ID": (6, 20),
+    "MY": (6, 20),
+    "TH": (10, 15),
+    "SG": (6, 20),
+    "VN": (6, 19),
+    "PH": (6, 20),
+}
+_DEFAULT_LENGTH = (6, 20)
 
 
 class UnsupportedBankError(Exception):
@@ -26,59 +48,40 @@ class Institution:
     max_length: int
 
 
-def _i(
-    country: str, code: str, name: str, bic: str | None, min_len: int, max_len: int
-) -> Institution:
-    return Institution(country, code, name, bic, min_len, max_len)
+@lru_cache(maxsize=1)
+def load_bank_records() -> tuple[dict, ...]:
+    """All reference records, ordered by country file then declaration order."""
+    records: list[dict] = []
+    for path in sorted(DATA_DIR.glob("*.json")):
+        records.extend(json.loads(path.read_text(encoding="utf-8")))
+    return tuple(records)
 
 
-BANK_DIRECTORY: dict[tuple[str, str], Institution] = {
-    # --- Indonesia (QRIS market, launch focus G-5) ---
-    ("ID", "014"): _i("ID", "014", "BCA", "BCIDIDJA", 10, 10),
-    ("ID", "002"): _i("ID", "002", "BRI", "BRINIDJA", 15, 15),
-    ("ID", "008"): _i("ID", "008", "Mandiri", "BMRIIDJA", 12, 12),
-    ("ID", "009"): _i("ID", "009", "BNI", "BNINIDJA", 10, 10),
-    ("ID", "022"): _i("ID", "022", "CIMB Niaga", "CENAIDJA", 10, 16),
-    ("ID", "011"): _i("ID", "011", "Bank Danamon", "SYNAIDJA", 10, 16),
-    ("ID", "013"): _i("ID", "013", "Permata Bank", "BBBAIDJA", 10, 16),
-    ("ID", "451"): _i("ID", "451", "BSI (Bank Syariah Indonesia)", "BSMDIDJA", 10, 16),
-    ("ID", "016"): _i("ID", "016", "Maybank Indonesia", "IBBUIDJA", 10, 16),
-    ("ID", "213"): _i("ID", "213", "BCA Syariah", "SYRBIDJA", 10, 16),
-    # --- E-wallets (wallet identifiers, P1 — IDs are phone/email aliases) ---
-    ("ID", "GOPAY"): _i("ID", "GOPAY", "GoPay (e-wallet)", None, 8, 16),
-    ("ID", "OVO"): _i("ID", "OVO", "OVO (e-wallet)", None, 8, 16),
-    ("ID", "DANA"): _i("ID", "DANA", "DANA (e-wallet)", None, 8, 16),
-    # --- Malaysia ---
-    ("MY", "MBB"): _i("MY", "MBB", "Maybank", "MBBEMYKL", 10, 12),
-    ("MY", "CIMB"): _i("MY", "CIMB", "CIMB Bank", "CIMBMYKL", 10, 14),
-    ("MY", "PBB"): _i("MY", "PBB", "Public Bank", "PBBEMYKL", 10, 12),
-    ("MY", "RHB"): _i("MY", "RHB", "RHB Bank", "RHBBMYKL", 10, 14),
-    ("MY", "HLB"): _i("MY", "HLB", "Hong Leong Bank", "HLBEMYKL", 10, 14),
-    ("MY", "BIMB"): _i("MY", "BIMB", "Bank Islam", "BIMBMYKL", 10, 14),
-    # --- Thailand ---
-    ("TH", "KBANK"): _i("TH", "KBANK", "Kasikorn Bank (KBank)", "KASITHBK", 10, 10),
-    ("TH", "SCB"): _i("TH", "SCB", "Siam Commercial Bank", "SICOTHBK", 10, 12),
-    ("TH", "BBL"): _i("TH", "BBL", "Bangkok Bank", "BKKBTHBK", 10, 12),
-    ("TH", "KTB"): _i("TH", "KTB", "Krungthai Bank", "KRTHTHBK", 10, 12),
-    ("TH", "BAY"): _i("TH", "BAY", "Bank of Ayudhya (Krungsri)", "AYUDTHBK", 10, 12),
-    # --- Singapore ---
-    ("SG", "DBS"): _i("SG", "DBS", "DBS Bank", "DBSSSGSG", 9, 12),
-    ("SG", "OCBC"): _i("SG", "OCBC", "OCBC Bank", "OCBCSGSG", 9, 12),
-    ("SG", "UOB"): _i("SG", "UOB", "United Overseas Bank", "UOVSGSG", 9, 12),
-    ("SG", "SCB"): _i("SG", "SCB", "Standard Chartered Singapore", "SCBLSGSG", 9, 12),
-    # --- Vietnam ---
-    ("VN", "VCB"): _i("VN", "VCB", "Vietcombank", "FTVBVNVX", 8, 16),
-    ("VN", "MB"): _i("VN", "MB", "MB Bank", "ASCBVNVX", 8, 16),
-    ("VN", "BIDV"): _i("VN", "BIDV", "BIDV", "BIDVVNVX", 8, 16),
-    ("VN", "VTB"): _i("VN", "VTB", "VietinBank", "ICBKVNVX", 8, 16),
-    ("VN", "AGB"): _i("VN", "AGB", "Agribank", "ABLBVNVX", 8, 16),
-    # --- Philippines ---
-    ("PH", "BDO"): _i("PH", "BDO", "BDO Unibank", "BNORPHMM", 10, 12),
-    ("PH", "BPI"): _i("PH", "BPI", "Bank of the Philippine Islands", "BOPIPHMM", 10, 12),
-    ("PH", "MB"): _i("PH", "MB", "Metrobank", "MBTCPHMM", 10, 12),
-    ("PH", "LB"): _i("PH", "LB", "Landbank of the Philippines", "TLBAPHMM", 10, 12),
-    ("PH", "RCBC"): _i("PH", "RCBC", "Rizal Commercial Banking Corp", "RCBCPHMM", 10, 12),
-}
+def _resolve_length(record: dict) -> tuple[int, int]:
+    fallback = LENGTH_FALLBACKS.get(record["country_code"], _DEFAULT_LENGTH)
+    lo = record.get("min_length") or fallback[0]
+    hi = record.get("max_length") or fallback[1]
+    return int(lo), int(hi)
+
+
+def _build_directory() -> dict[tuple[str, str], Institution]:
+    directory: dict[tuple[str, str], Institution] = {}
+    for record in load_bank_records():
+        country = record["country_code"].upper()
+        code = record["code"].upper()
+        min_len, max_len = _resolve_length(record)
+        directory[(country, code)] = Institution(
+            country=country,
+            code=record["code"],
+            name=record["name"],
+            bic=record.get("bic"),
+            min_length=min_len,
+            max_length=max_len,
+        )
+    return directory
+
+
+BANK_DIRECTORY: dict[tuple[str, str], Institution] = _build_directory()
 
 SUPPORTED_COUNTRIES = ("ID", "MY", "TH", "SG", "VN", "PH")
 

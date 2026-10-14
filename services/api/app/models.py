@@ -35,6 +35,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 from app.db import Base
 from app.enums import (
     AdminVerificationStatus,
+    BankType,
     DisputeStatus,
     EntityVerificationStatus,
     ProcessingStatus,
@@ -361,6 +362,45 @@ class AuditLog(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     __table_args__ = (Index("ix_audit_logs_subject", "subject_type", "subject_id"),)
+
+
+class Bank(Base):
+    """Reference directory of SEA banks / e-wallets (Phase 1.1).
+
+    Single source of truth for the reporting UI: a report's institution MUST be
+    selected from this table, never free text. Seeded from
+    ``app/data/banks/*.json`` via ``python -m app.seeds.seed_banks`` (G-8:
+    demo-grade data, licensing review pending for production).
+    """
+
+    __tablename__ = "banks"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, **GEN_UUID)
+    country_code: Mapped[str] = mapped_column(String(2), nullable=False)
+    code: Mapped[str] = mapped_column(String(50), nullable=False)  # local bank code / token
+    name: Mapped[str] = mapped_column(String(200), nullable=False)
+    short_name: Mapped[str | None] = mapped_column(String(100))
+    bic: Mapped[str | None] = mapped_column(String(11))  # SWIFT/BIC, when published
+    national_id: Mapped[str | None] = mapped_column(String(30))  # e.g. VN NAPAS BIN, SG GIRO code
+    bank_type: Mapped[str] = mapped_column(String(20), nullable=False)
+    min_length: Mapped[int | None] = mapped_column(Integer)
+    max_length: Mapped[int | None] = mapped_column(Integer)
+    aliases: Mapped[list[Any]] = mapped_column(JSONB, default=list, nullable=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    sort_order: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
+
+    __table_args__ = (
+        UniqueConstraint("country_code", "code", name="uq_banks_country_code"),
+        CheckConstraint(
+            f"bank_type IN ({','.join(repr(t.value) for t in BankType)})",
+            name="ck_banks_bank_type",
+        ),
+        Index("ix_banks_country_code", "country_code"),
+    )
 
 
 class UserNotification(Base):

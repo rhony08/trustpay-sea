@@ -61,7 +61,8 @@ This plan is structured so each phase produces a **verifiable, demo-able increme
 
 ### Phase 1 Demo
 - Scan QRIS → profile card shows Merchant Name, City, NMID, masked account, scheme, risk placeholder.
-- **Status 2026-10-14**: ✅ DONE — bank directory (40 institutions, 6 countries + ID e-wallets), normalizer (formatting variants → same KMS-keyed HMAC hash, H11 collision guards, length validation), EMVCo TLV parser w/ CRC-16 + scheme detection + homoglyph detector, server-side QR image decode (`POST /api/v1/qr/decode`, upload guards), `GET /api/v1/entities/account` + `POST /api/v1/entities/qr` (exact-match only; lookups never insert rows §10.3; ADR-016 holder-name labels), `/check` PWA page. 49 tests green. Implementation notes: opencv pinned `<5` (5.0.0 QRCodeEncoder segfaults on arm64); QR fixture PNG committed (encoder unusable in-wheel); CV2 multi-decode arity handled defensively.
+- **Status 2026-10-14**: ✅ DONE — bank directory (393 institutions across 6 countries incl. commercial/Islamic/digital banks + major e-wallets, sourced from `app/data/banks/*.json`), normalizer (formatting variants → same KMS-keyed HMAC hash, H11 collision guards, length validation), EMVCo TLV parser w/ CRC-16 + scheme detection + homoglyph detector, server-side QR image decode (`POST /api/v1/qr/decode`, upload guards), `GET /api/v1/entities/account` + `POST /api/v1/entities/qr` (exact-match only; lookups never insert rows §10.3; ADR-016 holder-name labels), `/check` PWA page. 59 tests green. Implementation notes: opencv pinned `<5` (5.0.0 QRCodeEncoder segfaults on arm64); QR fixture PNG committed (encoder unusable in-wheel); CV2 multi-decode arity handled defensively.
+- **Bank reference → controlled vocabulary (2026-10-14)**: `banks` DB table + Alembic migration `47312e3b6363`; seed with `python -m app.seeds.seed_banks` (idempotent upsert); public `GET /api/v1/banks?country=ID&bank_type=E_WALLET` so reports/reporter UI select an institution instead of free text. The same JSON is the resolver's source of truth (single taxonomy). G-8 still applies: real bank code maps are demo-grade pending licensing review.
 
 ---
 
@@ -85,6 +86,8 @@ This plan is structured so each phase produces a **verifiable, demo-able increme
 ### Phase 2 Demo
 - Submit report with slip image → watch it flip to "published with redacted evidence" + `ai_tampering_detected` displayed.
 - Bonus: submit a `.exe` masked as image → rejected at upload; submit 6 reports in 1h from a burner account → quota 429.
+
+- **Status 2026-10-14**: ✅ DONE — `POST /api/v1/reports` (auth + consent, `Idempotency-Key`, per-user/day + per-entity/hour quotas → 202 PROCESSING), `POST /api/v1/reports/{id}/evidence` (magic-byte + decompression-bomb pixel cap + EXIF-stripping re-encode → quarantine), async worker (fail-closed PII redaction, slip OCR/tamper heuristics, real pHash duplicate detection, canonical-taxonomy NLP + NER), `GET /api/v1/reports/{id}` status polling, published-reports feed on the entity profile, and the `/report` PWA page (auth → submit → processing→published polling) + report feed in `/check`. AI is mock-first per ADR-012 (no Gemini key). Evidence storage is a local-disk shim (S3/R2 presigned = Phase 7). 77 API tests green; web typecheck/lint/build green.
 
 ---
 
