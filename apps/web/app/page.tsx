@@ -78,6 +78,12 @@ export default function HomePage() {
         <Link href="/receipt" className="rounded-full border border-slate-700 px-4 py-1.5 text-slate-300 hover:border-emerald-400">
           Diligence receipt
         </Link>
+        <Link href="/tools/deal-check" className="rounded-full border border-slate-700 px-4 py-1.5 text-slate-300 hover:border-emerald-400">
+          Too good to be true?
+        </Link>
+        <Link href="/recovery" className="rounded-full border border-slate-700 px-4 py-1.5 text-slate-300 hover:border-emerald-400">
+          I got scammed
+        </Link>
         <Link href="/profile" className="rounded-full border border-slate-700 px-4 py-1.5 text-slate-300 hover:border-emerald-400">
           My profile
         </Link>

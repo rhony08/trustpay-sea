@@ -5,6 +5,8 @@ import { useCallback, useEffect, useState } from "react";
 import {
   ApiError,
   addWatch,
+  eraseData,
+  exportData,
   getProfile,
   getQuiz,
   getToken,
@@ -244,6 +246,41 @@ export default function ProfilePage() {
             Submit answers
           </button>
           {quizResult && <p className="text-sm text-slate-300">{quizResult}</p>}
+        </div>
+      </div>
+
+      <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-5">
+        <p className="font-semibold">Privacy &amp; your data</p>
+        <p className="mt-1 text-xs text-slate-400">
+          Export everything we hold about you, or erase your reports and votes.
+        </p>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <button
+            className="rounded-lg bg-slate-800 px-4 py-2 text-sm"
+            onClick={async () => {
+              const data = await exportData(token);
+              const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement("a");
+              a.href = url;
+              a.download = "trustpay-export.json";
+              a.click();
+              URL.revokeObjectURL(url);
+            }}
+          >
+            Export my data
+          </button>
+          <button
+            className="rounded-lg border border-rose-500/50 px-4 py-2 text-sm text-rose-300"
+            onClick={async () => {
+              if (!window.confirm("Erase your reports, votes, flags and watchlist? This cannot be undone.")) return;
+              await eraseData(token);
+              await refresh(token);
+              window.alert("Your data has been erased.");
+            }}
+          >
+            Erase my data
+          </button>
         </div>
       </div>
     </main>
