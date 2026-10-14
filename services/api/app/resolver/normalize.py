@@ -115,3 +115,20 @@ def normalize_qr_identifier(
     )
     masked = f"NMID ****{sanitized[-4:]}" if len(sanitized) >= 4 else "NMID ****"
     return hmac_hash(key, kms_key), masked
+
+
+def mask_phone(sanitized: str) -> str:
+    if len(sanitized) >= 4:
+        return f"***{sanitized[-4:]}"
+    return "***"
+
+
+def normalize_phone(*, country: str, phone: str, kms_key: str) -> tuple[str, str]:
+    """Cross-wallet e-wallet key (Phase 11): HMAC(country:PHONE:<sanitized>).
+
+    Deliberately independent of the wallet code so one phone number aggregates
+    reports across every e-wallet the same person/merchant uses.
+    """
+    sanitized = sanitize_account(phone)
+    key = f"{country.upper()}:PHONE:{sanitized}"
+    return hmac_hash(key, kms_key), mask_phone(sanitized)

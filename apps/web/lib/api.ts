@@ -192,6 +192,35 @@ export function screenQr(qr_payload: string): Promise<ScreenResult> {
   });
 }
 
+export interface PhoneWallet {
+  institution: string | null;
+  institution_name: string | null;
+  account_masked: string;
+  risk_score: number;
+  risk_level: string;
+  total_reports: number | string;
+  is_gov_blacklisted: boolean;
+  is_under_dispute: boolean;
+}
+
+export interface PhoneSearchResult {
+  country: string;
+  phone_masked: string;
+  wallet_count: number;
+  wallets: PhoneWallet[];
+  totals: { total_reports: number | string; max_risk_score: number };
+  risk_level: string;
+  gov_check?: GovCheck | null;
+}
+
+export function searchPhone(
+  country: string,
+  phone: string,
+): Promise<{ status: string; data: PhoneSearchResult }> {
+  const qs = new URLSearchParams({ country, phone }).toString();
+  return request<{ status: string; data: PhoneSearchResult }>(`/api/v1/entities/phone?${qs}`);
+}
+
 export async function decodeQrImage(file: File): Promise<string> {
   const form = new FormData();
   form.append("file", file);

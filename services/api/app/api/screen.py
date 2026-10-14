@@ -29,6 +29,7 @@ from app.resolver.banks import UnsupportedBankError, get_institution
 from app.resolver.emvco import EMVCoParseError, parse_emvco
 from app.resolver.normalize import NormalizationError, normalize_account, normalize_qr_identifier
 from app.services.entity_service import _report_stats, get_entity_by_hash
+from app.services.phone_search import search_phone
 from app.services.search_intel import get_search_intel
 
 router = APIRouter(prefix="/screen", tags=["screen"])
@@ -204,6 +205,27 @@ async def screen_account(
         "status": "success",
         "data": await _screen_response(db, caller, entity, query=query, gov_check=gov_check),
     }
+
+
+@router.get("/phone")
+async def screen_phone(
+    request: Request,
+    response: Response,
+    country: str,
+    phone: str,
+    db: AsyncSession = Depends(get_db),
+):
+    """Aggregated e-wallet screen by phone number (all wallets for that number)."""
+    caller = await _caller(request, db)
+    _set_headers(response, caller)
+    data = await search_phone(db, country=country, phone=phone)
+    if caller.tier == VISITOR_TIER:
+        for wallet in data["wallets"]:
+            wallet["total_reports"] = _bucket(wallet["total_reports"])
+        data["totals"]["total_reports"] = _bucket(data["totals"]["total_reports"])
+    data["tier"] = caller.tier
+    data["note"] = "Risk score is 0-100; higher = riskier."
+    return {"status": "success" if data["wallet_count"] else "not_found", "data": data}
 
 
 @router.post("/qr")

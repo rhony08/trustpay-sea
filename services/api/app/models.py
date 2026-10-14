@@ -87,6 +87,9 @@ class PaymentEntity(Base):
     scheme: Mapped[str | None] = mapped_column(String(30))
     country_code: Mapped[str] = mapped_column(String(2), nullable=False)
     institution_code: Mapped[str | None] = mapped_column(String(50))
+    # Cross-wallet phone key for e-wallets / phone aliases (Phase 11): same phone
+    # across different wallets shares this hash so lookups aggregate.
+    phone_hash: Mapped[str | None] = mapped_column(String(64), index=True)
     # KMS-keyed HMAC-SHA256 canonical key (ADR-002/013) — index only, never reverse
     account_hash: Mapped[str] = mapped_column(String(64), unique=True, nullable=False)
     hash_version: Mapped[int] = mapped_column(Integer, default=1, nullable=False)

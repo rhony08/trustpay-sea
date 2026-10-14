@@ -53,6 +53,7 @@ async def upsert_entity(
     institution_code: str | None,
     account_hash: str,
     account_masked: str,
+    phone_hash: str | None = None,
     merchant_name: str | None = None,
     merchant_city: str | None = None,
     nmid: str | None = None,
@@ -72,6 +73,8 @@ async def upsert_entity(
             entity.nmid = nmid
         if emvco_payload and emvco_payload != entity.emvco_payload:
             entity.emvco_payload = emvco_payload
+        if phone_hash and not entity.phone_hash:
+            entity.phone_hash = phone_hash
         return entity
 
     entity = PaymentEntity(
@@ -79,6 +82,7 @@ async def upsert_entity(
         scheme=str(scheme) if scheme else None,
         country_code=country_code.upper(),
         institution_code=institution_code,
+        phone_hash=phone_hash,
         account_hash=account_hash,
         hash_version=settings.account_hash_version,
         account_masked=account_masked,

@@ -14,11 +14,19 @@ import {
   getToken,
   screenAccount,
   screenQr,
+  searchPhone,
   type GovCheck,
+  type PhoneSearchResult,
   type ScreenResult,
 } from "@/lib/api";
 
-type Tab = "account" | "qr";
+type Tab = "account" | "phone" | "qr";
+
+const TABS: { key: Tab; label: string }[] = [
+  { key: "account", label: "Bank account" },
+  { key: "phone", label: "E-wallet (by phone)" },
+  { key: "qr", label: "Scan / paste QR" },
+];
 
 const BADGE_STYLES: Record<string, string> = {
   GREEN: "bg-emerald-500/15 text-emerald-300 border-emerald-500/40",
@@ -48,20 +56,39 @@ export default function CheckPage() {
   const [country, setCountry] = useState("ID");
   const [bank, setBank] = useState("014");
   const [account, setAccount] = useState("");
+  const [phone, setPhone] = useState("");
   const [payload, setPayload] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<ScreenResult | null>(null);
+  const [phoneResult, setPhoneResult] = useState<PhoneSearchResult | null>(null);
   const [acknowledged, setAcknowledged] = useState(true);
 
   async function run(fn: () => Promise<ScreenResult>) {
     setBusy(true);
     setError(null);
     setResult(null);
+    setPhoneResult(null);
     try {
       const next = await fn();
       setResult(next);
       setAcknowledged(!hasFreshReports(next));
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : "Request failed");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function runPhone() {
+    setBusy(true);
+    setError(null);
+    setResult(null);
+    setPhoneResult(null);
+    try {
+      const next = await searchPhone(country, phone);
+      setPhoneResult(next.data);
+      setAcknowledged(true);
     } catch (e) {
       setError(e instanceof ApiError ? e.message : "Request failed");
     } finally {
@@ -90,15 +117,15 @@ export default function CheckPage() {
       <h1 className="text-2xl font-bold">Check before you pay</h1>
 
       <div className="flex gap-2">
-        {(["account", "qr"] as Tab[]).map((t) => (
+        {TABS.map((t) => (
           <button
-            key={t}
-            onClick={() => setTab(t)}
-            className={`flex-1 rounded-lg px-4 py-2 text-sm font-medium ${
-              tab === t ? "bg-emerald-500 text-slate-950" : "bg-slate-800 text-slate-300"
+            key={t.key}
+            onClick={() => setTab(t.key)}
+            className={`flex-1 rounded-lg px-3 py-2 text-xs font-medium sm:text-sm ${
+              tab === t.key ? "bg-emerald-500 text-slate-950" : "bg-slate-800 text-slate-300"
             }`}
           >
-            {t === "account" ? "Bank account / e-wallet" : "Scan / paste QR"}
+            {t.label}
           </button>
         ))}
       </div>
@@ -144,6 +171,46 @@ export default function CheckPage() {
             className="rounded-lg bg-emerald-500 px-4 py-2 font-semibold text-slate-950 disabled:opacity-50"
           >
             {busy ? "Checking…" : "Check account"}
+          </button>
+        </form>
+      ) : tab === "phone" ? (
+        <form
+          className="flex flex-col gap-3"
+          onSubmit={(e) => {
+            e.preventDefault();
+            void runPhone();
+          }}
+        >
+          <div className="grid grid-cols-2 gap-3">
+            <select
+              className={input}
+              value={country}
+              onChange={(e) => setCountry(e.target.value)}
+            >
+              {COUNTRIES.map((c) => (
+                <option key={c.code} value={c.code}>
+                  {c.label}
+                </option>
+              ))}
+            </select>
+            <input
+              className={input}
+              placeholder="Phone number (e.g. 0812…)"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              inputMode="tel"
+              required
+            />
+          </div>
+          <p className="text-xs text-slate-400">
+            Checks <b>all e-wallets</b> for this phone number at once — no need to pick a wallet.
+          </p>
+          <button
+            type="submit"
+            disabled={busy || !phone}
+            className="rounded-lg bg-emerald-500 px-4 py-2 font-semibold text-slate-950 disabled:opacity-50"
+          >
+            {busy ? "Checking…" : "Check e-wallets"}
           </button>
         </form>
       ) : (
@@ -223,6 +290,7 @@ export default function CheckPage() {
       )}
 
       {result && acknowledged && <ResultCard result={result} />}
+      {phoneResult && <PhoneResultCard data={phoneResult} />}
     </main>
   );
 }
@@ -666,6 +734,60 @@ function GovCheckBanner({ check }: { check?: GovCheck | null }) {
   return (
     <div className="mt-3 rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-200">
       No match on the {check.source} national registry.
+    </div>
+  );
+}
+
+function PhoneResultCard({ data }: { data: PhoneSearchResult }) {
+  const found = data.wallet_count > 0;
+  return (
+    <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-5">
+      <div className="flex items-center justify-between">
+        <p className="font-mono text-lg">{data.phone_masked}</p>
+        <span
+          className={`rounded-full border px-3 py-1 text-xs font-semibold ${
+            found ? BADGE_STYLES.RED : BADGE_STYLES.GREEN
+          }`}
+        >
+          {data.wallet_count} wallet{data.wallet_count === 1 ? "" : "s"}
+        </span>
+      </div>
+      <p className="mt-1 text-sm text-slate-400">
+        {data.country} · max risk {data.totals.max_risk_score} ·{" "}
+        {LEVEL_LABELS[data.risk_level] ?? data.risk_level}
+        {found ? "" : " · no reports"}
+      </p>
+
+      <GovCheckBanner check={data.gov_check} />
+
+      {found ? (
+        <ul className="mt-3 space-y-2">
+          {data.wallets.map((w) => (
+            <li
+              key={`${w.institution}-${w.account_masked}`}
+              className="rounded-lg border border-slate-700 bg-slate-800/60 p-3 text-sm"
+            >
+              <div className="flex items-center justify-between">
+                <span className="font-semibold">{w.institution_name ?? w.institution}</span>
+                <span className="text-xs text-slate-400">
+                  risk {w.risk_score} · {w.total_reports} report
+                  {typeof w.total_reports === "number" && w.total_reports === 1 ? "" : "s"}
+                </span>
+              </div>
+              <p className="mt-0.5 font-mono text-xs text-slate-400">{w.account_masked}</p>
+              {w.is_gov_blacklisted && (
+                <p className="mt-1 text-xs text-rose-300">🏛 Government blacklist</p>
+              )}
+              {w.is_under_dispute && <p className="mt-1 text-xs text-amber-300">⚖ Dispute active</p>}
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="mt-3 text-sm text-slate-400">
+          No e-wallet reports found for this phone number.
+        </p>
+      )}
+      <p className="mt-3 text-[11px] text-slate-500">higher risk score = riskier</p>
     </div>
   );
 }

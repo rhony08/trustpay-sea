@@ -25,7 +25,7 @@ from app.enums import (
 from app.models import FraudReport, PaymentEntity, ReportEvidence
 from app.resolver.banks import get_institution
 from app.resolver.emvco import parse_emvco
-from app.resolver.normalize import normalize_account, normalize_qr_identifier
+from app.resolver.normalize import normalize_account, normalize_phone, normalize_qr_identifier
 from app.services.entity_service import upsert_entity
 
 
@@ -50,6 +50,11 @@ async def resolve_bank_target(
         account_raw=account,
         kms_key=settings.account_hmac_key,
     )
+    phone_hash = None
+    if (institution.bank_type or "").upper() == "E_WALLET":
+        phone_hash, _ = normalize_phone(
+            country=country, phone=account, kms_key=settings.account_hmac_key
+        )
     entity = await upsert_entity(
         db,
         entity_type=EntityType.BANK_ACCOUNT,
@@ -58,6 +63,7 @@ async def resolve_bank_target(
         institution_code=institution.code,
         account_hash=account_hash,
         account_masked=masked,
+        phone_hash=phone_hash,
     )
     await _apply_government_signal(
         db, entity, country=country, account=account, bank_type=institution.bank_type
