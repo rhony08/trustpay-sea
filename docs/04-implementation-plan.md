@@ -259,12 +259,14 @@ This plan is structured so each phase produces a **verifiable, demo-able increme
 
 ### Phase 7 Delivery Notes (2026-10-14)
 
+- ✅ **7.1 Coverage gate**: `pytest-cov` wired into CI with `--cov-fail-under=70`; current core coverage ~81% (135 tests).
+- ✅ **7.2 E2E smoke**: Playwright (`apps/web/e2e/smoke.spec.ts`) runs in CI (jobs boot the built PWA); plus a backend end-to-end journey test (`tests/test_e2e_journey.py`: search→report→publish→vote→flag→admin→claim→dispute→settle).
 - ✅ **7.3 Seed demo data**: `python -m app.seeds.seed_demo` (idempotent) creates a demo analyst + reporters, 10 entities (incl. QRIS), ~20 published reports, a safe-harbor dispute and a mock gov-blacklisted account. `seed_banks` seeds the 393-institution directory.
 - ✅ **7.7 Notifications**: `user_notifications` created for watchers on publish; `GET /profile/notifications` + mark-read.
 - ✅ **7.8 Consent + DSAR**: report flow requires explicit consent; `GET /profile/export` + `DELETE /profile/data` self-serve (evidence cascades).
 - ✅ **7.4 OpenAPI**: FastAPI serves `/openapi.json` + Swagger at `/docs`. Partner API-key scopes/rotation remain a follow-up.
-- ✅ **7.9 Env/deploy docs**: README quick-start, `.env.example`, compose; seeder documented.
-- ⏳ **Deferred (follow-ups)**: 7.1 numeric coverage gate (pytest-cov), 7.2 Playwright E2E, 7.4 partner API keys, 7.5 full security review, 7.6 rehearsed demo script. Tracked for the hardening pass.
+- ✅ **7.9 Env/deploy docs**: README quick-start, `.env.example`, compose; seeders documented.
+- ⏳ **Deferred (follow-ups)**: 7.4 partner API keys (scopes/rotation), 7.5 full security review checklist, 7.6 rehearsed demo script.
 
 ---
 

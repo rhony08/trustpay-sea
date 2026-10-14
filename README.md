@@ -50,6 +50,8 @@ pytest -q
 cd apps/web
 npm install
 npm run typecheck && npm run lint && npm run build
+npx playwright install chromium   # once
+npm run test:e2e                  # Playwright smoke (boots the built PWA)
 ```
 
 ### Bank reference (controlled vocabulary)
