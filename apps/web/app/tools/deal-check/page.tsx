@@ -2,18 +2,18 @@
 
 import { useState } from "react";
 import { checkDeal, type DealCheckResult } from "@/lib/api";
+import { useI18n } from "@/components/LocaleProvider";
 
 export default function DealCheckPage() {
+  const { t } = useI18n();
   const [text, setText] = useState("");
   const [result, setResult] = useState<DealCheckResult | null>(null);
   const [busy, setBusy] = useState(false);
 
   return (
     <main className="mx-auto flex max-w-xl flex-1 flex-col gap-4 px-6 py-12">
-      <h1 className="text-2xl font-bold text-slate-900">Too good to be true?</h1>
-      <p className="text-sm text-slate-500">
-        Paste a deal, offer, or message and we&apos;ll flag common scam tactics.
-      </p>
+      <h1 className="text-2xl font-bold text-slate-900">{t("dealCheck.title")}</h1>
+      <p className="text-sm text-slate-500">{t("dealCheck.subtitle")}</p>
       <form
         className="flex flex-col gap-3"
         onSubmit={async (e) => {
@@ -29,7 +29,7 @@ export default function DealCheckPage() {
         <textarea
           className="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-slate-800 outline-none focus:border-blue-600 focus:bg-white focus:ring-2 focus:ring-blue-100"
           rows={4}
-          placeholder="e.g. Guaranteed profit, deposit today and double your money!"
+          placeholder={t("dealCheck.placeholder")}
           value={text}
           onChange={(e) => setText(e.target.value)}
           required
@@ -38,7 +38,7 @@ export default function DealCheckPage() {
           disabled={busy}
           className="rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white shadow-xs hover:bg-blue-700 disabled:opacity-50"
         >
-          {busy ? "Checking…" : "Check the deal"}
+          {busy ? t("common.checking") : t("dealCheck.check")}
         </button>
       </form>
 
@@ -51,7 +51,7 @@ export default function DealCheckPage() {
           }`}
         >
           <p className="font-semibold">
-            {result.suspicious ? "Red flags found" : "No obvious red flags"}
+            {result.suspicious ? t("dealCheck.redFlags") : t("dealCheck.noFlags")}
           </p>
           {result.suspicious && (
             <ul className="mt-2 list-disc space-y-1 pl-5 text-sm">

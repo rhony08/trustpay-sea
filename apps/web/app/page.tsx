@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { BANKS, COUNTRIES } from "@/lib/api";
 import { ShieldMark } from "@/components/Brand";
+import { useI18n } from "@/components/LocaleProvider";
 
 type Tab = "account" | "phone" | "qr";
 
@@ -13,6 +14,7 @@ const inputCls =
 
 export default function HomePage() {
   const router = useRouter();
+  const { t } = useI18n();
   const [tab, setTab] = useState<Tab>("account");
   const [country, setCountry] = useState("ID");
   const [bank, setBank] = useState(BANKS.ID[0].code);
@@ -47,29 +49,28 @@ export default function HomePage() {
             <div className="space-y-6 lg:col-span-7">
               <span className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-800">
                 <span className="h-2 w-2 rounded-full bg-blue-600" />
-                Southeast Asia&rsquo;s Community Payment Protection Registry
+                {t("home.badge")}
               </span>
 
               <h1 className="text-4xl font-black leading-tight tracking-tight text-slate-900 sm:text-5xl">
-                Know who you are paying <br className="hidden sm:inline" />
-                <span className="text-blue-600">before sending money.</span>
+                {t("home.title1")} <br className="hidden sm:inline" />
+                <span className="text-blue-600">{t("home.title2")}</span>
               </h1>
 
               <p className="max-w-xl text-base leading-relaxed text-slate-600 sm:text-lg">
-                Search any bank account, phone number, or scan a <b>QRIS, DuitNow, PromptPay,
-                PayNow, VietQR, or QR Ph</b> code. Prevent mule scams and verify legitimate sellers.
+                {t("home.subtitle")}
               </p>
 
               <div className="rounded-2xl border-2 border-slate-200 bg-white p-5 shadow-xl sm:p-6">
                 <div className="mb-5 flex border-b border-slate-200">
                   <TabButton active={tab === "account"} onClick={() => setTab("account")}>
-                    Bank Account
+                    {t("home.tabBank")}
                   </TabButton>
                   <TabButton active={tab === "phone"} onClick={() => setTab("phone")}>
-                    E-Wallet Phone
+                    {t("home.tabPhone")}
                   </TabButton>
                   <TabButton active={tab === "qr"} onClick={() => setTab("qr")}>
-                    Scan QR
+                    {t("home.tabQr")}
                   </TabButton>
                 </div>
 
@@ -77,7 +78,7 @@ export default function HomePage() {
                   <form className="space-y-4" onSubmit={submitAccount}>
                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                       <div>
-                        <Label>Country</Label>
+                        <Label>{t("home.country")}</Label>
                         <select
                           className={inputCls}
                           value={country}
@@ -94,7 +95,7 @@ export default function HomePage() {
                         </select>
                       </div>
                       <div>
-                        <Label>Bank / Platform</Label>
+                        <Label>{t("home.bank")}</Label>
                         <select
                           className={inputCls}
                           value={bank}
@@ -110,11 +111,11 @@ export default function HomePage() {
                     </div>
 
                     <div>
-                      <Label>Destination bank account number</Label>
+                      <Label>{t("home.accountNumber")}</Label>
                       <input
                         inputMode="numeric"
                         required
-                        placeholder="e.g. 8831924831 (exact match required)"
+                        placeholder={t("home.accountPlaceholder")}
                         className={`${inputCls} font-mono text-base`}
                         value={account}
                         onChange={(e) => setAccount(e.target.value)}
@@ -124,21 +125,20 @@ export default function HomePage() {
                     <div className="rounded-xl border border-blue-200 bg-blue-50/70 p-3.5">
                       <div className="mb-1 flex items-center justify-between">
                         <label className="flex items-center gap-1.5 text-xs font-bold text-blue-900">
-                          ⚡ Recipient Name Matcher (Anti-Mule Radar)
+                          {t("home.nameMatcher")}
                         </label>
                         <span className="rounded bg-blue-100 px-2 py-0.5 text-[10px] font-bold text-blue-800">
-                          Recommended
+                          {t("home.recommended")}
                         </span>
                       </div>
                       <input
-                        placeholder="Who did the seller claim to be? (e.g. 'Siti' or 'Shop Admin')"
+                        placeholder={t("home.nameMatcherPlaceholder")}
                         className="w-full rounded-lg border border-blue-200 bg-white px-3 py-1.5 text-xs text-slate-800 outline-none focus:border-blue-500"
                         value={nameClaim}
                         onChange={(e) => setNameClaim(e.target.value)}
                       />
                       <p className="mt-1.5 text-[11px] text-blue-800">
-                        We cross-check the bank holder name against who you were told to pay, flagging
-                        third-party mule accounts.
+                        {t("home.nameMatcherHelp")}
                       </p>
                     </div>
 
@@ -147,13 +147,13 @@ export default function HomePage() {
                       className="flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 py-3.5 text-sm font-bold text-white shadow-md transition-colors hover:bg-blue-700"
                     >
                       <ShieldMark className="h-5 w-5" />
-                      Check Account Now
+                      {t("home.checkAccountBtn")}
                     </button>
                   </form>
                 ) : tab === "phone" ? (
                   <form className="space-y-4" onSubmit={submitPhone}>
                     <div>
-                      <Label>Phone number (any connected e-wallet)</Label>
+                      <Label>{t("home.phoneLabel")}</Label>
                       <div className="flex gap-2">
                         <select
                           className="rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm font-medium"
@@ -169,22 +169,21 @@ export default function HomePage() {
                         <input
                           type="tel"
                           required
-                          placeholder="08123456789…"
+                          placeholder={t("home.phonePlaceholder")}
                           className="flex-1 rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 font-mono text-base outline-none focus:border-blue-600"
                           value={phone}
                           onChange={(e) => setPhone(e.target.value)}
                         />
                       </div>
                       <p className="mt-2 text-xs text-slate-500">
-                        Simultaneously searches GoPay, OVO, DANA, ShopeePay, Touch &rsquo;n Go,
-                        GrabPay, and GCash.
+                        {t("home.phoneHelp")}
                       </p>
                     </div>
                     <button
                       type="submit"
                       className="w-full rounded-xl bg-blue-600 py-3.5 text-sm font-bold text-white shadow-md transition-colors hover:bg-blue-700"
                     >
-                      Check E-Wallet Number
+                      {t("home.checkWalletBtn")}
                     </button>
                   </form>
                 ) : (
@@ -192,10 +191,10 @@ export default function HomePage() {
                     <label className="block cursor-pointer rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 p-8 text-center hover:border-blue-500">
                       <ShieldMark className="mx-auto mb-2 h-10 w-10 text-slate-400" />
                       <p className="text-sm font-bold text-slate-700">
-                        Upload QRIS / DuitNow QR screenshot
+                        {t("home.qrUploadTitle")}
                       </p>
                       <p className="mt-1 text-xs text-slate-500">
-                        Supports QRIS, DuitNow, PromptPay, PayNow, VietQR &amp; QR Ph
+                        {t("home.qrUploadHelp")}
                       </p>
                       <input
                         type="file"
@@ -211,10 +210,10 @@ export default function HomePage() {
                       />
                     </label>
                     <div className="text-center text-xs font-bold uppercase text-slate-400">
-                      or paste payload string
+                      {t("home.qrOrPaste")}
                     </div>
                     <input
-                      placeholder="Paste EMVCo TLV string (000201010212…)"
+                      placeholder={t("home.qrPlaceholder")}
                       className="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 font-mono text-xs"
                       value={qrPayload}
                       onChange={(e) => setQrPayload(e.target.value)}
@@ -224,16 +223,16 @@ export default function HomePage() {
                       onClick={submitQr}
                       className="w-full rounded-xl bg-blue-600 py-3.5 text-sm font-bold text-white shadow-md hover:bg-blue-700"
                     >
-                      Screen QR Code
+                      {t("home.checkQrBtn")}
                     </button>
                   </div>
                 )}
 
                 <div className="mt-4 flex flex-wrap items-center justify-between border-t border-slate-100 pt-4 text-xs text-slate-500">
                   <span className="flex items-center gap-1.5 font-medium">
-                    ✓ 393 Financial Institutions Seeded
+                    {t("home.seeded")}
                   </span>
-                  <span className="flex items-center gap-1.5 font-medium">🔒 KMS Encrypted Index</span>
+                  <span className="flex items-center gap-1.5 font-medium">{t("home.kms")}</span>
                 </div>
               </div>
             </div>
@@ -248,13 +247,13 @@ export default function HomePage() {
       <section className="border-b border-slate-200 bg-slate-100 py-8">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <p className="mb-5 text-center text-xs font-bold uppercase tracking-wider text-slate-500">
-            Ecosystem Integration &amp; Official Intelligence Sources
+            {t("home.proofTitle")}
           </p>
           <div className="grid grid-cols-2 gap-4 text-center sm:grid-cols-4">
-            <ProofCard title="🇲🇾 PDRM Semak Mule" body="Live sync with Royal Malaysia Police CCID database" />
-            <ProofCard title="🇮🇩 CekRekening & IASC" body="OJK Anti-Scam Center & Kominfo blacklist taxonomy" />
-            <ProofCard title="🇸🇬 SPF Anti-Scam" body="Singapore Police Force referral compatibility" />
-            <ProofCard title="🔒 Banking-Grade HMAC" body="Never cleartext indexed · Fail-closed PII protection" />
+            <ProofCard title={t("home.proof1Title")} body={t("home.proof1Body")} />
+            <ProofCard title={t("home.proof2Title")} body={t("home.proof2Body")} />
+            <ProofCard title={t("home.proof3Title")} body={t("home.proof3Body")} />
+            <ProofCard title={t("home.proof4Title")} body={t("home.proof4Body")} />
           </div>
         </div>
       </section>
@@ -263,37 +262,36 @@ export default function HomePage() {
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <div className="mx-auto mb-12 max-w-2xl text-center">
             <h2 className="mb-3 text-2xl font-extrabold text-slate-900 sm:text-3xl">
-              How TrustPay Protects Your Everyday Payments
+              {t("home.pillarsTitle")}
             </h2>
             <p className="text-sm text-slate-600">
-              Instant payment rails (QRIS, DuitNow, PromptPay) offer no chargeback. TrustPay acts as
-              your real-time safety layer.
+              {t("home.pillarsSub")}
             </p>
           </div>
           <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
             <Pillar
               n="1"
               tone="blue"
-              title="Check Before Transferring (Truecaller Mode)"
-              body="Enter any account or scan an in-store QR code. See verified holder names, 7-day search velocity, and clear risk scores."
+              title={t("home.pillar1Title")}
+              body={t("home.pillar1Body")}
               href="/check"
-              cta="Check an account now"
+              cta={t("home.pillar1Cta")}
             />
             <Pillar
               n="2"
               tone="rose"
-              title="Google Reviews + Slip Forensics"
-              body="Victims upload transfer receipts. Automated AI blurs sender balances and personal IDs, keeping the scammer's destination crystal clear."
+              title={t("home.pillar2Title")}
+              body={t("home.pillar2Body")}
               href="/report"
-              cta="Submit a fraud report"
+              cta={t("home.pillar2Cta")}
             />
             <Pillar
               n="3"
               tone="emerald"
-              title="Anti-Smear Shield for Merchants"
-              body="Legitimate owners can claim accounts with proof. An active dispute triggers an instant safe-harbor freeze so competitors cannot extortion-bomb your rating."
+              title={t("home.pillar3Title")}
+              body={t("home.pillar3Body")}
               href="/claim"
-              cta="Claim business account"
+              cta={t("home.pillar3Cta")}
             />
           </div>
         </div>
@@ -381,6 +379,7 @@ function Pillar({
 }
 
 function PhoneMockup() {
+  const { t } = useI18n();
   return (
     <div className="relative w-full max-w-sm">
       <div className="absolute -inset-4 rotate-2 rounded-3xl bg-gradient-to-r from-blue-100 to-indigo-100 blur-sm" />
@@ -391,7 +390,7 @@ function PhoneMockup() {
             <span className="h-3 w-3 rounded-full bg-amber-500" />
             <span className="h-3 w-3 rounded-full bg-emerald-500" />
           </div>
-          <span className="font-mono text-[10px] font-bold text-slate-400">TRUSTPAY SHIELD v2.0</span>
+          <span className="font-mono text-[10px] font-bold text-slate-400">{t("home.mockHeader")}</span>
         </div>
 
         <div className="space-y-2 rounded-2xl border-2 border-red-300 bg-red-50 p-4 text-center">
@@ -399,31 +398,31 @@ function PhoneMockup() {
             !
           </div>
           <span className="rounded-full bg-red-600 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-white">
-            Critical scam detected
+            {t("home.mockCritical")}
           </span>
-          <h4 className="text-base font-extrabold leading-tight text-slate-900">BCA 8831924831</h4>
-          <p className="text-xs font-bold text-red-800">Recipient: BAMBANG SUJARWO</p>
+          <h4 className="text-base font-extrabold leading-tight text-slate-900">{t("home.mockAccount")}</h4>
+          <p className="text-xs font-bold text-red-800">{t("home.mockRecipient")}</p>
           <p className="text-[11px] text-slate-600">
-            ⚠️ 3 verified community fraud reports
+            {t("home.mockReports")}
             <br />
-            Seller claimed to be: <b>&ldquo;Siti Aminah&rdquo;</b>
+            {t("home.mockClaimed")} <b>&ldquo;Siti Aminah&rdquo;</b>
           </p>
         </div>
 
         <div className="grid grid-cols-2 gap-2 text-center text-xs">
           <div className="rounded-xl border border-slate-200 bg-slate-50 p-2.5">
-            <span className="text-[10px] font-bold uppercase text-slate-500">Risk score</span>
-            <p className="text-lg font-black text-red-600">88 / 100</p>
+            <span className="text-[10px] font-bold uppercase text-slate-500">{t("home.mockRiskScore")}</span>
+            <p className="text-lg font-black text-red-600">{t("home.mockRiskValue")}</p>
           </div>
           <div className="rounded-xl border border-slate-200 bg-slate-50 p-2.5">
-            <span className="text-[10px] font-bold uppercase text-slate-500">Searched (7d)</span>
-            <p className="text-lg font-black text-slate-900">42 times</p>
+            <span className="text-[10px] font-bold uppercase text-slate-500">{t("home.mockSearched")}</span>
+            <p className="text-lg font-black text-slate-900">{t("home.mockSearchedValue")}</p>
           </div>
         </div>
 
         <div className="flex items-center gap-2.5 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-xs font-medium text-emerald-900">
           <span className="shrink-0 text-emerald-600">✓</span>
-          <span>Protected: victim transfer slip balance is automatically redacted by AI.</span>
+          <span>{t("home.mockProtected")}</span>
         </div>
       </div>
     </div>

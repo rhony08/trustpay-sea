@@ -24,6 +24,7 @@ import { RiskGauge } from "@/components/RiskGauge";
 import { CoolingOffTimer } from "@/components/CoolingOffTimer";
 import { RedactedSlipViewer } from "@/components/RedactedSlipViewer";
 import { ReportCard } from "@/components/ReportCard";
+import { useI18n } from "@/components/LocaleProvider";
 
 type Tab = "account" | "phone" | "qr";
 
@@ -41,6 +42,7 @@ function hasFreshReports(result: ScreenResult): boolean {
 }
 
 export default function CheckPage() {
+  const { t } = useI18n();
   const [tab, setTab] = useState<Tab>("account");
   const [country, setCountry] = useState("ID");
   const [bank, setBank] = useState("014");
@@ -54,19 +56,22 @@ export default function CheckPage() {
   const [phoneResult, setPhoneResult] = useState<PhoneSearchResult | null>(null);
   const [flagged, setFlagged] = useState<ReportView | null>(null);
 
-  const run = useCallback(async (fn: () => Promise<ScreenResult>) => {
-    setBusy(true);
-    setError(null);
-    setResult(null);
-    setPhoneResult(null);
-    try {
-      setResult(await fn());
-    } catch (e) {
-      setError(e instanceof ApiError ? e.message : "Request failed");
-    } finally {
-      setBusy(false);
-    }
-  }, []);
+  const run = useCallback(
+    async (fn: () => Promise<ScreenResult>) => {
+      setBusy(true);
+      setError(null);
+      setResult(null);
+      setPhoneResult(null);
+      try {
+        setResult(await fn());
+      } catch (e) {
+        setError(e instanceof ApiError ? e.message : t("common.errorRequest"));
+      } finally {
+        setBusy(false);
+      }
+    },
+    [t],
+  );
 
   const runPhone = useCallback(async () => {
     setBusy(true);
@@ -77,11 +82,11 @@ export default function CheckPage() {
       const next = await searchPhone(country, phone);
       setPhoneResult(next.data);
     } catch (e) {
-      setError(e instanceof ApiError ? e.message : "Request failed");
+      setError(e instanceof ApiError ? e.message : t("common.errorRequest"));
     } finally {
       setBusy(false);
     }
-  }, [country, phone]);
+  }, [country, phone, t]);
 
   // Deep-link hydration: home search + shared QR both land here.
   useEffect(() => {
@@ -124,23 +129,27 @@ export default function CheckPage() {
       <div className="mx-auto max-w-4xl px-4 sm:px-6">
         <div className="mb-6">
           <Link href="/" className="mb-1 inline-flex items-center gap-1 text-xs font-medium text-slate-500 hover:text-blue-600">
-            &larr; Back to search
+            {t("common.backToSearch")}
           </Link>
-          <h1 className="text-2xl font-bold text-slate-900">Payment verification dossier</h1>
+          <h1 className="text-2xl font-bold text-slate-900">{t("check.title")}</h1>
         </div>
 
         {/* Search form */}
         <div className="mb-6 rounded-xl border border-slate-200 bg-white p-4 shadow-xs">
           <div className="mb-3 flex gap-2 text-xs font-semibold">
-            {(["account", "phone", "qr"] as Tab[]).map((t) => (
+            {(["account", "phone", "qr"] as Tab[]).map((tabKey) => (
               <button
-                key={t}
-                onClick={() => setTab(t)}
+                key={tabKey}
+                onClick={() => setTab(tabKey)}
                 className={`rounded-lg px-3 py-1.5 ${
-                  tab === t ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                  tab === tabKey ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                 }`}
               >
-                {t === "account" ? "Bank account" : t === "phone" ? "E-wallet phone" : "QR / QRIS"}
+                {tabKey === "account"
+                  ? t("check.tabAccount")
+                  : tabKey === "phone"
+                    ? t("check.tabPhone")
+                    : t("check.tabQr")}
               </button>
             ))}
           </div>
@@ -154,7 +163,7 @@ export default function CheckPage() {
               }}
             >
               <div>
-                <MiniLabel>Country</MiniLabel>
+                <MiniLabel>{t("common.country")}</MiniLabel>
                 <select
                   className={inputCls}
                   value={country}
@@ -171,7 +180,7 @@ export default function CheckPage() {
                 </select>
               </div>
               <div>
-                <MiniLabel>Institution</MiniLabel>
+                <MiniLabel>{t("check.institution")}</MiniLabel>
                 <select className={inputCls} value={bank} onChange={(e) => setBank(e.target.value)}>
                   {(BANKS[country] ?? []).map((b) => (
                     <option key={b.code} value={b.code}>
@@ -181,7 +190,7 @@ export default function CheckPage() {
                 </select>
               </div>
               <div>
-                <MiniLabel>Account number</MiniLabel>
+                <MiniLabel>{t("check.accountNumber")}</MiniLabel>
                 <input
                   required
                   inputMode="numeric"
@@ -192,12 +201,12 @@ export default function CheckPage() {
                 />
               </div>
               <div>
-                <MiniLabel>Seller claimed name (optional)</MiniLabel>
+                <MiniLabel>{t("check.sellerClaimed")}</MiniLabel>
                 <input
                   className={`${inputCls} border-blue-200 bg-blue-50/50`}
                   value={nameClaim}
                   onChange={(e) => setNameClaim(e.target.value)}
-                  placeholder="e.g. Siti Aminah"
+                  placeholder={t("check.sellerClaimedPlaceholder")}
                 />
               </div>
               <div className="sm:col-span-4">
@@ -206,7 +215,7 @@ export default function CheckPage() {
                   disabled={busy || !account}
                   className="w-full rounded-lg bg-blue-600 py-2 text-sm font-bold text-white shadow-xs hover:bg-blue-700 disabled:opacity-50"
                 >
-                  {busy ? "Checking…" : "Re-verify account"}
+                  {busy ? t("common.checking") : t("check.reVerify")}
                 </button>
               </div>
             </form>
@@ -221,7 +230,7 @@ export default function CheckPage() {
               }}
             >
               <div className="sm:w-40">
-                <MiniLabel>Country</MiniLabel>
+                <MiniLabel>{t("common.country")}</MiniLabel>
                 <select className={inputCls} value={country} onChange={(e) => setCountry(e.target.value)}>
                   {COUNTRIES.map((c) => (
                     <option key={c.code} value={c.code}>
@@ -231,7 +240,7 @@ export default function CheckPage() {
                 </select>
               </div>
               <div className="flex-1">
-                <MiniLabel>Phone number</MiniLabel>
+                <MiniLabel>{t("check.phone")}</MiniLabel>
                 <input
                   required
                   inputMode="tel"
@@ -246,7 +255,7 @@ export default function CheckPage() {
                 disabled={busy || !phone}
                 className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-bold text-white hover:bg-blue-700 disabled:opacity-50"
               >
-                {busy ? "Checking…" : "Check e-wallets"}
+                {busy ? t("common.checking") : t("check.checkWallets")}
               </button>
             </form>
           )}
@@ -262,13 +271,13 @@ export default function CheckPage() {
               <textarea
                 rows={2}
                 className={`${inputCls} font-mono text-xs`}
-                placeholder="Paste EMVCo QR payload"
+                placeholder={t("check.pastePayload")}
                 value={payload}
                 onChange={(e) => setPayload(e.target.value)}
               />
               <div className="flex flex-col gap-2 sm:flex-row">
                 <label className="flex-1 cursor-pointer rounded-lg border border-dashed border-slate-300 px-4 py-2 text-center text-sm text-slate-500 hover:border-blue-500 hover:text-slate-700">
-                  Upload QR image
+                  {t("check.uploadQr")}
                   <input
                     type="file"
                     accept="image/*"
@@ -284,7 +293,7 @@ export default function CheckPage() {
                         setPayload(decoded);
                         setResult(await screenQr(decoded));
                       } catch (err) {
-                        setError(err instanceof ApiError ? err.message : "Decode failed");
+                        setError(err instanceof ApiError ? err.message : t("check.decodeFailed"));
                       } finally {
                         setBusy(false);
                       }
@@ -296,7 +305,7 @@ export default function CheckPage() {
                   disabled={busy || !payload}
                   className="rounded-lg bg-blue-600 px-6 py-2 text-sm font-bold text-white hover:bg-blue-700 disabled:opacity-50"
                 >
-                  {busy ? "Screening…" : "Screen QR"}
+                  {busy ? t("common.checking") : t("check.screenQr")}
                 </button>
               </div>
             </form>
@@ -319,6 +328,8 @@ export default function CheckPage() {
 }
 
 function MiniLabel({ children }: { children: React.ReactNode }) {
+  const { t } = useI18n();
+  void t;
   return <label className="mb-0.5 block text-[11px] font-bold text-slate-500">{children}</label>;
 }
 
@@ -331,28 +342,28 @@ function ResultView({
   nameClaim: string;
   onFlag: (r: ReportView) => void;
 }) {
+  const { t } = useI18n();
   if (result.status === "not_found") {
     const meta = result.data.qr_metadata;
     return (
       <div className="space-y-4">
         <div className="rounded-2xl border border-slate-300 bg-white p-6 shadow-xs">
           <span className="inline-block rounded-lg border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-extrabold uppercase tracking-wide text-amber-800">
-            Unreviewed account
+            {t("check.unreviewed")}
           </span>
-          <h2 className="mt-2 text-lg font-bold text-slate-900">Not yet in our registry</h2>
+          <h2 className="mt-2 text-lg font-bold text-slate-900">{t("check.notInRegistry")}</h2>
           <p className="mt-1 text-sm text-slate-600">{result.data.message}</p>
           <p className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
-            ⚠ An unreviewed status does <b>not</b> guarantee safety. Verify the seller
-            independently before transferring.
+            {t("check.unreviewedWarning")}
           </p>
           {meta && (
             <dl className="mt-3 space-y-1 text-sm text-slate-600">
-              <Row k="Merchant" v={meta.merchant_name} />
-              <Row k="City" v={meta.merchant_city} />
-              <Row k="Scheme" v={meta.scheme} />
-              <Row k="NMID" v={meta.national_merchant_id} />
+              <Row k={t("check.merchant")} v={meta.merchant_name} />
+              <Row k={t("check.city")} v={meta.merchant_city} />
+              <Row k={t("check.scheme")} v={meta.scheme} />
+              <Row k={t("check.nmid")} v={meta.national_merchant_id} />
               {meta.homoglyph_warning && (
-                <p className="text-amber-600">⚠ Lookalike characters detected in merchant name</p>
+                <p className="text-amber-600">{t("check.lookalike")}</p>
               )}
             </dl>
           )}
@@ -394,7 +405,7 @@ function ResultView({
                 {entity.institution ?? entity.scheme ?? entity.entity_type} · {entity.country}
               </span>
               <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700">
-                Exact match
+                {t("common.exactMatch")}
               </span>
             </div>
             <div className="flex items-center gap-3">
@@ -404,7 +415,7 @@ function ResultView({
             </div>
             {entity.holder ? (
               <div className="mt-2.5 flex items-center gap-2">
-                <span className="text-xs font-medium text-slate-500">Account holder:</span>
+                <span className="text-xs font-medium text-slate-500">{t("check.accountHolder")}</span>
                 <span className="text-sm font-bold text-slate-900">{entity.holder.name}</span>
                 <span className="rounded border border-slate-200 bg-slate-100 px-2 py-0.5 text-[11px] text-slate-600">
                   {entity.holder.label}
@@ -412,7 +423,7 @@ function ResultView({
               </div>
             ) : (
               <p className="mt-2 text-xs text-slate-500">
-                Holder name undisclosed (exact-match protection, ADR-016).
+                {t("check.holderUndisclosed")}
               </p>
             )}
           </div>
@@ -421,10 +432,10 @@ function ResultView({
             <span
               className={`inline-block rounded-lg border px-3.5 py-1.5 text-xs font-extrabold uppercase tracking-wide ${band.badge}`}
             >
-              {risk.badge.label}
+              {t(`level.${risk.risk_level}`)}
             </span>
             {risk.anomaly_spike_detected && (
-              <p className="text-[11px] text-amber-600">⚠ Reporting spike — signals dampened</p>
+              <p className="text-[11px] text-amber-600">{t("check.anomaly")}</p>
             )}
             <div className="flex flex-wrap justify-end gap-2">
               <WatchButton entityId={entity.id} />
@@ -432,7 +443,7 @@ function ResultView({
                 href={`/claim?entity=${entity.id}`}
                 className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-bold text-blue-700 hover:bg-blue-100"
               >
-                🛡️ Are you the owner?
+                {t("check.ownerBtn")}
               </Link>
             </div>
           </div>
@@ -442,39 +453,55 @@ function ResultView({
 
         {risk.is_under_dispute && (
           <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
-            ⚖ Ownership dispute active — safe-harbor freeze applied (score rise capped at ≤45).
+            {t("check.disputeActive")}
           </p>
         )}
 
         {entity.owner_response && (
           <div className="rounded-xl border border-blue-200 bg-blue-50/70 p-4">
             <p className="text-xs font-bold text-blue-900">
-              🛡️ Official pinned business clarification · verified legal owner
+              {t("check.pinnedOwner")}
             </p>
             <p className="mt-1 text-xs leading-relaxed text-slate-700">{entity.owner_response}</p>
           </div>
         )}
 
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <Metric label="Times searched" value={search_intelligence?.total_searches_display ?? "—"} sub="Total lookups" />
           <Metric
-            label="Searches (7 days)"
+            label={t("check.timesSearched")}
+            value={search_intelligence?.total_searches_display ?? t("check.dash")}
+            sub={t("check.totalLookups")}
+          />
+          <Metric
+            label={t("check.searches7d")}
             value={String(search_intelligence?.searches_7d ?? 0)}
-            sub={search_intelligence && search_intelligence.searches_7d > 0 ? "↑ Velocity spike" : "—"}
+            sub={search_intelligence && search_intelligence.searches_7d > 0 ? t("check.velocitySpike") : t("check.dash")}
             accent="rose"
           />
-          <Metric label="Community reports" value={`${community.total_reports} total`} sub={`${community.admin_verified_reports} admin-verified`} />
-          <Metric label="Last queried" value={search_intelligence?.last_searched_at ? new Date(search_intelligence.last_searched_at).toLocaleDateString() : "—"} sub="Active threat" />
+          <Metric
+            label={t("check.communityReports")}
+            value={t("check.totalCount", { n: community.total_reports })}
+            sub={t("check.adminVerified", { n: community.admin_verified_reports })}
+          />
+          <Metric
+            label={t("check.lastQueried")}
+            value={
+              search_intelligence?.last_searched_at
+                ? new Date(search_intelligence.last_searched_at).toLocaleDateString()
+                : t("check.dash")
+            }
+            sub={t("check.activeThreat")}
+          />
         </div>
 
         {ai_summary?.text && (
           <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
             <div className="mb-1.5 flex items-center gap-2">
               <span className="text-xs font-bold uppercase tracking-wide text-blue-900">
-                AI neutral entity summary
+                {t("check.aiSummary")}
               </span>
               <span className="rounded bg-blue-100 px-2 py-0.5 text-[10px] font-bold text-blue-800">
-                {ai_summary.grounded ? "Strictly grounded" : "Ungrounded"}
+                {ai_summary.grounded ? t("check.grounded") : t("check.ungrounded")}
               </span>
             </div>
             <p className="text-xs leading-relaxed text-slate-700 sm:text-sm">{ai_summary.text}</p>
@@ -483,12 +510,12 @@ function ResultView({
 
         {related_fact_checks && related_fact_checks.length > 0 && (
           <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-            <p className="text-xs font-bold uppercase tracking-wide text-slate-500">Related fact-checks</p>
+            <p className="text-xs font-bold uppercase tracking-wide text-slate-500">{t("check.relatedFactChecks")}</p>
             <ul className="mt-1 space-y-1 text-sm text-slate-700">
               {related_fact_checks.map((fc, i) => (
                 <li key={i}>
                   <a href={fc.url ?? "#"} className="underline" target="_blank" rel="noreferrer">
-                    {fc.text} {fc.rating ? `— ${fc.rating}` : ""}
+                    {fc.text} {fc.rating ? `${t("check.dash")} ${fc.rating}` : ""}
                   </a>
                 </li>
               ))}
@@ -500,21 +527,20 @@ function ResultView({
 
         {(entity.merchant_name || meta?.merchant_name || entity.nmid) && (
           <dl className="space-y-1 text-sm text-slate-600">
-            <Row k="Merchant" v={entity.merchant_name ?? meta?.merchant_name ?? null} />
-            {entity.nmid && <Row k="NMID" v={entity.nmid} />}
-            {entity.mcc && <Row k="MCC" v={entity.mcc} />}
+            <Row k={t("check.merchant")} v={entity.merchant_name ?? meta?.merchant_name ?? null} />
+            {entity.nmid && <Row k={t("check.nmid")} v={entity.nmid} />}
+            {entity.mcc && <Row k={t("check.mcc")} v={entity.mcc} />}
           </dl>
         )}
 
         {meta?.homoglyph_warning && (
           <p className="text-sm text-amber-600">
-            ⚠ Lookalike characters detected in merchant name — verify carefully
+            {t("check.lookalike")}
           </p>
         )}
         {meta?.qr_changed_since_last_seen && (
           <p className="text-sm text-rose-600">
-            ⚠ This QR payload differs from the one previously recorded for this merchant — verify
-            carefully.
+            {t("check.qrChanged")}
           </p>
         )}
 
@@ -534,17 +560,17 @@ function ResultView({
               href={`/receipt?country=${entity.country}&bank=${entity.institution ?? ""}&account=`}
               className="rounded-lg border border-slate-300 bg-slate-50 px-3.5 py-2 font-bold text-slate-700 hover:bg-slate-100"
             >
-              🧾 Export diligence receipt slip
+              {t("check.exportReceipt")}
             </Link>
             <Link
               href={`/claim?entity=${entity.id}`}
               className="rounded-lg border border-slate-300 bg-slate-50 px-3.5 py-2 font-bold text-blue-700 hover:bg-slate-100"
             >
-              🛡️ Misjudged? File name clearance
+              {t("check.fileClearance")}
             </Link>
           </div>
           <Link href="/recovery" className="font-bold text-rose-700 hover:underline">
-            Already paid this account? Take action &rarr;
+            {t("check.alreadyPaid")}
           </Link>
         </div>
       </div>
@@ -559,6 +585,7 @@ function ReportsFeed({
   reports: ReportView[];
   onFlag: (r: ReportView) => void;
 }) {
+  const { t } = useI18n();
   const [page, setPage] = useState(1);
   const totalPages = Math.max(1, Math.ceil(reports.length / REPORTS_PER_PAGE));
   const start = (page - 1) * REPORTS_PER_PAGE;
@@ -569,18 +596,23 @@ function ReportsFeed({
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
           <h3 className="text-sm font-bold uppercase tracking-wide text-slate-900">
-            Community fraud reports ({reports.length} total)
+            {t("check.reportsTitle", { n: reports.length })}
           </h3>
           <p className="text-xs text-slate-500">
-            Showing reports {start + 1} to {Math.min(start + REPORTS_PER_PAGE, reports.length)} of{" "}
-            {reports.length} (Page {page} of {totalPages})
+            {t("check.showing", {
+              from: start + 1,
+              to: Math.min(start + REPORTS_PER_PAGE, reports.length),
+              total: reports.length,
+              page,
+              pages: totalPages,
+            })}
           </p>
         </div>
         <Link
           href="/report"
           className="rounded-lg bg-rose-600 px-3 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-rose-700"
         >
-          + Add report
+          {t("check.addReport")}
         </Link>
       </div>
 
@@ -597,7 +629,7 @@ function ReportsFeed({
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 font-semibold text-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            &larr; Previous page
+            {t("check.prevPage")}
           </button>
           <div className="flex items-center gap-1 font-semibold text-slate-700">
             {Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
@@ -619,7 +651,7 @@ function ReportsFeed({
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 font-semibold text-slate-800 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            Next page &rarr;
+            {t("check.nextPage")}
           </button>
         </div>
       )}
@@ -628,6 +660,7 @@ function ReportsFeed({
 }
 
 function FlagModal({ report, onClose }: { report: ReportView; onClose: () => void }) {
+  const { t } = useI18n();
   const token = getToken();
   const [reason, setReason] = useState(FLAG_REASONS[0].value);
   const [details, setDetails] = useState("");
@@ -636,14 +669,14 @@ function FlagModal({ report, onClose }: { report: ReportView; onClose: () => voi
 
   async function submit() {
     if (!token) {
-      setError("Sign in to submit a flag.");
+      setError(t("check.flagError"));
       return;
     }
     try {
       const flag = await flagReport(token, report.id, reason, details || undefined);
       setStatus(flag.status);
     } catch (e) {
-      setError(e instanceof ApiError ? e.message : "Flag failed");
+      setError(e instanceof ApiError ? e.message : t("check.flagFailed"));
     }
   }
 
@@ -652,8 +685,8 @@ function FlagModal({ report, onClose }: { report: ReportView; onClose: () => voi
       <div className="w-full max-w-md space-y-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-xl">
         <div className="flex items-center justify-between border-b border-slate-100 pb-3">
           <div>
-            <h3 className="text-base font-bold text-slate-900">Flag this review as false</h3>
-            <p className="font-mono text-[11px] text-slate-500">Report {report.id.slice(0, 8)}</p>
+            <h3 className="text-base font-bold text-slate-900">{t("check.flagModalTitle")}</h3>
+            <p className="font-mono text-[11px] text-slate-500">{t("check.reportLabel")} {report.id.slice(0, 8)}</p>
           </div>
           <button onClick={onClose} className="text-lg text-slate-400 hover:text-slate-600">
             ✕
@@ -662,17 +695,16 @@ function FlagModal({ report, onClose }: { report: ReportView; onClose: () => voi
 
         {status ? (
           <p className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
-            Flag submitted — status: {status}. Our analysts will triage under ADR-021 dual-control.
+            {t("check.flagSubmitted", { status })}
           </p>
         ) : (
           <>
             <p className="text-xs leading-relaxed text-slate-600">
-              TrustPay protects innocent citizens and legitimate merchants from malicious smear
-              attacks. All flags are audited under ADR-021 dual-control.
+              {t("check.flagModalDesc")}
             </p>
             <div>
               <label className="mb-1 block text-xs font-bold text-slate-700">
-                Why should this report be taken down?
+                {t("check.whyTakenDown")}
               </label>
               <select
                 className={inputCls}
@@ -681,7 +713,7 @@ function FlagModal({ report, onClose }: { report: ReportView; onClose: () => voi
               >
                 {FLAG_REASONS.map((r) => (
                   <option key={r.value} value={r.value}>
-                    {r.label}
+                    {t(`flag.${r.value}`)}
                   </option>
                 ))}
               </select>
@@ -689,7 +721,7 @@ function FlagModal({ report, onClose }: { report: ReportView; onClose: () => voi
             <textarea
               rows={3}
               className={inputCls}
-              placeholder="Explain why this review is inaccurate…"
+              placeholder={t("check.explanation")}
               value={details}
               onChange={(e) => setDetails(e.target.value)}
             />
@@ -699,14 +731,14 @@ function FlagModal({ report, onClose }: { report: ReportView; onClose: () => voi
 
         <div className="flex gap-2 pt-2">
           <button onClick={onClose} className="flex-1 rounded-lg bg-slate-100 py-2 text-xs font-bold text-slate-700">
-            Close
+            {t("common.close")}
           </button>
           {!status && (
             <button
               onClick={() => void submit()}
               className="flex-1 rounded-lg bg-blue-600 py-2 text-xs font-bold text-white shadow-xs hover:bg-blue-700"
             >
-              Submit flag for triage
+              {t("check.submitFlag")}
             </button>
           )}
         </div>
@@ -726,6 +758,8 @@ function Metric({
   sub: string;
   accent?: "rose";
 }) {
+  const { t } = useI18n();
+  void t;
   return (
     <div className="rounded-xl border border-slate-200 bg-white p-3.5">
       <span className="text-[11px] font-bold uppercase text-slate-500">{label}</span>
@@ -740,6 +774,8 @@ function Metric({
 }
 
 function Row({ k, v }: { k: string; v: string | null }) {
+  const { t } = useI18n();
+  void t;
   if (!v) return null;
   return (
     <div className="flex justify-between gap-4">
@@ -750,6 +786,7 @@ function Row({ k, v }: { k: string; v: string | null }) {
 }
 
 function WatchButton({ entityId }: { entityId: string }) {
+  const { t } = useI18n();
   const [state, setState] = useState<"idle" | "saving" | "done">("idle");
   const token = getToken();
   if (!token) {
@@ -758,7 +795,7 @@ function WatchButton({ entityId }: { entityId: string }) {
         href="/profile"
         className="rounded-lg border border-slate-300 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-100"
       >
-        Watch (sign in)
+        {t("check.watchSignin")}
       </Link>
     );
   }
@@ -776,33 +813,34 @@ function WatchButton({ entityId }: { entityId: string }) {
       }}
       className="rounded-lg border border-slate-300 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-100 disabled:opacity-60"
     >
-      {state === "done" ? "Watching ✓" : "Watch account"}
+      {state === "done" ? t("check.watching") : t("check.watchAccount")}
     </button>
   );
 }
 
 function GovCheckBanner({ check }: { check?: { source: string; available: boolean; found: boolean; report_count: number; category?: string } | null }) {
+  const { t } = useI18n();
   if (!check || !check.available) return null;
-  const kind = check.category === "phone" ? "phone number" : "bank account";
+  const kind = check.category === "phone" ? t("check.kindPhone") : t("check.kindAccount");
   if (check.found) {
     return (
       <div className="rounded-lg border border-rose-300 bg-rose-50 px-3 py-2 text-xs text-rose-800">
-        <p className="font-semibold">🏛 Match on {check.source}</p>
+        <p className="font-semibold">{t("check.govMatch", { source: check.source })}</p>
         <p className="mt-0.5">
-          This {kind} appears in the national mule registry ({check.report_count} report
-          {check.report_count === 1 ? "" : "s"}). Do not pay.
+          {t("check.govMatchBody", { kind, n: check.report_count })}
         </p>
       </div>
     );
   }
   return (
     <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-800">
-      No match on the {check.source} national registry.
+      {t("check.govClean", { source: check.source })}
     </div>
   );
 }
 
 function PhoneResultCard({ data }: { data: PhoneSearchResult }) {
+  const { t } = useI18n();
   const found = data.wallet_count > 0;
   const band = riskBand(data.totals.max_risk_score);
   return (
@@ -810,12 +848,12 @@ function PhoneResultCard({ data }: { data: PhoneSearchResult }) {
       <div className="flex items-center justify-between">
         <p className="font-mono text-lg font-bold text-slate-900">{data.phone_masked}</p>
         <span className={`rounded-full border px-3 py-1 text-xs font-semibold ${band.badge}`}>
-          {data.wallet_count} wallet{data.wallet_count === 1 ? "" : "s"}
+          {t("check.wallets", { n: data.wallet_count })}
         </span>
       </div>
       <p className="mt-1 text-sm text-slate-500">
-        {data.country} · max risk {data.totals.max_risk_score} · {band.label}
-        {found ? "" : " · no reports"}
+        {data.country} · {t("check.maxRisk")} {data.totals.max_risk_score} · {t(band.labelKey)}
+        {found ? "" : ` · ${t("check.noReports")}`}
       </p>
 
       <GovCheckBanner check={data.gov_check} />
@@ -832,20 +870,22 @@ function PhoneResultCard({ data }: { data: PhoneSearchResult }) {
                   {w.institution_name ?? w.institution}
                 </span>
                 <span className="text-xs text-slate-500">
-                  risk {w.risk_score} · {w.total_reports} report
-                  {typeof w.total_reports === "number" && w.total_reports === 1 ? "" : "s"}
+                  {t("check.riskInline", { n: w.risk_score })} ·{" "}
+                  {t("check.reportsInline", { n: w.total_reports })}
                 </span>
               </div>
               <p className="mt-0.5 font-mono text-xs text-slate-500">{w.account_masked}</p>
               {w.is_gov_blacklisted && (
-                <p className="mt-1 text-xs text-rose-600">🏛 Government blacklist</p>
+                <p className="mt-1 text-xs text-rose-600">{t("check.govBlacklist")}</p>
               )}
-              {w.is_under_dispute && <p className="mt-1 text-xs text-amber-600">⚖ Dispute active</p>}
+              {w.is_under_dispute && (
+                <p className="mt-1 text-xs text-amber-600">{t("check.disputeActiveShort")}</p>
+              )}
             </li>
           ))}
         </ul>
       ) : (
-        <p className="mt-3 text-sm text-slate-500">No e-wallet reports found for this phone number.</p>
+        <p className="mt-3 text-sm text-slate-500">{t("check.noWalletReports")}</p>
       )}
     </div>
   );

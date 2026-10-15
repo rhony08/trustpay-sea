@@ -4,17 +4,19 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Brand } from "./Brand";
 import { LanguageSwitcher } from "./LanguageSwitcher";
+import { useI18n } from "./LocaleProvider";
 
-const LINKS: { href: string; label: string; accent?: "rose" }[] = [
-  { href: "/check", label: "Check Account / QR" },
-  { href: "/report", label: "Report Fraud", accent: "rose" },
-  { href: "/claim", label: "Merchant Shield" },
-  { href: "/recovery", label: "Emergency SOS", accent: "rose" },
-  { href: "/receipt", label: "Diligence Slip" },
+const LINKS: { href: string; key: string; accent?: "rose" }[] = [
+  { href: "/check", key: "nav.check" },
+  { href: "/report", key: "nav.report", accent: "rose" },
+  { href: "/claim", key: "nav.claim" },
+  { href: "/recovery", key: "nav.recovery", accent: "rose" },
+  { href: "/receipt", key: "nav.receipt" },
 ];
 
 export function Navbar() {
   const pathname = usePathname();
+  const { t } = useI18n();
   const isActive = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
 
   return (
@@ -33,7 +35,7 @@ export function Navbar() {
             const idle = "text-slate-700 hover:bg-slate-100 hover:text-slate-900";
             return (
               <Link key={l.href} href={l.href} className={`${base} ${active ? activeCls : idle}`}>
-                {l.label}
+                {t(l.key)}
               </Link>
             );
           })}
@@ -45,7 +47,7 @@ export function Navbar() {
             href="/report"
             className="hidden items-center gap-1 rounded-lg bg-rose-600 px-3.5 py-2 text-xs font-bold text-white shadow-xs transition-colors hover:bg-rose-700 sm:inline-flex"
           >
-            + Report a Scam
+            {t("nav.reportBtn")}
           </Link>
         </div>
       </div>

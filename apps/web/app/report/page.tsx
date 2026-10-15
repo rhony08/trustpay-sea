@@ -18,6 +18,7 @@ import {
   type Bank,
 } from "@/lib/api";
 import { RedactedSlipViewer } from "@/components/RedactedSlipViewer";
+import { useI18n } from "@/components/LocaleProvider";
 
 const inputCls =
   "w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm text-slate-900 outline-none focus:border-blue-600 focus:bg-white focus:ring-2 focus:ring-blue-100";
@@ -40,9 +41,10 @@ function fallbackBanks(country: string): Bank[] {
   }));
 }
 
-const STEPS = ["Recipient account", "Loss & timeline", "Proof & AI redaction", "Declaration"];
+const STEPS = ["report.step1", "report.step2", "report.step3", "report.step4"];
 
 export default function ReportPage() {
+  const { t } = useI18n();
   const [token, setTokenState] = useState<string | null>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -99,7 +101,7 @@ export default function ReportPage() {
       const t = authMode === "login" ? await login(email, password) : await signup(email, password);
       setTokenState(t);
     } catch (err) {
-      setAuthError(err instanceof ApiError ? err.message : "Authentication failed");
+      setAuthError(err instanceof ApiError ? err.message : t("common.errorAuth"));
     } finally {
       setAuthBusy(false);
     }
@@ -137,7 +139,7 @@ export default function ReportPage() {
       setReportStatus(created.processing_status);
       void poll(created.report_id);
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Submission failed");
+      setError(err instanceof ApiError ? err.message : t("report.submitError"));
     } finally {
       setBusy(false);
     }
@@ -148,23 +150,21 @@ export default function ReportPage() {
       <main className="flex-1 py-12">
         <div className="mx-auto flex max-w-md flex-col gap-4 px-6">
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">Report a scam</h1>
+            <h1 className="text-2xl font-bold text-slate-900">{t("report.signInTitle")}</h1>
             <p className="mt-1 text-sm text-slate-500">
-              {authMode === "signup"
-                ? "Create an account to submit a fraud report."
-                : "Sign in to submit a fraud report."}
+              {authMode === "signup" ? t("report.signupPrompt") : t("report.loginPrompt")}
             </p>
           </div>
           <form className="flex flex-col gap-3" onSubmit={authenticate}>
-            <input className={inputCls} type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-            <input className={inputCls} type="password" placeholder="Password (min 8 chars)" value={password} onChange={(e) => setPassword(e.target.value)} minLength={8} required />
+            <input className={inputCls} type="email" placeholder={t("common.email")} value={email} onChange={(e) => setEmail(e.target.value)} required />
+            <input className={inputCls} type="password" placeholder={t("common.password")} value={password} onChange={(e) => setPassword(e.target.value)} minLength={8} required />
             <button type="submit" disabled={authBusy} className="rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white disabled:opacity-50">
-              {authBusy ? "Please wait…" : authMode === "signup" ? "Create account" : "Sign in"}
+              {authBusy ? t("common.pleaseWait") : authMode === "signup" ? t("common.createAccount") : t("common.signIn")}
             </button>
           </form>
           {authError && <p className="text-sm text-rose-600">{authError}</p>}
           <button className="text-sm text-slate-500 underline" onClick={() => setAuthMode(authMode === "signup" ? "login" : "signup")}>
-            {authMode === "signup" ? "Already have an account? Sign in" : "Need an account? Sign up"}
+            {authMode === "signup" ? t("common.switchAuthSignup") : t("common.switchAuthLogin")}
           </button>
         </div>
       </main>
@@ -176,10 +176,8 @@ export default function ReportPage() {
       <div className="mx-auto max-w-2xl px-4 sm:px-6">
         <div className="mb-6 flex items-start justify-between">
           <div>
-            <h1 className="text-2xl font-extrabold text-slate-900 sm:text-3xl">Report fraudulent account or scam</h1>
-            <p className="mt-1 text-xs text-slate-600 sm:text-sm">
-              Your verified report helps protect millions across Southeast Asia from payment scams.
-            </p>
+            <h1 className="text-2xl font-extrabold text-slate-900 sm:text-3xl">{t("report.title")}</h1>
+            <p className="mt-1 text-xs text-slate-600 sm:text-sm">{t("report.subtitle")}</p>
           </div>
           <button
             onClick={() => {
@@ -188,7 +186,7 @@ export default function ReportPage() {
             }}
             className="text-sm text-slate-400 underline"
           >
-            Sign out
+            {t("common.signOut")}
           </button>
         </div>
 
@@ -209,7 +207,7 @@ export default function ReportPage() {
                   >
                     {n}
                   </span>
-                  <span className={`hidden sm:inline ${active ? "text-blue-700" : ""}`}>{label}</span>
+                  <span className={`hidden sm:inline ${active ? "text-blue-700" : ""}`}>{t(label)}</span>
                   {n < STEPS.length && <span className="hidden h-0.5 flex-1 bg-slate-200 sm:block" />}
                 </div>
               );
@@ -222,10 +220,10 @@ export default function ReportPage() {
             <SuccessPanel status={reportStatus} reportId={reportId} evidenceUrl={evidenceUrl} />
           ) : step === 1 ? (
             <>
-              <h2 className="text-base font-bold text-slate-900">Step 1: Which account received your funds?</h2>
+              <h2 className="text-base font-bold text-slate-900">{t("report.s1Title")}</h2>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
-                  <Label>Destination country</Label>
+                  <Label>{t("report.destinationCountry")}</Label>
                   <select className={inputCls} value={country} onChange={(e) => setCountry(e.target.value)}>
                     {COUNTRIES.map((c) => (
                       <option key={c.code} value={c.code}>
@@ -235,7 +233,7 @@ export default function ReportPage() {
                   </select>
                 </div>
                 <div>
-                  <Label>Bank / e-wallet entity</Label>
+                  <Label>{t("report.bank")}</Label>
                   <select className={inputCls} value={bank} onChange={(e) => setBank(e.target.value)}>
                     {banks.map((b) => (
                       <option key={b.code} value={b.code}>
@@ -246,40 +244,36 @@ export default function ReportPage() {
                 </div>
               </div>
               <div>
-                <Label>Destination account number or phone</Label>
+                <Label>{t("report.account")}</Label>
                 <input
                   className={`${inputCls} font-mono font-bold`}
                   value={account}
                   onChange={(e) => setAccount(e.target.value)}
-                  placeholder="e.g. 8831924831"
+                  placeholder={t("report.accountPlaceholder")}
                 />
-                <p className="mt-1 text-[11px] text-slate-500">
-                  Must match the exact recipient account number on your bank transfer slip.
-                </p>
+                <p className="mt-1 text-[11px] text-slate-500">{t("report.accountHelp")}</p>
               </div>
               <div>
-                <Label>Seller / scammer claimed name or alias</Label>
+                <Label>{t("report.claimed")}</Label>
                 <input
                   className={inputCls}
                   value={claimedName}
                   onChange={(e) => setClaimedName(e.target.value)}
-                  placeholder="e.g. 'Admin Siti' or 'Toko Jaya Mandiri'"
+                  placeholder={t("report.claimedPlaceholder")}
                 />
-                <p className="mt-1 text-[11px] text-slate-500">
-                  Helps our Name-Matching Radar detect mule accounts when the real holder name differs.
-                </p>
+                <p className="mt-1 text-[11px] text-slate-500">{t("report.claimedHelp")}</p>
               </div>
               <div className="flex justify-end pt-2">
                 <NextButton disabled={!account} onClick={() => setStep(2)}>
-                  Continue to loss &amp; timeline &rarr;
+                  {t("report.continueLoss")}
                 </NextButton>
               </div>
             </>
           ) : step === 2 ? (
             <>
-              <h2 className="text-base font-bold text-slate-900">Step 2: Financial loss &amp; timeline</h2>
+              <h2 className="text-base font-bold text-slate-900">{t("report.s2Title")}</h2>
               <div>
-                <Label>Scam modus operandi category</Label>
+                <Label>{t("report.category")}</Label>
                 <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                   {REPORT_CATEGORIES.map((c) => (
                     <label
@@ -297,14 +291,14 @@ export default function ReportPage() {
                         checked={category === c.value}
                         onChange={() => setCategory(c.value)}
                       />
-                      <span>{c.label}</span>
+                      <span>{t(`cat.${c.value}`)}</span>
                     </label>
                   ))}
                 </div>
               </div>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                 <div>
-                  <Label>Loss amount</Label>
+                  <Label>{t("report.lossAmount")}</Label>
                   <div className="flex">
                     <select
                       className="rounded-l-lg border border-r-0 border-slate-300 bg-slate-100 px-2 text-xs font-bold text-slate-600"
@@ -325,88 +319,80 @@ export default function ReportPage() {
                   </div>
                 </div>
                 <div>
-                  <Label>Transaction date</Label>
+                  <Label>{t("report.txnDate")}</Label>
                   <input type="date" className={inputCls} value={incidentDate} onChange={(e) => setIncidentDate(e.target.value)} />
                 </div>
                 <div>
-                  <Label>Severity (1–5)</Label>
+                  <Label>{t("report.severity")}</Label>
                   <select className={inputCls} value={severity} onChange={(e) => setSeverity(Number(e.target.value))}>
                     {[1, 2, 3, 4, 5].map((s) => (
                       <option key={s} value={s}>
-                        Severity {s}
+                        {t("report.severityOption", { n: s })}
                       </option>
                     ))}
                   </select>
                 </div>
               </div>
               <div>
-                <Label>Incident narrative</Label>
+                <Label>{t("report.narrative")}</Label>
                 <textarea
                   rows={3}
                   className={inputCls}
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Describe how the perpetrator approached you and what promises were made. Never share passwords, PINs or OTPs. (min 20 characters)"
+                  placeholder={t("report.narrativePlaceholder")}
                 />
               </div>
               <div className="flex justify-between pt-2">
                 <BackButton onClick={() => setStep(1)} />
                 <NextButton disabled={description.length < 20} onClick={() => setStep(3)}>
-                  Continue to transfer-slip proof &rarr;
+                  {t("report.continueSlip")}
                 </NextButton>
               </div>
             </>
           ) : step === 3 ? (
             <>
               <div className="flex items-center justify-between">
-                <h2 className="text-base font-bold text-slate-900">Step 3: Transfer slip &amp; asymmetric AI redaction</h2>
+                <h2 className="text-base font-bold text-slate-900">{t("report.s3Title")}</h2>
                 <span className="rounded border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-800">
-                  🔒 Fail-closed privacy
+                  {t("report.failClosed")}
                 </span>
               </div>
               <label className="block cursor-pointer rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 p-6 text-center hover:border-blue-500">
                 <span className="mb-1 block text-3xl">🧾</span>
                 <p className="text-sm font-bold text-slate-800">
-                  {file ? file.name : "Click to select bank transfer slip or screenshot"}
+                  {file ? file.name : t("report.uploadTitle")}
                 </p>
-                <p className="mt-1 text-xs text-slate-500">Supports JPG, PNG, or PDF (max 10MB)</p>
+                <p className="mt-1 text-xs text-slate-500">{t("report.uploadHelp")}</p>
                 <input type="file" accept="image/*" className="hidden" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
               </label>
               <div className="space-y-3 rounded-xl border border-blue-200 bg-blue-50/60 p-4">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold uppercase tracking-wide text-blue-900">
-                    How we protect your identity (asymmetric redaction standard):
+                    {t("report.howProtect")}
                   </span>
                   <span className="rounded bg-blue-200 px-1.5 py-0.5 text-[10px] font-bold text-blue-900">ADR-016</span>
                 </div>
-                <p className="text-xs leading-relaxed text-slate-600">
-                  Your sensitive personal information is automatically blurred before public display.
-                  The destination scammer&rsquo;s bank account and verified holder name remain{" "}
-                  <b>100% unredacted</b> so other citizens can identify the perpetrator.
-                </p>
+                <p className="text-xs leading-relaxed text-slate-600">{t("report.howProtectBody")}</p>
               </div>
               <RedactedSlipViewer allowAnalystView />
               <div className="flex justify-between pt-2">
                 <BackButton onClick={() => setStep(2)} />
-                <NextButton onClick={() => setStep(4)}>Continue to declaration &rarr;</NextButton>
+                <NextButton onClick={() => setStep(4)}>{t("report.continueDeclaration")}</NextButton>
               </div>
             </>
           ) : (
             <>
-              <h2 className="text-base font-bold text-slate-900">Step 4: Statutory declaration &amp; submission</h2>
+              <h2 className="text-base font-bold text-slate-900">{t("report.s4Title")}</h2>
               <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-xs leading-relaxed text-slate-700">
                 <label className="flex cursor-pointer items-start gap-2.5">
                   <input type="checkbox" className="mt-0.5 h-4 w-4 shrink-0 accent-blue-600" checked={consent} onChange={(e) => setConsent(e.target.checked)} />
-                  <span>
-                    <b>Statutory anti-perjury declaration:</b> I declare that this report is true and
-                    accurately reflects an actual transaction in which I suffered financial harm. I
-                    understand intentional false reports are subject to legal prosecution.
-                  </span>
+                  <span>{t("report.declaration")}</span>
                 </label>
               </div>
               <div>
-                <Label>Official police report reference (optional)</Label>
-                <input className={inputCls} value={policeRef} onChange={(e) => setPoliceRef(e.target.value)} placeholder="e.g. LP/B/921/X/2026/SPKT" />
+                <Label>{t("report.policeRef")}</Label>
+                <input className={inputCls} value={policeRef} onChange={(e) => setPoliceRef(e.target.value)} placeholder={t("report.policeRefPlaceholder")} />
               </div>
               {error && <p className="text-sm text-rose-600">{error}</p>}
               <div className="flex justify-between pt-2">
@@ -416,7 +402,7 @@ export default function ReportPage() {
                   onClick={() => void submit()}
                   className="rounded-xl bg-rose-600 px-6 py-2.5 text-sm font-bold text-white shadow-xs hover:bg-rose-700 disabled:opacity-50"
                 >
-                  {busy ? "Submitting…" : "Submit scam incident report"}
+                  {busy ? t("report.submitting") : t("report.submit")}
                 </button>
               </div>
             </>
@@ -444,9 +430,10 @@ function NextButton({ children, onClick, disabled }: { children: React.ReactNode
 }
 
 function BackButton({ onClick }: { onClick: () => void }) {
+  const { t } = useI18n();
   return (
     <button onClick={onClick} className="rounded-xl border border-slate-300 bg-slate-50 px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100">
-      &larr; Back
+      {t("common.back")}
     </button>
   );
 }
@@ -460,6 +447,7 @@ function SuccessPanel({
   reportId: string | null;
   evidenceUrl: string | null;
 }) {
+  const { t } = useI18n();
   return (
     <div className="space-y-4 py-4 text-center">
       <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full border border-emerald-200 bg-emerald-100 text-2xl font-bold text-emerald-700">
@@ -467,34 +455,34 @@ function SuccessPanel({
       </div>
       <h2 className="text-xl font-bold text-slate-900">
         {status === "PUBLISHED"
-          ? "Scam incident report published"
+          ? t("report.published")
           : status === "PROCESSING"
-            ? "Report received — processing"
-            : "Report submitted"}
+            ? t("report.processingTitle")
+            : t("report.submittedTitle")}
       </h2>
       <p className="mx-auto max-w-md text-xs text-slate-600">
         {status === "PROCESSING"
-          ? "Our AI is redacting evidence and running forensics — this usually takes a few seconds."
+          ? t("report.processingBody")
           : status === "PUBLISHED"
-            ? "Published. Anyone who checks this account will now see your report."
-            : "Evidence could not be safely redacted; a moderator will review it. The report is not published unredacted."}
+            ? t("report.publishedBody")
+            : t("report.failedBody")}
       </p>
       <p className="text-xs text-slate-500">
-        Report reference: <span className="font-mono font-bold text-slate-800">{reportId}</span>
+        {t("report.reference")} <span className="font-mono font-bold text-slate-800">{reportId}</span>
       </p>
       <span className={`inline-block rounded-full border px-3 py-1 text-xs font-semibold ${STATUS_STYLES[status] ?? STATUS_STYLES.PROCESSING}`}>
         {status}
       </span>
       {status === "PUBLISHED" && evidenceUrl && (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={evidenceUrl} alt="Redacted evidence" className="mx-auto mt-3 max-h-64 rounded-lg border border-slate-200" />
+        <img src={evidenceUrl} alt={t("report.evidenceAlt")} className="mx-auto mt-3 max-h-64 rounded-lg border border-slate-200" />
       )}
       <div className="flex flex-wrap justify-center gap-3 pt-2">
         <Link href="/check" className="rounded-xl bg-blue-600 px-5 py-2 text-xs font-bold text-white shadow-xs hover:bg-blue-700">
-          View risk verification result &rarr;
+          {t("report.viewResult")}
         </Link>
         <Link href="/recovery" className="rounded-xl border border-slate-200 bg-slate-100 px-5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-200">
-          Open bank freeze guide
+          {t("report.openFreeze")}
         </Link>
       </div>
     </div>

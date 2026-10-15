@@ -6,11 +6,13 @@ import { Suspense, useEffect, useState } from "react";
 import { BANKS, COUNTRIES, createReceipt, getReceipt, type Receipt } from "@/lib/api";
 import { riskBand } from "@/lib/risk";
 import { ShieldMark } from "@/components/Brand";
+import { useI18n } from "@/components/LocaleProvider";
 
 const inputCls =
   "w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm text-slate-900 outline-none focus:border-blue-600 focus:bg-white focus:ring-2 focus:ring-blue-100";
 
 function ReceiptInner() {
+  const { t } = useI18n();
   const search = useSearchParams();
   const [country, setCountry] = useState(search.get("country") ?? "ID");
   const [bank, setBank] = useState(search.get("bank") ?? "014");
@@ -23,17 +25,17 @@ function ReceiptInner() {
     if (token) {
       void getReceipt(token)
         .then(setReceipt)
-        .catch(() => setError("Invalid or expired receipt"));
+        .catch(() => setError(t("receipt.expired")));
     }
-  }, [search]);
+  }, [search, t]);
 
   return (
     <main className="flex-1 px-4 py-10">
       <div className="mx-auto max-w-md space-y-6">
         <div className="no-print text-center">
-          <h1 className="text-xl font-extrabold text-slate-900">Pre-transfer due diligence certificate</h1>
+          <h1 className="text-xl font-extrabold text-slate-900">{t("receipt.title")}</h1>
           <p className="mt-1 text-xs text-slate-500">
-            Official timestamped proof that you verified payment credentials before transferring.
+            {t("receipt.subtitle")}
           </p>
         </div>
 
@@ -46,7 +48,7 @@ function ReceiptInner() {
               try {
                 setReceipt(await createReceipt({ country, bank, account }));
               } catch {
-                setError("No registry entry to certify for this identifier.");
+                setError(t("receipt.invalid"));
               }
             }}
           >
@@ -75,13 +77,13 @@ function ReceiptInner() {
             </div>
             <input
               className={`${inputCls} font-mono`}
-              placeholder="Account number"
+              placeholder={t("receipt.placeholder")}
               value={account}
               onChange={(e) => setAccount(e.target.value)}
               required
             />
             <button className="rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white">
-              Generate certificate
+              {t("receipt.generate")}
             </button>
             {error && <p className="text-sm text-rose-600">{error}</p>}
           </form>
@@ -94,13 +96,13 @@ function ReceiptInner() {
             onClick={() => window.print()}
             className="flex items-center gap-1.5 rounded-xl bg-blue-600 px-5 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-blue-700"
           >
-            🖨️ Print / download PDF
+            {t("receipt.print")}
           </button>
           <Link
             href="/check"
             className="rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-100"
           >
-            &larr; Back to account check
+            {t("receipt.backToCheck")}
           </Link>
         </div>
       </div>
@@ -109,6 +111,7 @@ function ReceiptInner() {
 }
 
 function Certificate({ receipt }: { receipt: Receipt }) {
+  const { t } = useI18n();
   const band = riskBand(receipt.risk_score);
   const certId = `TP-REC-${new Date(receipt.at * 1000).getFullYear()}-${receipt.account_masked.replace(/\W/g, "").slice(-5) || "00000"}`;
   return (
@@ -123,32 +126,34 @@ function Certificate({ receipt }: { receipt: Receipt }) {
           </span>
         </span>
         <p className="font-sans text-[10px] font-bold uppercase tracking-wider text-slate-500">
-          Pre-payment fraud due diligence record
+          {t("receipt.certTitle")}
         </p>
-        <p className="mt-1 font-mono text-[10px] font-bold text-blue-700">CERTIFICATE ID: {certId}</p>
+        <p className="mt-1 font-mono text-[10px] font-bold text-blue-700">
+          {t("receipt.certId")} {certId}
+        </p>
       </div>
 
       <div className="space-y-2 font-sans text-slate-700">
-        <CertRow k="Verification timestamp" v={new Date(receipt.at * 1000).toLocaleString()} />
-        <CertRow k="Destination institution" v={receipt.institution ?? receipt.scheme ?? "—"} />
-        <CertRow k="Country" v={receipt.country} />
-        <CertRow k="Account (masked)" v={receipt.account_masked} mono />
-        <CertRow k="Entity type" v={receipt.entity_type} />
+        <CertRow k={t("receipt.timestamp")} v={new Date(receipt.at * 1000).toLocaleString()} />
+        <CertRow k={t("receipt.institutionRow")} v={receipt.institution ?? receipt.scheme ?? "—"} />
+        <CertRow k={t("receipt.country")} v={receipt.country} />
+        <CertRow k={t("receipt.accountMasked")} v={receipt.account_masked} mono />
+        <CertRow k={t("receipt.entityType")} v={receipt.entity_type} />
       </div>
 
       <div className={`space-y-1 rounded-xl border p-3.5 font-sans ${band.badge}`}>
         <div className="flex items-center justify-between">
-          <span className="text-xs font-bold">Fraud risk score:</span>
+          <span className="text-xs font-bold">{t("receipt.riskScore")}</span>
           <span className={`font-mono text-base font-extrabold ${band.scoreText}`}>
             {receipt.risk_score} / 100
           </span>
         </div>
         <div className="flex items-center justify-between">
-          <span className="text-xs font-bold">Classification:</span>
-          <span className="text-xs font-black uppercase">{band.label}</span>
+          <span className="text-xs font-bold">{t("receipt.classification")}</span>
+          <span className="text-xs font-black uppercase">{t(band.labelKey)}</span>
         </div>
         <p className="border-t border-slate-200 pt-1 text-[10px]">
-          Higher score = higher danger. Point-in-time artifact — re-run the check for current risk.
+          {t("receipt.higherDanger")}
         </p>
       </div>
 
@@ -159,13 +164,12 @@ function Certificate({ receipt }: { receipt: Receipt }) {
           </svg>
         </div>
         <p className="mt-2 text-[9px] font-semibold uppercase text-slate-500">
-          Scan to verify certificate authenticity on TrustPay SEA
+          {t("receipt.scanVerify")}
         </p>
       </div>
 
       <p className="text-center font-sans text-[10px] leading-relaxed text-slate-500">
-        This document verifies consumer pre-transfer due diligence in accordance with national cyber
-        scam advisory standards and regional consumer protection guidance.
+        {t("receipt.legal")}
       </p>
     </div>
   );

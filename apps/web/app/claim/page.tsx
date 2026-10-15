@@ -18,11 +18,13 @@ import {
   verifyMicroDeposit,
   type DisputeView,
 } from "@/lib/api";
+import { useI18n } from "@/components/LocaleProvider";
 
 const inputCls =
   "w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm text-slate-900 outline-none focus:border-blue-600 focus:bg-white focus:ring-2 focus:ring-blue-100";
 
 function ClaimInner() {
+  const { t } = useI18n();
   const search = useSearchParams();
   const entityId = search.get("entity") ?? "";
 
@@ -52,7 +54,7 @@ function ClaimInner() {
       const t = mode === "login" ? await login(email, password) : await signup(email, password);
       setTokenState(t);
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Authentication failed");
+      setError(err instanceof ApiError ? err.message : t("common.errorAuth"));
     }
   }
 
@@ -60,17 +62,17 @@ function ClaimInner() {
     return (
       <main className="flex-1 py-12">
         <div className="mx-auto flex max-w-md flex-col gap-4 px-6">
-          <h1 className="text-2xl font-bold text-slate-900">Merchant Shield — sign in</h1>
+          <h1 className="text-2xl font-bold text-slate-900">{t("claim.signInTitle")}</h1>
           <form className="flex flex-col gap-3" onSubmit={authenticate}>
-            <input className={inputCls} type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-            <input className={inputCls} type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} minLength={8} required />
+            <input className={inputCls} type="email" placeholder={t("common.email")} value={email} onChange={(e) => setEmail(e.target.value)} required />
+            <input className={inputCls} type="password" placeholder={t("common.password")} value={password} onChange={(e) => setPassword(e.target.value)} minLength={8} required />
             <button className="rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white">
-              {mode === "signup" ? "Create account" : "Sign in"}
+              {mode === "signup" ? t("common.createAccount") : t("common.signIn")}
             </button>
           </form>
           {error && <p className="text-sm text-rose-600">{error}</p>}
           <button className="text-sm text-slate-500 underline" onClick={() => setMode(mode === "signup" ? "login" : "signup")}>
-            {mode === "signup" ? "Have an account? Sign in" : "Need an account? Sign up"}
+            {mode === "signup" ? t("common.switchAuthSignup") : t("common.switchAuthLogin")}
           </button>
         </div>
       </main>
@@ -84,46 +86,44 @@ function ClaimInner() {
       <div className="mx-auto max-w-3xl px-4 sm:px-6">
         <div className="mx-auto mb-8 max-w-2xl text-center">
           <span className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-100 px-3 py-1 text-xs font-bold text-blue-800">
-            🛡️ Protecting legitimate merchants from extortion and smears
+            {t("claim.badge")}
           </span>
           <h1 className="text-2xl font-extrabold text-slate-900 sm:text-3xl">
-            Merchant Shield: name-clearing &amp; dispute portal
+            {t("claim.title")}
           </h1>
           <p className="mt-2 text-xs leading-relaxed text-slate-600 sm:text-sm">
-            Your business reputation should never be damaged by bad-faith competitor reviews or false
-            accusations. Submit verified KYC ownership to activate an immediate{" "}
-            <b>Safe-Harbor Score Freeze</b>.
+            {t("claim.subtitle")}
           </p>
         </div>
 
         <div className="mb-8 rounded-2xl border border-blue-200 bg-blue-50/70 p-5 shadow-xs">
           <div className="mb-2 flex items-center justify-between">
             <h3 className="text-xs font-bold uppercase tracking-wide text-blue-900">
-              ⚖ Statutory safe-harbor protection mechanism (ADR-004 &amp; ADR-014)
+              {t("claim.policyTitle")}
             </h3>
             <span className="rounded bg-blue-200 px-2 py-0.5 text-[10px] font-bold text-blue-900">
-              Anti-extortion protocol
+              {t("claim.antiExtortion")}
             </span>
           </div>
           <div className="mt-3 grid grid-cols-1 gap-3 text-xs text-slate-700 sm:grid-cols-3">
             <div className="rounded-xl border border-blue-100 bg-white p-3.5 shadow-xs">
-              <b className="mb-1 block text-slate-900">1. Mandatory proof of identity</b>
-              Business registration (NIB/SSM/ACRA) or official banking KYC is strictly required.
+              <b className="mb-1 block text-slate-900">{t("claim.policy1Title")}</b>
+              {t("claim.policy1Body")}
             </div>
             <div className="rounded-xl border border-blue-100 bg-white p-3.5 shadow-xs">
-              <b className="mb-1 block text-blue-700">2. Instant safe-harbor freeze</b>
-              Upon submission, risk-score penalties are capped at <b>45 / 100 max</b>.
+              <b className="mb-1 block text-blue-700">{t("claim.policy2Title")}</b>
+              {t("claim.policy2Body")}
             </div>
             <div className="rounded-xl border border-blue-100 bg-white p-3.5 shadow-xs">
-              <b className="mb-1 block text-slate-900">3. Dual-control adjudication</b>
-              Analysts audit refund slips and evidence; bad-faith smears are expunged.
+              <b className="mb-1 block text-slate-900">{t("claim.policy3Title")}</b>
+              {t("claim.policy3Body")}
             </div>
           </div>
         </div>
 
         {!entityId && (
           <p className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
-            Open this from an account profile (&ldquo;Are you the owner?&rdquo;) — missing entity id.
+            {t("claim.missingEntity")}
           </p>
         )}
         {message && (
@@ -135,27 +135,27 @@ function ClaimInner() {
         <div className="space-y-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-xs sm:p-8">
           <section className="space-y-3">
             <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900">
-              1. Prove you are the legitimate owner (KYC)
+              {t("claim.s1Title")}
             </h3>
             <div>
-              <Label>Verification tier</Label>
+              <Label>{t("claim.tierLabel")}</Label>
               <select className={inputCls} value={proofType} onChange={(e) => setProofType(e.target.value)}>
                 {PROOF_TYPES.map((p) => (
                   <option key={p.value} value={p.value}>
-                    {p.label}
+                    {t("proof." + p.value)}
                   </option>
                 ))}
               </select>
             </div>
             {proofType !== "MICRO_DEPOSIT_OTP" && (
               <div>
-                <Label>Proof document reference / URL</Label>
+                <Label>{t("claim.proofRef")}</Label>
                 <input className={inputCls} value={docUrl} onChange={(e) => setDocUrl(e.target.value)} />
               </div>
             )}
             {proofType === "MERCHANT_PORTAL_NMID" && (
               <div>
-                <Label>NMID from your merchant portal</Label>
+                <Label>{t("claim.nmid")}</Label>
                 <input className={inputCls} value={reference} onChange={(e) => setReference(e.target.value)} />
               </div>
             )}
@@ -169,10 +169,10 @@ function ClaimInner() {
                   declared_reference: reference || undefined,
                 });
                 setDispute(d);
-                setMessage(d.note ?? `Claim stage: ${d.claim_stage}`);
+                setMessage(d.note ?? t("claim.stage", { stage: d.claim_stage }));
               }}
             >
-              Submit ownership claim
+              {t("claim.submitClaim")}
             </button>
 
             {proofType === "MICRO_DEPOSIT_OTP" && (
@@ -181,25 +181,25 @@ function ClaimInner() {
                   className="rounded-lg bg-slate-800 px-4 py-2 text-sm text-white"
                   onClick={async () => {
                     const r = await startMicroDeposit(token, entityId);
-                    setDevCode(r.dev_code ?? "(sent)");
+                    setDevCode(r.dev_code ?? t("claim.codeSent"));
                     setMessage(r.note);
                   }}
                 >
-                  Send micro-deposit
+                  {t("claim.sendMicro")}
                 </button>
-                {devCode && <p className="text-xs text-amber-600">Dev code: {devCode}</p>}
+                {devCode && <p className="text-xs text-amber-600">{t("claim.devCode")} {devCode}</p>}
                 {devCode && (
                   <>
-                    <input className={inputCls} placeholder="Reference code" value={code} onChange={(e) => setCode(e.target.value)} />
+                    <input className={inputCls} placeholder={t("claim.refCode")} value={code} onChange={(e) => setCode(e.target.value)} />
                     <button
                       className="rounded-lg bg-emerald-500 px-4 py-2 font-semibold text-white"
                       onClick={async () => {
                         const d = await verifyMicroDeposit(token, entityId, code);
                         setDispute(d);
-                        setMessage(`Claim stage: ${d.claim_stage}`);
+                        setMessage(t("claim.stage", { stage: d.claim_stage }));
                       }}
                     >
-                      Verify micro-deposit
+                      {t("claim.verify")}
                     </button>
                   </>
                 )}
@@ -211,20 +211,20 @@ function ClaimInner() {
             <>
               <section className="space-y-3 border-t border-slate-100 pt-4">
                 <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900">
-                  2. Official clarification &amp; counter-evidence
+                  {t("claim.s2Title")}
                 </h3>
                 <div>
-                  <Label>Dispute reason</Label>
+                  <Label>{t("claim.reason")}</Label>
                   <select className={inputCls} value={reason} onChange={(e) => setReason(e.target.value)}>
                     {DISPUTE_REASONS.map((r) => (
                       <option key={r.value} value={r.value}>
-                        {r.label}
+                        {t("dispute." + r.value)}
                       </option>
                     ))}
                   </select>
                 </div>
                 <div>
-                  <Label>Justification (why the reports are false or misjudged)</Label>
+                  <Label>{t("claim.justification")}</Label>
                   <textarea className={inputCls} rows={3} value={justification} onChange={(e) => setJustification(e.target.value)} />
                 </div>
                 <button
@@ -232,21 +232,21 @@ function ClaimInner() {
                   disabled={justification.length < 10}
                   onClick={async () => {
                     const d = await submitDispute(token, entityId, { reason, justification });
-                    setMessage(`Dispute ${d.status} — analysts will review under dual-control.`);
+                    setMessage(t("claim.disputeStatus", { status: d.status }));
                   }}
                 >
-                  Submit dispute &amp; activate safe-harbor freeze
+                  {t("claim.submitDispute")}
                 </button>
               </section>
 
               <section className="space-y-3 border-t border-slate-100 pt-4">
                 <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900">
-                  3. Official response pinned to public profile
+                  {t("claim.s3Title")}
                 </h3>
                 <textarea
                   className={inputCls}
                   rows={3}
-                  placeholder="This clarification will be pinned beneath contested reports…"
+                  placeholder={t("claim.responsePlaceholder")}
                   value={response}
                   onChange={(e) => setResponse(e.target.value)}
                 />
@@ -255,10 +255,10 @@ function ClaimInner() {
                   disabled={!response}
                   onClick={async () => {
                     await setOwnerResponse(token, entityId, response);
-                    setMessage("Response pinned to public profile.");
+                    setMessage(t("claim.responsePinned"));
                   }}
                 >
-                  Publish pinned response
+                  {t("claim.publishResponse")}
                 </button>
               </section>
             </>
@@ -266,13 +266,13 @@ function ClaimInner() {
         </div>
 
         <p className="mt-6 text-center text-xs text-slate-400">
-          Need help? See the{" "}
+          {t("claim.help")}{" "}
           <Link href="/playbook" className="underline">
-            scam playbooks
+            {t("claim.helpPlaybooks")}
           </Link>{" "}
-          or{" "}
+          {t("claim.helpOr")}{" "}
           <Link href="/recovery" className="underline">
-            emergency recovery guide
+            {t("claim.helpRecovery")}
           </Link>
           .
         </p>

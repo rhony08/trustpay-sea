@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { DIRECTION_NOTE, riskBand } from "@/lib/risk";
+import { riskBand } from "@/lib/risk";
+import { useI18n } from "./LocaleProvider";
 
 export type RiskFactor = { label: string; weight: number; dampened?: boolean };
 
@@ -14,6 +15,7 @@ export function RiskGauge({
   factors?: RiskFactor[];
   compact?: boolean;
 }) {
+  const { t } = useI18n();
   const band = riskBand(score);
   const [open, setOpen] = useState(false);
 
@@ -23,41 +25,41 @@ export function RiskGauge({
         <div>
           <div className="flex items-center gap-2">
             <span className="text-xs font-bold uppercase tracking-wide text-slate-600">
-              Assessed fraud risk score
+              {t("risk.assessed")}
             </span>
             <span className="rounded border border-red-200 bg-red-50 px-2 py-0.5 text-[10px] font-bold text-red-700">
-              Higher score = higher danger
+              {t("risk.higherDanger")}
             </span>
           </div>
           <div className="mt-1 flex items-baseline gap-2">
             <span className={`text-4xl font-extrabold ${band.scoreText}`}>{score}</span>
             <span className="text-sm font-bold text-slate-400">/ 100</span>
-            <span className={`ml-2 text-sm font-bold ${band.scoreText}`}>{band.label}</span>
+            <span className={`ml-2 text-sm font-bold ${band.scoreText}`}>{t(band.labelKey)}</span>
           </div>
         </div>
 
         {!compact && (
           <div className="max-w-xs text-left text-xs text-slate-500 sm:text-right">
-            <p className="font-bold text-slate-700">{DIRECTION_NOTE}</p>
+            <p className="font-bold text-slate-700">{t("risk.direction")}</p>
             <p className="mt-0.5 text-[11px] leading-tight text-slate-500">
-              Unlike credit scores, high numbers represent extreme fraudulent activity.
+              {t("risk.unlikeCredit")}
             </p>
           </div>
         )}
       </div>
 
       <div className="flex h-3 w-full overflow-hidden rounded-full bg-slate-200">
-        <div className="w-1/4 bg-emerald-500" title="0-20 Safe" />
-        <div className="w-1/4 bg-amber-400" title="21-50 Caution" />
-        <div className="w-1/4 bg-orange-500" title="51-79 High" />
-        <div className="w-1/4 bg-red-600" title="80-100 Critical" />
+        <div className="w-1/4 bg-emerald-500" title={t("risk.low")} />
+        <div className="w-1/4 bg-amber-400" title={t("risk.caution")} />
+        <div className="w-1/4 bg-orange-500" title={t("risk.high")} />
+        <div className="w-1/4 bg-red-600" title={t("risk.critical")} />
       </div>
       <div className="mt-1.5 flex justify-between text-[11px] font-medium text-slate-500">
-        <span>0 (Safe)</span>
+        <span>{t("risk.safe")}</span>
         <span>20</span>
-        <span>50 (Caution)</span>
+        <span>{t("risk.cautionMid")}</span>
         <span>80</span>
-        <span>100 (Critical)</span>
+        <span>{t("risk.criticalMax")}</span>
       </div>
 
       {factors && factors.length > 0 && (
@@ -67,7 +69,7 @@ export function RiskGauge({
             onClick={() => setOpen((v) => !v)}
             className="flex items-center gap-1.5 text-xs font-bold text-blue-700 hover:text-blue-900"
           >
-            <span>View mathematical factor breakdown</span>
+            <span>{t("risk.factorBreakdown")}</span>
             <span>{open ? "↑" : "↓"}</span>
           </button>
           {open && (
@@ -87,7 +89,7 @@ export function RiskGauge({
                 </div>
               ))}
               <div className="flex justify-between rounded-lg bg-slate-100 px-3 py-1.5 font-bold text-slate-800">
-                <span>Calculated risk score:</span>
+                <span>{t("risk.calculated")}</span>
                 <span className={band.scoreText}>= {score} / 100</span>
               </div>
             </div>

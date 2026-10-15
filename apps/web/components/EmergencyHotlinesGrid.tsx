@@ -1,8 +1,11 @@
+"use client";
+
 import type { Hotline } from "@/lib/api";
+import { useI18n } from "./LocaleProvider";
 
 interface Row {
   name: string;
-  sub: string;
+  subKey: string;
   dial: string;
   action: string;
 }
@@ -10,37 +13,37 @@ interface Row {
 /** Official national anti-scam command hotlines (Doc 12 §4B.4 / §4B.5). */
 export const HOTLINES: Record<string, Row[]> = {
   ID: [
-    { name: "OJK Anti-Scam Center (IASC)", sub: "Inter-bank rapid freeze coordination center", dial: "157", action: "tel:157" },
-    { name: "Patroli Siber Polri", sub: "Official online police cybercrime portal", dial: "patrolisiber.id", action: "https://patrolisiber.id" },
-    { name: "CekRekening.id", sub: "Ministry Kominfo national scam blacklist", dial: "cekrekening.id", action: "https://cekrekening.id" },
+    { name: "OJK Anti-Scam Center (IASC)", subKey: "hotline.ID.1", dial: "157", action: "tel:157" },
+    { name: "Patroli Siber Polri", subKey: "hotline.ID.2", dial: "patrolisiber.id", action: "https://patrolisiber.id" },
+    { name: "CekRekening.id", subKey: "hotline.ID.3", dial: "cekrekening.id", action: "https://cekrekening.id" },
   ],
   MY: [
-    { name: "National Scam Response Centre (NSRC)", sub: "Call within 24 hours to intercept stolen fund transfers", dial: "997", action: "tel:997" },
-    { name: "PDRM Semak Mule", sub: "Royal Malaysia Police commercial crime mule database", dial: "semakmule.rmp.gov.my", action: "https://semakmule.rmp.gov.my" },
-    { name: "BNMTELELINK", sub: "Bank Negara Malaysia consumer financial protection center", dial: "1300885465", action: "tel:1300885465" },
+    { name: "National Scam Response Centre (NSRC)", subKey: "hotline.MY.1", dial: "997", action: "tel:997" },
+    { name: "PDRM Semak Mule", subKey: "hotline.MY.2", dial: "semakmule.rmp.gov.my", action: "https://semakmule.rmp.gov.my" },
+    { name: "BNMTELELINK", subKey: "hotline.MY.3", dial: "1300885465", action: "tel:1300885465" },
   ],
   SG: [
-    { name: "SPF Anti-Scam Command Hotline", sub: "Singapore Police Force dedicated anti-scam unit", dial: "1799", action: "tel:1799" },
-    { name: "National Crime Prevention Helpline", sub: "24-hour scam advisory and emergency guidance", dial: "18007226688", action: "tel:18007226688" },
+    { name: "SPF Anti-Scam Command Hotline", subKey: "hotline.SG.1", dial: "1799", action: "tel:1799" },
+    { name: "National Crime Prevention Helpline", subKey: "hotline.SG.2", dial: "18007226688", action: "tel:18007226688" },
   ],
   TH: [
-    { name: "Anti Online Scam Operation Center (AOC)", sub: "Thailand national emergency anti-scam response unit", dial: "1441", action: "tel:1441" },
-    { name: "Cyber Crime Investigation Bureau (CCIB)", sub: "Royal Thai Police cyber incident center", dial: "thaipoliceonline.com", action: "https://thaipoliceonline.com" },
+    { name: "Anti Online Scam Operation Center (AOC)", subKey: "hotline.TH.1", dial: "1441", action: "tel:1441" },
+    { name: "Cyber Crime Investigation Bureau (CCIB)", subKey: "hotline.TH.2", dial: "thaipoliceonline.com", action: "https://thaipoliceonline.com" },
   ],
   VN: [
-    { name: "National Cyber Security Center (NCSC)", sub: "Ministry of Information & Communications cyber safety hub", dial: "khonggianmang.vn", action: "https://khonggianmang.vn" },
-    { name: "Ministry of Public Security Cyber Hotline", sub: "Department of Cybersecurity & High-Tech Crime Prevention", dial: "0692348560", action: "tel:0692348560" },
+    { name: "National Cyber Security Center (NCSC)", subKey: "hotline.VN.1", dial: "khonggianmang.vn", action: "https://khonggianmang.vn" },
+    { name: "Ministry of Public Security Cyber Hotline", subKey: "hotline.VN.2", dial: "0692348560", action: "tel:0692348560" },
   ],
   PH: [
-    { name: "PNP Anti-Cybercrime Group (ACG)", sub: "Philippine National Police 24/7 scam response", dial: "09617291299", action: "tel:09617291299" },
-    { name: "CIBAC / CICC Hotline", sub: "Cybercrime Investigation and Coordinating Center", dial: "1326", action: "tel:1326" },
+    { name: "PNP Anti-Cybercrime Group (ACG)", subKey: "hotline.PH.1", dial: "09617291299", action: "tel:09617291299" },
+    { name: "CIBAC / CICC Hotline", subKey: "hotline.PH.2", dial: "1326", action: "tel:1326" },
   ],
 };
 
 function fromApi(hotlines: Hotline[]): Row[] {
   return hotlines.map((h) => ({
     name: h.name,
-    sub: "Official national anti-scam resource",
+    subKey: "recovery.hotlineSub",
     dial: h.number ?? h.url ?? "",
     action: h.number ? `tel:${h.number}` : (h.url ?? "#"),
   }));
@@ -53,6 +56,7 @@ export function EmergencyHotlinesGrid({
   country: string;
   apiHotlines?: Hotline[];
 }) {
+  const { t } = useI18n();
   const rows = HOTLINES[country] ?? (apiHotlines?.length ? fromApi(apiHotlines) : HOTLINES.ID);
 
   return (
@@ -68,10 +72,10 @@ export function EmergencyHotlinesGrid({
                   idx === 0 ? "bg-rose-100 text-rose-800" : "bg-slate-100 text-slate-600"
                 }`}
               >
-                {idx === 0 ? "Primary priority" : "Official"}
+                {idx === 0 ? t("recovery.primary") : t("recovery.official")}
               </span>
             </div>
-            <p className="mb-3 text-[11px] text-slate-500">{item.sub}</p>
+            <p className="mb-3 text-[11px] text-slate-500">{t(item.subKey)}</p>
             <a
               href={item.action}
               {...(isTel ? {} : { target: "_blank", rel: "noreferrer" })}
@@ -81,7 +85,9 @@ export function EmergencyHotlinesGrid({
                   : "border border-slate-200 bg-slate-100 text-slate-800 hover:bg-slate-200"
               }`}
             >
-              {isTel ? `📞 Call hotline ${item.dial}` : `Visit portal ${item.dial} →`}
+              {isTel
+                ? t("recovery.callHotline", { dial: item.dial })
+                : t("recovery.visitPortal", { dial: item.dial })}
             </a>
           </div>
         );

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { COUNTRIES, getHotlines, getRecovery, type Hotline, type RecoveryPlan } from "@/lib/api";
 import { EmergencyHotlinesGrid } from "@/components/EmergencyHotlinesGrid";
+import { useI18n } from "@/components/LocaleProvider";
 
 const BANK_DIALS = [
   { label: "HaloBCA: 1500888", dial: "1500888" },
@@ -14,6 +15,7 @@ const BANK_DIALS = [
 ];
 
 export default function RecoveryPage() {
+  const { t } = useI18n();
   const [country, setCountry] = useState("ID");
   const [hotlines, setHotlines] = useState<Hotline[]>([]);
   const [plan, setPlan] = useState<RecoveryPlan | null>(null);
@@ -33,15 +35,13 @@ export default function RecoveryPage() {
             </div>
             <div>
               <span className="rounded border border-rose-200 bg-rose-100 px-2.5 py-0.5 text-xs font-bold uppercase text-rose-800">
-                0–24 hour critical rapid response
+                {t("recovery.badge")}
               </span>
               <h1 className="mt-2 text-2xl font-black text-slate-900 sm:text-3xl">
-                Just transferred money to a scammer? Take action immediately.
+                {t("recovery.title")}
               </h1>
               <p className="mt-2 text-xs leading-relaxed text-slate-600 sm:text-sm">
-                Perpetrators systematically transfer stolen funds into secondary mule accounts within{" "}
-                <b>15 to 60 minutes</b>. Follow these statutory steps immediately to freeze the
-                recipient account and maximise fund interception chances.
+                {t("recovery.subtitle")}
               </p>
             </div>
           </div>
@@ -50,11 +50,9 @@ export default function RecoveryPage() {
         <div className="flex items-center justify-between border-b border-slate-200 pb-3">
           <div>
             <h2 className="text-sm font-bold uppercase tracking-wide text-slate-900">
-              National anti-scam command hotlines
+              {t("recovery.hotlinesTitle")}
             </h2>
-            <p className="text-xs text-slate-500">
-              Official government emergency lines for instant inter-bank freezes
-            </p>
+            <p className="text-xs text-slate-500">{t("recovery.hotlinesSub")}</p>
           </div>
           <select
             className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-bold text-slate-800 shadow-xs outline-none focus:border-blue-600"
@@ -72,15 +70,10 @@ export default function RecoveryPage() {
         <EmergencyHotlinesGrid country={country} apiHotlines={hotlines} />
 
         <div className="space-y-4">
-          <h2 className="text-base font-bold text-slate-900">3 crucial emergency recovery steps</h2>
+          <h2 className="text-base font-bold text-slate-900">{t("recovery.stepsTitle")}</h2>
 
-          <Step n={1} tone="rose" title="Contact your bank's fraud department right now">
-            <p className="text-xs leading-relaxed text-slate-600">
-              Ask to be connected directly to the <b>Fraud / Dispute Operations Team</b>. State
-              clearly: <i>&ldquo;I have just made an erroneous transfer to a confirmed scammer.
-              Please create an emergency incident report and initiate inter-bank communication to
-              freeze the destination account at the recipient bank.&rdquo;</i>
-            </p>
+          <Step n={1} tone="rose" title={t("recovery.step1Title")}>
+            <p className="text-xs leading-relaxed text-slate-600">{t("recovery.step1Body")}</p>
             <div className="flex flex-wrap gap-2 pt-2 font-mono text-xs">
               {BANK_DIALS.map((b) => (
                 <a
@@ -94,24 +87,17 @@ export default function RecoveryPage() {
             </div>
           </Step>
 
-          <Step n={2} tone="amber" title="File an official police report (SPKT / cybercrime division)">
-            <p className="text-xs leading-relaxed text-slate-600">
-              Financial institutions legally require an official police incident report (Surat Tanda
-              Penerimaan Laporan Polisi or national equivalent) to permanently lock the recipient
-              mule account and preserve remaining funds for judicial restitution.
-            </p>
+          <Step n={2} tone="amber" title={t("recovery.step2Title")}>
+            <p className="text-xs leading-relaxed text-slate-600">{t("recovery.step2Body")}</p>
           </Step>
 
-          <Step n={3} tone="blue" title="Index the scammer's account on TrustPay SEA">
-            <p className="text-xs leading-relaxed text-slate-600">
-              Ensure this bank account is stamped with a <b>CRITICAL FRAUD</b> alert in our public
-              registry so no subsequent victims transfer money to the same perpetrator.
-            </p>
+          <Step n={3} tone="blue" title={t("recovery.step3Title")}>
+            <p className="text-xs leading-relaxed text-slate-600">{t("recovery.step3Body")}</p>
             <Link
               href="/report"
               className="mt-2 inline-block rounded-xl bg-blue-600 px-4 py-2 text-xs font-bold text-white shadow-xs hover:bg-blue-700"
             >
-              Report this fraudulent account now &rarr;
+              {t("recovery.reportBtn")}
             </Link>
           </Step>
         </div>
@@ -119,12 +105,12 @@ export default function RecoveryPage() {
         {plan && (
           <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs">
             <h2 className="text-sm font-bold uppercase tracking-wide text-slate-900">
-              Action plan · {plan.country}
-              {plan.bank ? ` · ${plan.bank}` : ""}
+              {t("recovery.planTitle", { country: plan.country })}
+              {plan.bank ? t("recovery.planBankSuffix", { bank: plan.bank }) : ""}
             </h2>
             <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
-                <p className="text-xs font-bold text-slate-700">Immediate steps</p>
+                <p className="text-xs font-bold text-slate-700">{t("recovery.immediate")}</p>
                 <ol className="mt-2 list-decimal space-y-1 pl-5 text-xs text-slate-600">
                   {plan.immediate_steps.map((s) => (
                     <li key={s}>{s}</li>
@@ -132,7 +118,7 @@ export default function RecoveryPage() {
                 </ol>
               </div>
               <div>
-                <p className="text-xs font-bold text-slate-700">Account freeze steps</p>
+                <p className="text-xs font-bold text-slate-700">{t("recovery.freeze")}</p>
                 <ol className="mt-2 list-decimal space-y-1 pl-5 text-xs text-slate-600">
                   {plan.freeze_steps.map((s) => (
                     <li key={s}>{s}</li>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useI18n } from "./LocaleProvider";
 
 export interface SlipFields {
   date?: string;
@@ -21,6 +22,7 @@ export function RedactedSlipViewer({
   fields?: SlipFields;
   allowAnalystView?: boolean;
 }) {
+  const { t } = useI18n();
   const [redacted, setRedacted] = useState(true);
   const f: Required<SlipFields> = {
     date: fields.date ?? "12 Oct 2026, 14:22:09 WIB · Success",
@@ -41,15 +43,13 @@ export function RedactedSlipViewer({
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
         <div>
           <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900">
-            Payment slip forensics · asymmetric redaction
+            {t("slip.title")}
           </h3>
-          <p className="text-xs text-slate-500">
-            Victim personal info is blurred; scammer destination account and name are kept clear.
-          </p>
+          <p className="text-xs text-slate-500">{t("slip.subtitle")}</p>
         </div>
         {allowAnalystView && (
           <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-100 p-1 text-xs">
-            <span className="text-[11px] font-medium text-slate-600">View mode:</span>
+            <span className="text-[11px] font-medium text-slate-600">{t("slip.viewMode")}</span>
             <button
               type="button"
               onClick={() => setRedacted((v) => !v)}
@@ -57,7 +57,7 @@ export function RedactedSlipViewer({
                 redacted ? "bg-blue-600 text-white" : "bg-rose-600 text-white"
               }`}
             >
-              {redacted ? "Public (victim protected)" : "Analyst view (unredacted)"}
+              {redacted ? t("slip.public") : t("slip.analyst")}
             </button>
           </div>
         )}
@@ -65,45 +65,46 @@ export function RedactedSlipViewer({
 
       <div className="mx-auto max-w-md rounded-xl border border-slate-300 bg-slate-50 p-5 font-mono text-xs text-slate-800 shadow-xs">
         <div className="mb-3 border-b border-dashed border-slate-300 pb-3 text-center">
-          <p className="text-sm font-extrabold text-slate-900">BANK TRANSFER RECEIPT</p>
+          <p className="text-sm font-extrabold text-slate-900">{t("slip.receiptTitle")}</p>
           <p className="font-sans text-[10px] text-slate-500">{f.date}</p>
         </div>
 
         <div className="mb-3 space-y-1.5 rounded-lg border border-slate-200 bg-white p-3">
           <span className="block text-[10px] font-bold uppercase text-slate-400">
-            Sender (victim — protected by system):
+            {t("slip.senderLabel")}
           </span>
-          <Row label="Sender name" valueClass={blur("font-bold")}>
+          <Row label={t("slip.senderName")} valueClass={blur("font-bold")}>
             {f.victimName}
           </Row>
-          <Row label="Sender account" valueClass={blur()}>
+          <Row label={t("slip.senderAccount")} valueClass={blur()}>
             {f.victimAccount}
           </Row>
-          <Row label="Account balance" valueClass={blur()}>
+          <Row label={t("slip.balance")} valueClass={blur()}>
             {f.victimBalance}
           </Row>
           <p className="mt-1 font-sans text-[10px] font-medium text-emerald-700">
-            🔒 Redacted by AI to prevent victim doxing &amp; harassment.
+            {t("slip.redactedNote")}
           </p>
         </div>
 
         <div className="space-y-1.5 rounded-lg border border-red-200 bg-red-50/60 p-3">
           <span className="block text-[10px] font-bold uppercase text-red-800">
-            Destination (scammer / mule — kept clear):
+            {t("slip.destLabel")}
           </span>
-          <Row label="Target bank">{f.targetBank}</Row>
-          <Row label="Account number" valueClass="rounded border border-red-200 bg-red-100 px-1.5 py-0.5 font-bold text-red-700">
+          <Row label={t("slip.targetBank")}>{f.targetBank}</Row>
+          <Row
+            label={t("slip.accountNumber")}
+            valueClass="rounded border border-red-200 bg-red-100 px-1.5 py-0.5 font-bold text-red-700"
+          >
             {f.accountNumber}
           </Row>
-          <Row label="Holder name" valueClass="bg-amber-50 px-1 font-extrabold text-slate-900">
+          <Row label={t("slip.holderName")} valueClass="bg-amber-50 px-1 font-extrabold text-slate-900">
             {f.holderName}
           </Row>
-          <Row label="Transferred sum" valueClass="font-bold">
+          <Row label={t("slip.transferred")} valueClass="font-bold">
             {f.amount}
           </Row>
-          <p className="mt-1 font-sans text-[10px] text-slate-600">
-            ✓ Kept visible so future payers can verify the exact recipient.
-          </p>
+          <p className="mt-1 font-sans text-[10px] text-slate-600">{t("slip.keptVisible")}</p>
         </div>
       </div>
     </div>

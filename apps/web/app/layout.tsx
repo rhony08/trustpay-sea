@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import "./globals.css";
 import { Chrome } from "@/components/Chrome";
+import { LocaleProvider } from "@/components/LocaleProvider";
 
 export const metadata: Metadata = {
   title: "TrustPay SEA — Payment Risk & Reputation Registry",
@@ -12,9 +13,11 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className="bg-slate-50 text-slate-800 antialiased">
-        <Chrome>{children}</Chrome>
+        <LocaleProvider>
+          <Chrome>{children}</Chrome>
+        </LocaleProvider>
       </body>
     </html>
   );

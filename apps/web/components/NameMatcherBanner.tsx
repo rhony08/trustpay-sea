@@ -1,3 +1,7 @@
+"use client";
+
+import { useI18n } from "./LocaleProvider";
+
 /** ADR-016 Name Matcher Radar (G-1): flag third-party mule accounts. */
 
 export function normalizeName(value: string): string {
@@ -34,6 +38,7 @@ export function NameMatcherBanner({
   claimedName: string;
   actualName: string;
 }) {
+  const { t } = useI18n();
   return (
     <div className="rounded-2xl border-2 border-red-300 bg-red-50 p-5 shadow-xs">
       <div className="flex items-start gap-4">
@@ -43,37 +48,32 @@ export function NameMatcherBanner({
         <div className="flex-1">
           <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
             <span className="text-sm font-bold uppercase tracking-wide text-red-900">
-              Critical alert: recipient name mismatch (money mule suspect)
+              {t("matcher.title")}
             </span>
             <span className="rounded bg-red-600 px-2 py-0.5 text-[10px] font-bold text-white">
-              High danger
+              {t("matcher.highDanger")}
             </span>
           </div>
           <p className="mb-3 text-xs leading-relaxed text-red-800">
-            The seller instructed you to pay to{" "}
-            <b className="underline">&ldquo;{claimedName}&rdquo;</b>, but this bank account is
-            legally registered to:
+            {t("matcher.claimedPre")} <b className="underline">&ldquo;{claimedName}&rdquo;</b>{" "}
+            {t("matcher.claimedPost")}
           </p>
 
           <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-red-200 bg-white p-3">
             <div>
               <span className="block text-[11px] font-bold uppercase text-slate-500">
-                Actual registered bank holder name (ADR-016 disclosed):
+                {t("matcher.actualLabel")}
               </span>
               <span className="text-base font-extrabold tracking-wide text-slate-900">
                 {actualName}
               </span>
             </div>
             <span className="rounded-lg border border-red-200 bg-red-100 px-2.5 py-1 text-xs font-bold text-red-800">
-              Name mismatch · Do not send funds
+              {t("matcher.badge")}
             </span>
           </div>
 
-          <p className="mt-2.5 text-[11px] text-red-700">
-            Online fraudsters routinely rent bank accounts registered under third-party citizens.
-            Never transfer money if the recipient holder name differs from the merchant you
-            contacted.
-          </p>
+          <p className="mt-2.5 text-[11px] text-red-700">{t("matcher.help")}</p>
         </div>
       </div>
     </div>
