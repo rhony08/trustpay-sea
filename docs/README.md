@@ -20,6 +20,7 @@ This folder contains the complete planning, design, and implementation documenta
 | 09 | [Screen API Key Tiers & Anti-Probing](09-screen-api-keys.md) | PROPOSED key tiers, quotas, probe-pattern detection (closes NG-3/NG-9) |
 | 10 | [Data Fate Matrix](10-data-fate-matrix.md) | PROPOSED retention × legal-hold × erasure × dispute-freeze per table (NG-6/NG-11, G-13) |
 | 11 | [Handoff: Status, Gaps & Notes](11-handoff-next-agent.md) | Post-implementation status (Phases 0–7 core + MY gov checker), real-vs-mocked, deferred work, invariants, next-work order |
+| 12 | [UI Redesign & Gap Resolutions](12-ui-redesign-and-gaps.md) | Asymmetric PII redaction rules, Name Matcher, Risk Gauge polarity, static prototype index (`prototype/`), and frontend migration roadmap |
 
 ## Quick Summary
 

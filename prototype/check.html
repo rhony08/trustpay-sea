@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Payment Verification Profile — TrustPay SEA</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+    .censored-blur { filter: blur(5px); user-select: none; }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col antialiased">
+
+  <!-- Header -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-xs">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+      <!-- Unified Brand Logo -->
+      <a href="index.html" class="flex items-center gap-3">
+        <div class="h-10 w-10 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold text-xl shadow-xs">
+          <svg class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+          </svg>
+        </div>
+        <div>
+          <span class="text-lg font-bold tracking-tight text-slate-900">TrustPay <span class="bg-blue-100 text-blue-800 text-[10px] font-bold px-1.5 py-0.2 rounded border border-blue-200">SEA</span></span>
+          <p class="text-[10px] text-slate-500 font-medium">Payment Verification &amp; Trust Registry</p>
+        </div>
+      </a>
+
+      <nav class="hidden md:flex items-center gap-1 text-sm font-medium">
+        <a href="check.html" class="px-3.5 py-2 rounded-lg text-blue-700 bg-blue-50 font-semibold border border-blue-100">
+          Check Account / QR
+        </a>
+        <a href="report.html" class="px-3.5 py-2 rounded-lg text-slate-700 hover:text-slate-900 hover:bg-slate-100">
+          Report Fraud
+        </a>
+        <a href="claim.html" class="px-3.5 py-2 rounded-lg text-slate-700 hover:text-slate-900 hover:bg-slate-100">
+          Merchant Shield
+        </a>
+        <a href="recovery.html" class="px-3.5 py-2 rounded-lg text-slate-700 hover:text-slate-900 hover:bg-slate-100">
+          Emergency SOS
+        </a>
+        <a href="receipt.html" class="px-3.5 py-2 rounded-lg text-slate-700 hover:text-slate-900 hover:bg-slate-100">
+          Diligence Slip
+        </a>
+      </nav>
+
+      <div class="flex items-center gap-2">
+        <select onchange="switchLanguage(this.value)" class="bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-slate-700 outline-none cursor-pointer">
+          <option value="en" selected>🇺🇸 English</option>
+          <option value="id">🇮🇩 Bahasa Indonesia</option>
+          <option value="ms">🇲🇾 Bahasa Melayu</option>
+          <option value="th">🇹🇭 ภาษาไทย</option>
+          <option value="vi">🇻🇳 Tiếng Việt</option>
+          <option value="fil">🇵🇭 Filipino</option>
+        </select>
+        <a href="report.html" class="px-3.5 py-2 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-xs">
+          + Report
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main class="flex-1 py-8 sm:py-10">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6">
+
+      <!-- Breadcrumbs & Scenario Switcher -->
+      <div class="mb-6 flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <a href="index.html" class="text-xs text-slate-500 hover:text-blue-600 inline-flex items-center gap-1 mb-1 font-medium">
+            &larr; Back to Search
+          </a>
+          <h1 class="text-2xl font-bold text-slate-900">
+            Payment Verification Dossier
+          </h1>
+        </div>
+
+        <!-- Interactive Scenario Test Pills -->
+        <div class="flex flex-wrap items-center gap-1.5 bg-white border border-slate-200 p-1.5 rounded-xl shadow-xs text-xs">
+          <span class="text-slate-400 text-[11px] px-1 font-semibold">Test Cases:</span>
+          <button onclick="loadScenario('fraud')" class="px-2.5 py-1 rounded-lg bg-red-50 text-red-700 border border-red-200 hover:bg-red-100 font-bold transition-all">
+            🚨 Confirmed Fraud (88)
+          </button>
+          <button onclick="loadScenario('dispute')" class="px-2.5 py-1 rounded-lg bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100 font-semibold transition-all">
+            ⚖ Dispute Active (42)
+          </button>
+          <button onclick="loadScenario('clean')" class="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100 font-semibold transition-all">
+            ✓ Clean Merchant (5)
+          </button>
+          <button onclick="loadScenario('unverified')" class="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 border border-slate-200 hover:bg-slate-200 font-semibold transition-all">
+            ❓ New / Unreviewed (15)
+          </button>
+        </div>
+      </div>
+
+      <!-- Quick Search Bar -->
+      <div class="bg-white rounded-xl border border-slate-200 p-4 mb-6 shadow-xs">
+        <div class="grid grid-cols-1 sm:grid-cols-4 gap-3 items-center">
+          <div>
+            <label class="block text-[11px] font-bold text-slate-500 mb-0.5">Institution</label>
+            <select id="quickBank" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-slate-800">
+              <option selected>Bank Central Asia (BCA)</option>
+              <option>Bank Rakyat Indonesia (BRI)</option>
+              <option>Bank Mandiri</option>
+              <option>Maybank</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-500 mb-0.5">Account Number</label>
+            <input type="text" id="quickAccount" value="8831924831" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-mono font-bold text-slate-900" />
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-blue-700 mb-0.5">Seller Claimed Name</label>
+            <input type="text" id="quickNameClaim" value="Siti Aminah (Admin Olshop)" placeholder="e.g. Siti Aminah" class="w-full bg-blue-50/50 border border-blue-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-800" />
+          </div>
+          <div class="sm:pt-4">
+            <button onclick="applyNewSearch()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-lg text-xs shadow-xs">
+              Re-Verify
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============================================================== -->
+      <!-- RESULT PROFILE CONTAINER                                       -->
+      <!-- ============================================================== -->
+      <div id="resultContainer" class="space-y-6">
+
+        <!-- 1. NAME MISMATCH RADAR ALERT (ADR-016) -->
+        <div id="mismatchBanner" class="bg-red-50 border-2 border-red-300 rounded-2xl p-5 shadow-xs">
+          <div class="flex items-start gap-4">
+            <div class="h-10 w-10 rounded-full bg-red-600 text-white flex items-center justify-center shrink-0 font-bold text-xl">
+              !
+            </div>
+            <div class="flex-1">
+              <div class="flex flex-wrap items-center justify-between gap-2 mb-1">
+                <span class="text-sm font-bold text-red-900 uppercase tracking-wide">
+                  CRITICAL ALERT: RECIPIENT NAME MISMATCH (MONEY MULE SUSPECT)
+                </span>
+                <span class="bg-red-600 text-white text-[10px] font-bold px-2 py-0.5 rounded">
+                  HIGH DANGER
+                </span>
+              </div>
+              <p class="text-xs text-red-800 leading-relaxed mb-3">
+                The seller instructed you to pay to <b class="underline" id="bannerClaimedName">"Siti Aminah (Admin Olshop)"</b>, but this bank account is legally registered to:
+              </p>
+
+              <div class="bg-white border border-red-200 rounded-xl p-3 flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <span class="text-[11px] text-slate-500 block uppercase font-bold">Actual Registered Bank Holder Name (ADR-016 Disclosed):</span>
+                  <span class="text-base font-extrabold text-slate-900 tracking-wide" id="bannerActualName">BAMBANG SUJARWO</span>
+                </div>
+                <span class="bg-red-100 text-red-800 font-bold text-xs px-2.5 py-1 rounded-lg border border-red-200">
+                  Name Mismatch &middot; Do Not Send Funds
+                </span>
+              </div>
+
+              <p class="text-[11px] text-red-700 mt-2.5">
+                Online fraudsters routinely rent bank accounts registered under third-party citizens. Never transfer money if the recipient holder name differs from the merchant you contacted.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. COOLING-OFF CARD -->
+        <div id="coolingOffCard" class="bg-amber-50 border border-amber-300 rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div class="flex items-center gap-3">
+            <span class="text-2xl">⏳</span>
+            <div>
+              <p class="text-xs font-bold text-amber-900">Mandatory Cooling-off Notice</p>
+              <p class="text-xs text-amber-800">Fresh fraud reports detected within the past 72 hours. Pause before paying.</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <span id="countdownBadge" class="bg-amber-100 text-amber-900 font-mono text-xs font-bold px-3 py-1.5 rounded-lg border border-amber-200">
+              Pause 10s...
+            </span>
+            <button id="coolingAckBtn" disabled class="rounded-lg bg-slate-200 text-slate-400 px-3 py-1.5 text-xs font-semibold cursor-not-allowed">
+              I Understand the Risk
+            </button>
+          </div>
+        </div>
+
+        <!-- 3. MAIN TRUST PROFILE CARD -->
+        <div class="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-xs space-y-6">
+
+          <!-- Top Row: Account & Verification Status -->
+          <div class="flex flex-wrap items-start justify-between gap-4 pb-6 border-b border-slate-100">
+            <div>
+              <div class="flex items-center gap-2 mb-1">
+                <span class="text-xs font-bold text-slate-500 uppercase tracking-wide" id="profileBank">Bank Central Asia (BCA) &middot; Indonesia</span>
+                <span class="bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold px-2 py-0.2 rounded-full">Exact Match</span>
+              </div>
+              <div class="flex items-center gap-3">
+                <span class="text-3xl font-mono font-bold text-slate-900 tracking-wider" id="profileAccount">
+                  883-****-831
+                </span>
+                <button onclick="copyAccount()" class="text-xs text-blue-600 hover:text-blue-800 font-semibold underline">
+                  Copy Account
+                </button>
+              </div>
+              <div class="mt-2.5 flex items-center gap-2">
+                <span class="text-xs text-slate-500 font-medium">Account Holder:</span>
+                <span class="text-sm font-bold text-slate-900" id="profileHolderName">BAMBANG SUJARWO</span>
+                <span class="bg-slate-100 text-slate-700 text-[11px] font-medium px-2 py-0.5 rounded border border-slate-200" id="profileHolderTag">
+                  Reported (across 3 verified slips)
+                </span>
+              </div>
+            </div>
+
+            <!-- Primary Status Badge & Owner Name Clearing Button -->
+            <div class="text-right space-y-2">
+              <span id="trustBadge" class="inline-block px-3.5 py-1.5 rounded-lg bg-red-100 text-red-800 border border-red-300 font-extrabold text-xs uppercase tracking-wide">
+                CRITICAL FRAUD
+              </span>
+              <p class="text-[11px] text-slate-500" id="trustBadgeSub">Admin Confirmed &middot; Police Linked</p>
+
+              <!-- Dedicated Name Clearing Form Trigger for Misjudged Owners -->
+              <div>
+                <button onclick="openNameClearingModal()" class="inline-flex items-center gap-1.5 text-xs text-blue-700 hover:text-blue-900 font-bold bg-blue-50 border border-blue-200 px-3 py-1.5 rounded-lg shadow-2xs transition-colors">
+                  <span>🛡️ Are you the owner? File Name Clearance</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- RISK SCORE & POLARITY METER (NG-2 Solution) -->
+          <div class="bg-slate-50 border border-slate-200 rounded-xl p-5">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
+              <div>
+                <div class="flex items-center gap-2">
+                  <span class="text-xs font-bold uppercase tracking-wide text-slate-600">Assessed Fraud Risk Score</span>
+                  <span class="bg-red-50 text-red-700 border border-red-200 text-[10px] font-bold px-2 py-0.5 rounded">
+                    Higher Score = Higher Danger
+                  </span>
+                </div>
+                <div class="flex items-baseline gap-2 mt-1">
+                  <span class="text-4xl font-extrabold text-red-600" id="riskScoreNumber">88</span>
+                  <span class="text-sm font-bold text-slate-400">/ 100</span>
+                  <span class="text-sm font-bold text-red-800 ml-2" id="riskScoreLabel">Severe Scam Likelihood</span>
+                </div>
+              </div>
+
+              <!-- Explicit Direction Clarification -->
+              <div class="text-xs text-slate-500 text-left sm:text-right max-w-xs">
+                <p class="font-bold text-slate-700">0 (Safe / Verified) &mdash; 100 (Critical Fraud)</p>
+                <p class="text-[11px] text-slate-500 mt-0.5 leading-tight">Unlike credit scores, high numbers represent extreme fraudulent activity.</p>
+              </div>
+            </div>
+
+            <!-- Segmented Gauge -->
+            <div class="w-full bg-slate-200 h-3 rounded-full overflow-hidden flex">
+              <div class="w-1/4 bg-emerald-500" title="0-20 Safe"></div>
+              <div class="w-1/4 bg-amber-400" title="21-50 Caution"></div>
+              <div class="w-1/4 bg-orange-500" title="51-79 High"></div>
+              <div id="riskGaugeFill" class="w-1/4 bg-red-600" title="80-100 Critical"></div>
+            </div>
+            <div class="flex justify-between text-[11px] text-slate-500 mt-1.5 font-medium">
+              <span>0 (Safe)</span>
+              <span>20</span>
+              <span>50 (Caution)</span>
+              <span>80</span>
+              <span>100 (Critical)</span>
+            </div>
+
+            <!-- Mathematical Factor Breakdown -->
+            <div class="mt-4 pt-3 border-t border-slate-200">
+              <button onclick="toggleFactors()" class="text-xs font-bold text-blue-700 hover:text-blue-900 flex items-center gap-1.5">
+                <span>View Mathematical Factor Breakdown</span>
+                <span id="factorsArrow">&darr;</span>
+              </button>
+
+              <div id="factorList" class="mt-2.5 space-y-1.5 text-xs text-slate-700">
+                <div class="flex justify-between py-1.5 px-3 rounded-lg bg-white border border-slate-200">
+                  <span>+ 35 pts &middot; Admin Verified Fraud Report (#TR-8192)</span>
+                  <span class="font-bold text-red-600">+35</span>
+                </div>
+                <div class="flex justify-between py-1.5 px-3 rounded-lg bg-white border border-slate-200">
+                  <span>+ 38 pts &middot; 3 Community Reports with validated m-banking transfer receipts</span>
+                  <span class="font-bold text-red-600">+38</span>
+                </div>
+                <div class="flex justify-between py-1.5 px-3 rounded-lg bg-white border border-slate-200">
+                  <span>+ 15 pts &middot; Royal Malaysia Police (PDRM Semak Mule) CCID record</span>
+                  <span class="font-bold text-red-600">+15</span>
+                </div>
+                <div class="flex justify-between py-1.5 px-3 rounded-lg bg-slate-100 font-bold text-slate-800">
+                  <span>Calculated Risk Score:</span>
+                  <span class="text-red-700 font-extrabold">= 88 / 100 (Critical Band)</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- SEARCH INTELLIGENCE ACTIVITY (ADR-011) -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div class="bg-white border border-slate-200 rounded-xl p-3.5">
+              <span class="text-[11px] font-bold text-slate-500 uppercase">Times Searched</span>
+              <p class="text-xl font-extrabold text-slate-900 mt-0.5" id="intelTotalSearches">1,240</p>
+              <span class="text-[10px] text-slate-400">Total lookups</span>
+            </div>
+            <div class="bg-white border border-slate-200 rounded-xl p-3.5">
+              <span class="text-[11px] font-bold text-slate-500 uppercase">Searches (7 Days)</span>
+              <p class="text-xl font-extrabold text-red-600 mt-0.5" id="intel7d">42</p>
+              <span class="text-[10px] text-red-600 font-semibold">&uarr; Velocity spike</span>
+            </div>
+            <div class="bg-white border border-slate-200 rounded-xl p-3.5">
+              <span class="text-[11px] font-bold text-slate-500 uppercase">Community Reports</span>
+              <p class="text-xl font-extrabold text-slate-900 mt-0.5" id="intelReports">24 Total</p>
+              <span class="text-[10px] text-slate-500">Showing top 10</span>
+            </div>
+            <div class="bg-white border border-slate-200 rounded-xl p-3.5">
+              <span class="text-[11px] font-bold text-slate-500 uppercase">Last Queried</span>
+              <p class="text-sm font-bold text-slate-800 mt-1" id="intelLastSeen">18 mins ago</p>
+              <span class="text-[10px] text-slate-400">Active threat</span>
+            </div>
+          </div>
+
+          <!-- AI GROUNDED SUMMARY (ADR-012/013) -->
+          <div class="bg-slate-50 border border-slate-200 rounded-xl p-4">
+            <div class="flex items-center gap-2 mb-1.5">
+              <span class="text-xs font-bold uppercase tracking-wide text-blue-900">AI Neutral Entity Summary</span>
+              <span class="bg-blue-100 text-blue-800 text-[10px] font-bold px-2 py-0.2 rounded">Strictly Grounded</span>
+            </div>
+            <p class="text-xs sm:text-sm text-slate-700 leading-relaxed" id="aiSummaryText">
+              This BCA account has accumulated 24 community reports since August 2026, primarily categorized under Non-Delivery Online Shopping Scams. Verified by human analyst triage. System notes matching investigation records from Royal Malaysia Police PDRM Semak Mule.
+            </p>
+          </div>
+
+          <!-- ASYMMETRIC PII REDACTION EVIDENCE VIEWER -->
+          <div class="bg-white border border-slate-200 rounded-xl p-5 space-y-4">
+            <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
+              <div>
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-900">
+                  Payment Slip Forensics &middot; Asymmetric Redaction
+                </h3>
+                <p class="text-xs text-slate-500">
+                  Victim personal info is blurred; scammer destination account and name are kept clear.
+                </p>
+              </div>
+
+              <!-- Redaction Mode Toggle -->
+              <div class="flex items-center gap-2 bg-slate-100 border border-slate-200 rounded-lg p-1 text-xs">
+                <span class="text-[11px] text-slate-600 font-medium">View Mode:</span>
+                <button id="redactionModeBtn" onclick="toggleRedactionMode()" class="px-2.5 py-1 rounded-md bg-blue-600 text-white font-bold text-[11px] shadow-xs">
+                  Public (Victim Protected)
+                </button>
+              </div>
+            </div>
+
+            <!-- Realistic Paper Transfer Receipt -->
+            <div class="bg-slate-50 border border-slate-300 rounded-xl p-5 max-w-md mx-auto shadow-xs font-mono text-xs text-slate-800">
+              <div class="text-center pb-3 border-b border-dashed border-slate-300 mb-3">
+                <p class="font-extrabold text-sm text-slate-900">BANK TRANSFER RECEIPT</p>
+                <p class="text-[10px] text-slate-500 font-sans">12 Oct 2026, 14:22:09 WIB &middot; Success</p>
+              </div>
+
+              <!-- Sender / Victim (BLURRED) -->
+              <div class="bg-white p-3 rounded-lg border border-slate-200 mb-3 space-y-1.5">
+                <span class="text-[10px] font-bold text-slate-400 uppercase block">Sender (Victim - Protected by System):</span>
+                <div class="flex justify-between items-center">
+                  <span class="text-slate-500 font-sans">Sender Name:</span>
+                  <span id="slipVictimName" class="censored-blur bg-slate-200 px-1.5 py-0.5 rounded font-bold text-slate-900">Rina Andriani</span>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-slate-500 font-sans">Sender Account:</span>
+                  <span id="slipVictimAcc" class="censored-blur bg-slate-200 px-1.5 py-0.5 rounded text-slate-900">521-0982-192</span>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-slate-500 font-sans">Account Balance:</span>
+                  <span id="slipVictimBal" class="censored-blur bg-slate-200 px-1.5 py-0.5 rounded text-slate-900">Rp 8,421,900</span>
+                </div>
+                <p class="text-[10px] font-sans text-emerald-700 mt-1 font-medium">🔒 Redacted by AI to prevent victim doxing &amp; harassment.</p>
+              </div>
+
+              <!-- Recipient / Scammer (CLEAR) -->
+              <div class="bg-red-50/60 p-3 rounded-lg border border-red-200 space-y-1.5">
+                <span class="text-[10px] font-bold text-red-800 uppercase block">Destination (Scammer / Mule - Kept Clear):</span>
+                <div class="flex justify-between items-center">
+                  <span class="text-slate-600 font-sans">Target Bank:</span>
+                  <span class="font-bold text-slate-900">Bank Central Asia (BCA)</span>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-slate-600 font-sans">Account Number:</span>
+                  <span class="font-bold text-red-700 bg-red-100 px-1.5 py-0.5 rounded border border-red-200">8831924831</span>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-slate-600 font-sans">Holder Name:</span>
+                  <span class="font-extrabold text-slate-900">BAMBANG SUJARWO</span>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-slate-600 font-sans">Transferred Sum:</span>
+                  <span class="font-bold text-slate-900">Rp 1,500,000</span>
+                </div>
+                <p class="text-[10px] font-sans text-slate-600 mt-1">✓ Kept visible so future payers can verify the exact recipient.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- ============================================================== -->
+          <!-- TOP 10 REPORTS FEED WITH PAGINATION (User Request)             -->
+          <!-- ============================================================== -->
+          <div class="pt-4 border-t border-slate-100 space-y-4">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wide">
+                  Community Fraud Reports (<span id="reportsFeedCount">24 Total</span>)
+                </h3>
+                <p class="text-xs text-slate-500" id="paginationSummary">Showing reports 1 to 10 of 24 (Page 1 of 3)</p>
+              </div>
+              <div class="flex items-center gap-2">
+                <button onclick="openNameClearingModal()" class="px-3 py-1.5 rounded-lg border border-blue-300 text-blue-700 bg-blue-50 hover:bg-blue-100 font-bold text-xs">
+                  🛡️ Contest False Reports
+                </button>
+                <a href="report.html" class="px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-xs">
+                  + Add Report
+                </a>
+              </div>
+            </div>
+
+            <!-- PINNED OWNER DISPUTE RESPONSE (For Dispute Scenario) -->
+            <div id="pinnedOwnerCard" class="hidden rounded-xl border border-blue-200 bg-blue-50/70 p-4">
+              <div class="flex items-center gap-2 mb-1.5">
+                <span class="text-xs font-bold text-blue-900">🛡️ OFFICIAL PINNED BUSINESS CLARIFICATION</span>
+                <span class="bg-blue-100 text-blue-800 text-[10px] font-bold px-2 py-0.2 rounded border border-blue-200">Verified Legal Owner</span>
+              </div>
+              <p class="text-xs text-slate-700 leading-relaxed" id="pinnedOwnerText">
+                "We experienced shipping delays due to a courier disruption in late September. All delayed orders were 100% refunded on October 2nd. Refund transaction proof #REF-9921 has been submitted to TrustPay analysts for name clearance."
+              </p>
+              <span class="text-[11px] text-blue-800 font-semibold block mt-2">Active Safe-Harbor Freeze Applied (&le;45 Cap)</span>
+            </div>
+
+            <!-- Dynamic 10 Reports Container -->
+            <div id="reportsListContainer" class="space-y-3">
+              <!-- Populated dynamically by JS with 10 reports per page -->
+            </div>
+
+            <!-- Pagination Controls -->
+            <div class="flex items-center justify-between pt-4 border-t border-slate-200 text-xs">
+              <button id="prevPageBtn" onclick="changePage(-1)" disabled class="px-3 py-1.5 rounded-lg border border-slate-300 bg-white font-semibold text-slate-400 disabled:opacity-50 disabled:cursor-not-allowed">
+                &larr; Previous Page
+              </button>
+              <div class="flex items-center gap-1 font-semibold text-slate-700" id="paginationPills">
+                <!-- Page numbers generated by JS -->
+              </div>
+              <button id="nextPageBtn" onclick="changePage(1)" class="px-3 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 font-semibold text-slate-800">
+                Next Page &rarr;
+              </button>
+            </div>
+          </div>
+
+          <!-- Bottom Actions -->
+          <div class="pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 text-xs">
+            <div class="flex items-center gap-2">
+              <a href="receipt.html" class="rounded-lg border border-slate-300 bg-slate-50 hover:bg-slate-100 px-3.5 py-2 font-bold text-slate-700">
+                🧾 Export Diligence Receipt Slip
+              </a>
+              <button onclick="openNameClearingModal()" class="rounded-lg border border-slate-300 bg-slate-50 hover:bg-slate-100 px-3.5 py-2 font-bold text-blue-700">
+                🛡️ Misjudged? File Name Clearance
+              </button>
+            </div>
+            <a href="recovery.html" class="text-rose-700 hover:underline font-bold">
+              Already paid this account? Take action &rarr;
+            </a>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+  </main>
+
+  <!-- ============================================================== -->
+  <!-- MODAL 1: REPORT THIS REVIEW (FLAG AS FAKE / COMPETITOR SMEAR)  -->
+  <!-- ============================================================== -->
+  <div id="flagModal" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-2xl border border-slate-200 max-w-md w-full p-6 shadow-xl space-y-4">
+      <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+        <div>
+          <h3 class="text-base font-bold text-slate-900">Flag This Review as False or Smear</h3>
+          <p class="text-[11px] text-slate-500">Case Review ID: <span id="flagReportIdRef" class="font-mono font-bold">#REP-101</span></p>
+        </div>
+        <button onclick="closeFlagModal()" class="text-slate-400 hover:text-slate-600 text-lg">✕</button>
+      </div>
+
+      <p class="text-xs text-slate-600 leading-relaxed">
+        TrustPay protects innocent citizens and legitimate merchants from malicious smear attacks, false allegations, or extortion. All flags are audited under ADR-021 dual-control.
+      </p>
+
+      <div>
+        <label class="block text-xs font-bold text-slate-700 mb-1">Why should this report be taken down?</label>
+        <select id="flagReasonSelect" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs font-medium text-slate-800">
+          <option value="SMEAR">Competitor Smear / Malicious Fake Review</option>
+          <option value="FORGED_SLIP">Forged or Altered Transfer Receipt Screenshot</option>
+          <option value="WRONG_ACCOUNT">Wrong Account / Mistaken Recipient Identity</option>
+          <option value="SETTLED">Customer Refunded &amp; Matter Fully Settled</option>
+          <option value="DEFAMATION">Defamatory or Abusive Personal Language</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-xs font-bold text-slate-700 mb-1">Explanation &amp; Clarification</label>
+        <textarea id="flagReasonDesc" rows="3" placeholder="Explain why this review is inaccurate. State order numbers or refund details..." class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-xs outline-none focus:border-blue-600"></textarea>
+      </div>
+
+      <div>
+        <label class="block text-xs font-bold text-slate-700 mb-1">Attach Counter-Proof (Receipt / Delivery Proof / Police Letter)</label>
+        <div class="border-2 border-dashed border-slate-300 rounded-xl p-3 text-center bg-slate-50 cursor-pointer hover:border-blue-500 text-xs text-slate-500">
+          Click to upload supporting documents
+        </div>
+      </div>
+
+      <div class="flex gap-2 pt-2">
+        <button onclick="closeFlagModal()" class="flex-1 py-2 rounded-lg bg-slate-100 text-slate-700 text-xs font-bold">
+          Cancel
+        </button>
+        <button onclick="submitFlagReport()" class="flex-1 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-xs">
+          Submit Flag for Analyst Triage
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================== -->
+  <!-- MODAL 2: ACCOUNT OWNER NAME-CLEARING & DISPUTE FORM            -->
+  <!-- ============================================================== -->
+  <div id="nameClearingModal" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-2xl border border-slate-200 max-w-lg w-full p-6 shadow-xl space-y-4 max-h-[90vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+        <div>
+          <div class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-blue-100 text-blue-800 text-[10px] font-bold">
+            🛡️ ADR-004 &amp; ADR-014 SAFE-HARBOR
+          </div>
+          <h3 class="text-base font-bold text-slate-900 mt-1">Account Owner Name-Clearing Request</h3>
+        </div>
+        <button onclick="closeNameClearingModal()" class="text-slate-400 hover:text-slate-600 text-lg">✕</button>
+      </div>
+
+      <div class="bg-blue-50 border border-blue-200 rounded-xl p-3.5 text-xs text-blue-900 leading-relaxed">
+        <b>Due Process Guarantee:</b> If this bank account was reported mistakenly, falsely, or by extortionists, you have the right to clean your name. Submitting this form activates an immediate <b>Safe-Harbor Score Freeze (Capped at &le;45)</b> so your rating cannot be destroyed while under review.
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Target Account Under Review</label>
+          <input type="text" value="BCA 8831924831" readonly class="w-full bg-slate-100 border border-slate-300 rounded-lg px-3 py-2 font-mono font-bold text-slate-700" />
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Step 1: Prove You are the Legitimate Owner (KYC)</label>
+          <p class="text-[11px] text-slate-500 mb-2">Upload your m-banking profile screenshot or bank passbook page confirming your name matches this account.</p>
+          <div class="border-2 border-dashed border-slate-300 rounded-xl p-3 text-center bg-slate-50 cursor-pointer hover:border-blue-500">
+            <span class="text-slate-600 font-semibold">📁 Click to upload passbook or m-banking profile</span>
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Step 2: Why are these reports false or misjudged?</label>
+          <select id="clearingReason" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs">
+            <option>Customer already received 100% refund (settled privately)</option>
+            <option>Competitor smear attack / extortion attempt</option>
+            <option>Third party misused my name / stolen identity</option>
+            <option>Delivery delay resolved / goods fulfilled</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Step 3: Official Owner Clarification (Will be pinned to profile)</label>
+          <textarea rows="3" placeholder="Write an official clarification that will appear pinned to the public profile (e.g., 'All delayed orders from Sept have been refunded, see case ref #...')" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-xs outline-none focus:border-blue-600"></textarea>
+        </div>
+
+        <label class="flex items-start gap-2 pt-1 cursor-pointer">
+          <input type="checkbox" id="clearingConsent" class="mt-0.5 accent-blue-600 h-4 w-4" />
+          <span class="text-slate-600 text-[11px]">
+            I certify under penalty of perjury that I am the legal holder of this account and all uploaded counter-evidence is authentic.
+          </span>
+        </label>
+      </div>
+
+      <div class="flex gap-2 pt-2 border-t border-slate-100">
+        <button onclick="closeNameClearingModal()" class="flex-1 py-2 rounded-lg bg-slate-100 text-slate-700 text-xs font-bold">
+          Cancel
+        </button>
+        <button onclick="submitNameClearing()" class="flex-1 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-xs">
+          🛡️ Activate Safe-Harbor &amp; Submit
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT: PAGINATION & DYNAMIC DATA -->
+  <script>
+    let isRedacted = true;
+    let factorsOpen = true;
+    let currentPage = 1;
+    const reportsPerPage = 10;
+
+    // Generated 24 simulated reports to test top 10 pagination
+    const ALL_REPORTS = [
+      { id: "REP-101", cat: "FAKE_ONLINE_SHOP", title: "Online Shop Non-Delivery", text: "Ordered a Dyson vacuum via Instagram @elektronik_murah_jkt. Seller asked to transfer to 'Admin Siti' but gave this BCA account. Deleted chat immediately after payment.", loss: "Rp 1,500,000", days: "3 days ago", upvotes: 28 },
+      { id: "REP-102", cat: "TICKET_FRAUD", title: "Concert Ticket Scalping", text: "Promised 2 Coldplay festival tickets. Provided forged Loket booking confirmation. Account holder matched Bambang.", loss: "Rp 3,200,000", days: "5 days ago", upvotes: 19 },
+      { id: "REP-103", cat: "JOB_SCAM", title: "Freelance Task Scam", text: "Asked to deposit money to unlock e-commerce product liking commission. Lost initial deposit.", loss: "Rp 750,000", days: "1 week ago", upvotes: 14 },
+      { id: "REP-104", cat: "IMPERSONATION", title: "WhatsApp Family Impersonation", text: "Pretended to be my cousin needing emergency hospital fees. Transferred to this BCA account.", loss: "Rp 2,000,000", days: "2 weeks ago", upvotes: 22 },
+      { id: "REP-105", cat: "FAKE_ONLINE_SHOP", title: "Camera Lens Not Received", text: "Paid down payment for Sony lens on Facebook Marketplace. Seller blocked my number.", loss: "Rp 1,200,000", days: "2 weeks ago", upvotes: 9 },
+      { id: "REP-106", cat: "TICKET_FRAUD", title: "Football Ticket Scam", text: "Sold duplicate tickets for national football match at GBK. Barcode was already scanned at turnstile.", loss: "Rp 450,000", days: "3 weeks ago", upvotes: 8 },
+      { id: "REP-107", cat: "FAKE_ONLINE_SHOP", title: "Sneakers Pre-Order Scam", text: "Transferred full payment for Nike Dunks. Store account deactivated 2 days later.", loss: "Rp 2,100,000", days: "3 weeks ago", upvotes: 11 },
+      { id: "REP-108", cat: "JOB_SCAM", title: "Hotel Rating Task Scam", text: "Telegram group promised 20% return for reviewing hotels. Demanded more deposit to withdraw.", loss: "Rp 4,500,000", days: "1 month ago", upvotes: 31 },
+      { id: "REP-109", cat: "FAKE_ONLINE_SHOP", title: "Pre-loved iPhone Deposit", text: "Downpayment for iPhone 13. Seller gave excuses about shipping delays then vanished.", loss: "Rp 1,000,000", days: "1 month ago", upvotes: 6 },
+      { id: "REP-110", cat: "INVESTMENT_SCAM", title: "Gold Trading Arbitrage", text: "Promised guaranteed daily 5% returns on gold swing trade. Account was frozen by operator.", loss: "Rp 5,000,000", days: "1 month ago", upvotes: 17 },
+      // Page 2 items
+      { id: "REP-111", cat: "FAKE_ONLINE_SHOP", title: "Gaming Console Scam", text: "PS5 advertised at Rp 4M. Disappeared after receiving DP.", loss: "Rp 2,000,000", days: "1 month ago", upvotes: 5 },
+      { id: "REP-112", cat: "TICKET_FRAUD", title: "K-Pop Fanmeet Ticket", text: "Fake e-ticket PDF sent with invalid seat numbers.", loss: "Rp 1,800,000", days: "2 months ago", upvotes: 12 },
+      { id: "REP-113", cat: "FAKE_ONLINE_SHOP", title: "Watch Replicas Not Sent", text: "Seller promised tracking number in 24 hours. No tracking ever provided.", loss: "Rp 850,000", days: "2 months ago", upvotes: 4 },
+      { id: "REP-114", cat: "IMPERSONATION", title: "Telegram Admin Impersonator", text: "Posed as group admin offering token presale.", loss: "Rp 1,500,000", days: "2 months ago", upvotes: 7 },
+      { id: "REP-115", cat: "FAKE_ONLINE_SHOP", title: "Baby Stroller Scam", text: "Maternity items shop online. Took payment and deleted WhatsApp.", loss: "Rp 1,200,000", days: "2 months ago", upvotes: 9 },
+      { id: "REP-116", cat: "JOB_SCAM", title: "Data Entry Deposit", text: "Paid registration fee for work-from-home data typing project.", loss: "Rp 350,000", days: "3 months ago", upvotes: 3 },
+      { id: "REP-117", cat: "FAKE_ONLINE_SHOP", title: "Gold Jewelry Deposit", text: "Instagram pawnshop clearance scam.", loss: "Rp 3,000,000", days: "3 months ago", upvotes: 15 },
+      { id: "REP-118", cat: "TICKET_FRAUD", title: "Anime Expo Pass Scam", text: "Sold scanned badges that were revoked.", loss: "Rp 500,000", days: "3 months ago", upvotes: 4 },
+      { id: "REP-119", cat: "FAKE_ONLINE_SHOP", title: "Cosmetics Wholesale Scam", text: "Never sent invoice or shipment.", loss: "Rp 2,400,000", days: "3 months ago", upvotes: 8 },
+      { id: "REP-120", cat: "IMPERSONATION", title: "Bank Officer Impersonation", text: "Caller claiming to update OTP security settings.", loss: "Rp 6,200,000", days: "4 months ago", upvotes: 27 },
+      // Page 3 items
+      { id: "REP-121", cat: "FAKE_ONLINE_SHOP", title: "Car Accessories Order", text: "Unfulfilled bumper order.", loss: "Rp 1,100,000", days: "4 months ago", upvotes: 2 },
+      { id: "REP-122", cat: "FAKE_ONLINE_SHOP", title: "Mechanical Keyboard Group Buy", text: "Organizer ran away with group buy deposits.", loss: "Rp 2,800,000", days: "5 months ago", upvotes: 16 },
+      { id: "REP-123", cat: "JOB_SCAM", title: "Survey Cashback Scheme", text: "Cashback stopped after first Rp 50k trial.", loss: "Rp 900,000", days: "5 months ago", upvotes: 5 },
+      { id: "REP-124", cat: "FAKE_ONLINE_SHOP", title: "Pet Supplies Order", text: "Cattery supplies paid but never dispatched.", loss: "Rp 650,000", days: "6 months ago", upvotes: 4 }
+    ];
+
+    function renderReportsPage(page) {
+      currentPage = page;
+      const start = (page - 1) * reportsPerPage;
+      const end = Math.min(start + reportsPerPage, ALL_REPORTS.length);
+      const totalPages = Math.ceil(ALL_REPORTS.length / reportsPerPage);
+
+      document.getElementById('paginationSummary').textContent = `Showing reports ${start + 1} to ${end} of ${ALL_REPORTS.length} (Page ${page} of ${totalPages})`;
+
+      const container = document.getElementById('reportsListContainer');
+      container.innerHTML = '';
+
+      const sliced = ALL_REPORTS.slice(start, end);
+      sliced.forEach(r => {
+        const card = document.createElement('div');
+        card.className = 'rounded-xl border border-slate-200 bg-white p-4 space-y-2 shadow-2xs';
+        card.innerHTML = `
+          <div class="flex items-center justify-between text-xs">
+            <span class="bg-rose-50 text-rose-800 border border-rose-200 font-bold px-2 py-0.5 rounded">
+              ${r.title.toUpperCase()}
+            </span>
+            <span class="text-slate-400 font-medium">${r.days} &middot; Struk Verified</span>
+          </div>
+          <p class="text-xs text-slate-700 leading-relaxed">
+            "${r.text}"
+          </p>
+          <div class="flex items-center justify-between pt-2 border-t border-slate-100 text-xs">
+            <div class="flex items-center gap-2">
+              <button onclick="upvoteReport(this)" class="bg-slate-100 hover:bg-slate-200 border border-slate-200 px-2.5 py-1 rounded-lg text-slate-700 font-semibold flex items-center gap-1 transition-colors">
+                <span>👍 Helpful</span> <span class="font-bold text-blue-700">${r.upvotes}</span>
+              </button>
+              <!-- Dedicated Button to Report Malicious / False Reviews -->
+              <button onclick="openFlagModalFor('${r.id}')" class="text-slate-500 hover:text-red-700 font-semibold text-xs flex items-center gap-1 px-2 py-1 rounded hover:bg-red-50 transition-colors">
+                <span>🚩 Report as False / Smear</span>
+              </button>
+            </div>
+            <span class="font-bold text-slate-800 font-mono">Loss: ${r.loss}</span>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+
+      // Update Pagination Buttons
+      document.getElementById('prevPageBtn').disabled = page === 1;
+      document.getElementById('nextPageBtn').disabled = page === totalPages;
+
+      // Update Page Pills
+      const pillsContainer = document.getElementById('paginationPills');
+      pillsContainer.innerHTML = '';
+      for (let i = 1; i <= totalPages; i++) {
+        const pill = document.createElement('button');
+        pill.textContent = i;
+        pill.onclick = () => renderReportsPage(i);
+        pill.className = i === page
+          ? 'h-7 w-7 rounded-lg bg-blue-600 text-white font-bold text-xs'
+          : 'h-7 w-7 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-xs';
+        pillsContainer.appendChild(pill);
+      }
+    }
+
+    function changePage(direction) {
+      renderReportsPage(currentPage + direction);
+      document.getElementById('reportsListContainer').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // Modal Control: Flag False Review
+    function openFlagModalFor(repId) {
+      document.getElementById('flagReportIdRef').textContent = repId;
+      document.getElementById('flagModal').classList.remove('hidden');
+    }
+    function closeFlagModal() {
+      document.getElementById('flagModal').classList.add('hidden');
+    }
+    function submitFlagReport() {
+      const repId = document.getElementById('flagReportIdRef').textContent;
+      const reason = document.getElementById('flagReasonSelect').value;
+      alert(`Report ${repId} flagged under reason [${reason}]. Queued for analyst audit.`);
+      closeFlagModal();
+    }
+
+    // Modal Control: Account Owner Name Clearing
+    function openNameClearingModal() {
+      document.getElementById('nameClearingModal').classList.remove('hidden');
+    }
+    function closeNameClearingModal() {
+      document.getElementById('nameClearingModal').classList.add('hidden');
+    }
+    function submitNameClearing() {
+      if (!document.getElementById('clearingConsent').checked) {
+        alert('Please accept the certification checkbox before submitting.');
+        return;
+      }
+      closeNameClearingModal();
+      alert('Safe-Harbor Activated! Your penalty score is capped at <=45 and your clearance dossier was submitted to senior analysts for review. Reference #CLR-2026-901.');
+      loadScenario('dispute');
+    }
+
+    function toggleFactors() {
+      factorsOpen = !factorsOpen;
+      document.getElementById('factorList').classList.toggle('hidden', !factorsOpen);
+      document.getElementById('factorsArrow').innerHTML = factorsOpen ? '&darr;' : '&rarr;';
+    }
+
+    function toggleRedactionMode() {
+      isRedacted = !isRedacted;
+      const btn = document.getElementById('redactionModeBtn');
+      const victimName = document.getElementById('slipVictimName');
+      const victimAcc = document.getElementById('slipVictimAcc');
+      const victimBal = document.getElementById('slipVictimBal');
+
+      if (isRedacted) {
+        btn.textContent = 'Public (Victim Protected)';
+        btn.className = 'px-2.5 py-1 rounded-md bg-blue-600 text-white font-bold text-[11px] shadow-xs';
+        victimName.className = 'censored-blur bg-slate-200 px-1.5 py-0.5 rounded font-bold text-slate-900';
+        victimAcc.className = 'censored-blur bg-slate-200 px-1.5 py-0.5 rounded text-slate-900';
+        victimBal.className = 'censored-blur bg-slate-200 px-1.5 py-0.5 rounded text-slate-900';
+      } else {
+        btn.textContent = 'Analyst View (Unredacted)';
+        btn.className = 'px-2.5 py-1 rounded-md bg-rose-600 text-white font-bold text-[11px] shadow-xs';
+        victimName.className = 'bg-slate-200 px-1.5 py-0.5 rounded font-bold text-slate-900';
+        victimAcc.className = 'bg-slate-200 px-1.5 py-0.5 rounded text-slate-900';
+        victimBal.className = 'bg-slate-200 px-1.5 py-0.5 rounded text-slate-900';
+      }
+    }
+
+    function upvoteReport(btn) {
+      const span = btn.querySelector('.text-blue-700');
+      let val = parseInt(span.textContent, 10);
+      span.textContent = val + 1;
+      btn.disabled = true;
+      btn.classList.add('opacity-70');
+    }
+
+    function copyAccount() {
+      navigator.clipboard.writeText('8831924831');
+      alert('Account number copied.');
+    }
+
+    function applyNewSearch() {
+      const claim = document.getElementById('quickNameClaim').value.trim();
+      if (claim && !claim.toLowerCase().includes('bambang')) {
+        loadScenario('fraud');
+      } else {
+        loadScenario('clean');
+      }
+    }
+
+    function loadScenario(type) {
+      const mismatch = document.getElementById('mismatchBanner');
+      const cooling = document.getElementById('coolingOffCard');
+      const badge = document.getElementById('trustBadge');
+      const badgeSub = document.getElementById('trustBadgeSub');
+      const scoreNum = document.getElementById('riskScoreNumber');
+      const scoreLabel = document.getElementById('riskScoreLabel');
+      const gaugeFill = document.getElementById('riskGaugeFill');
+      const pinnedOwner = document.getElementById('pinnedOwnerCard');
+      const summary = document.getElementById('aiSummaryText');
+      const holderName = document.getElementById('profileHolderName');
+      const holderTag = document.getElementById('profileHolderTag');
+
+      if (type === 'fraud') {
+        mismatch.classList.remove('hidden');
+        cooling.classList.remove('hidden');
+        badge.textContent = 'CRITICAL FRAUD';
+        badge.className = 'inline-block px-3.5 py-1.5 rounded-lg bg-red-100 text-red-800 border border-red-300 font-extrabold text-xs uppercase tracking-wide';
+        badgeSub.textContent = 'Admin Confirmed · Police Linked';
+        scoreNum.textContent = '88';
+        scoreNum.className = 'text-4xl font-extrabold text-red-600';
+        scoreLabel.textContent = 'Severe Scam Likelihood';
+        scoreLabel.className = 'text-sm font-bold text-red-800 ml-2';
+        gaugeFill.className = 'w-1/4 bg-red-600';
+        pinnedOwner.classList.add('hidden');
+        holderName.textContent = 'BAMBANG SUJARWO';
+        holderTag.textContent = 'Reported (across 3 verified slips)';
+        summary.textContent = 'This BCA account has accumulated 24 community reports since August 2026, primarily categorized under Non-Delivery Online Shopping Scams. Verified by human analyst triage. System notes matching investigation records from Royal Malaysia Police PDRM Semak Mule.';
+      } else if (type === 'dispute') {
+        mismatch.classList.add('hidden');
+        cooling.classList.add('hidden');
+        badge.textContent = 'DISPUTE ACTIVE (SAFE-HARBOR)';
+        badge.className = 'inline-block px-3.5 py-1.5 rounded-lg bg-amber-100 text-amber-800 border border-amber-300 font-extrabold text-xs uppercase tracking-wide';
+        badgeSub.textContent = 'Owner Contesting Reviews · Penalty Capped';
+        scoreNum.textContent = '42';
+        scoreNum.className = 'text-4xl font-extrabold text-amber-600';
+        scoreLabel.textContent = 'Score Rise Capped (Safe-Harbor ADR-014)';
+        scoreLabel.className = 'text-sm font-bold text-amber-800 ml-2';
+        gaugeFill.className = 'w-1/4 bg-amber-400';
+        pinnedOwner.classList.remove('hidden');
+        holderName.textContent = 'PT MAKMUR ELEKTRONIK JAYA';
+        holderTag.textContent = 'Verified Corporate Owner';
+        summary.textContent = 'This entity is actively protected under Safe-Harbor dispute rules. The verified owner submitted formal corporate credentials and bank refund slips contesting recent complaint spikes.';
+      } else if (type === 'clean') {
+        mismatch.classList.add('hidden');
+        cooling.classList.add('hidden');
+        badge.textContent = 'VERIFIED CLEAN';
+        badge.className = 'inline-block px-3.5 py-1.5 rounded-lg bg-emerald-100 text-emerald-800 border border-emerald-300 font-extrabold text-xs uppercase tracking-wide';
+        badgeSub.textContent = 'Verified Merchant · Zero Fraud Reports';
+        scoreNum.textContent = '5';
+        scoreNum.className = 'text-4xl font-extrabold text-emerald-600';
+        scoreLabel.textContent = 'Low Risk Entity';
+        scoreLabel.className = 'text-sm font-bold text-emerald-800 ml-2';
+        gaugeFill.className = 'w-1/4 bg-emerald-500';
+        pinnedOwner.classList.add('hidden');
+        holderName.textContent = 'TOKO SERBA ADA RESMI';
+        holderTag.textContent = 'Verified QRIS Merchant (NMID Registered)';
+        summary.textContent = 'Legitimate commercial account with 18+ months of spotless transaction history. No fraud reports on record.';
+      } else if (type === 'unverified') {
+        mismatch.classList.add('hidden');
+        cooling.classList.add('hidden');
+        badge.textContent = 'UNREVIEWED ACCOUNT';
+        badge.className = 'inline-block px-3.5 py-1.5 rounded-lg bg-slate-100 text-slate-800 border border-slate-300 font-extrabold text-xs uppercase tracking-wide';
+        badgeSub.textContent = 'First Search · No Safety Guarantee';
+        scoreNum.textContent = '15';
+        scoreNum.className = 'text-4xl font-extrabold text-slate-700';
+        scoreLabel.textContent = 'Baseline Unreviewed';
+        scoreLabel.className = 'text-sm font-bold text-slate-500 ml-2';
+        gaugeFill.className = 'w-1/4 bg-slate-300';
+        pinnedOwner.classList.add('hidden');
+        holderName.textContent = 'Not Yet Recorded';
+        holderTag.textContent = 'First Search';
+        summary.textContent = 'This account has not been previously reviewed or reported in TrustPay SEA. An unreviewed status does NOT imply safety — always verify sellers before transferring money.';
+      }
+    }
+
+    // Cooling off countdown
+    let sec = 10;
+    const countBadge = document.getElementById('countdownBadge');
+    const ackBtn = document.getElementById('coolingAckBtn');
+    const t = setInterval(() => {
+      sec--;
+      if (sec > 0) {
+        countBadge.textContent = `Pause ${sec}s...`;
+      } else {
+        clearInterval(t);
+        countBadge.textContent = 'Ready';
+        ackBtn.disabled = false;
+        ackBtn.className = 'rounded-lg bg-amber-600 text-white px-3 py-1.5 text-xs font-bold hover:bg-amber-700 cursor-pointer shadow-xs';
+        ackBtn.onclick = () => {
+          document.getElementById('coolingOffCard').classList.add('hidden');
+        };
+      }
+    }, 1000);
+
+    function switchLanguage(lang) {
+      if (lang !== 'en') {
+        alert('Language preview activated for: ' + lang);
+      }
+    }
+
+    // Initialize with Page 1 reports
+    renderReportsPage(1);
+
+    // Initial check scenario if query parameter present
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('demo') === 'mismatch' || urlParams.get('nameClaim')) {
+      loadScenario('fraud');
+    }
+  </script>
+</body>
+</html>

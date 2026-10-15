@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Analyst &amp; Dual-Control Adjudication Portal — TrustPay SEA</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col antialiased">
+
+  <!-- Header -->
+  <header class="bg-white border-b border-slate-200 px-6 py-3 flex items-center justify-between shadow-xs sticky top-0 z-40">
+    <div class="flex items-center gap-4">
+      <a href="index.html" class="flex items-center gap-2.5 group">
+        <div class="h-9 w-9 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold text-lg shadow-xs transition-transform group-hover:scale-105">
+          <svg class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+          </svg>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <span class="font-bold text-slate-900 text-base">TrustPay</span>
+          <span class="bg-blue-100 text-blue-800 text-[10px] font-bold px-1.5 py-0.2 rounded border border-blue-200">SEA</span>
+        </div>
+      </a>
+      <span class="h-5 w-px bg-slate-200"></span>
+      <span class="text-xs font-bold bg-blue-50 text-blue-800 border border-blue-200 px-2.5 py-1 rounded-md">
+        ANALYST PORTAL &middot; DUAL CONTROL (ADR-021)
+      </span>
+    </div>
+
+    <div class="flex items-center gap-4 text-xs font-medium">
+      <div class="hidden sm:flex items-center gap-1.5 text-emerald-700 font-semibold bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-md">
+        <span class="h-2 w-2 rounded-full bg-emerald-600"></span>
+        <span>SHA-256 Audit Trail: VALID</span>
+      </div>
+
+      <!-- Language Selector -->
+      <select id="langSelect" onchange="switchLanguage(this.value)" class="bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-lg px-2.5 py-1 text-xs font-semibold text-slate-700 outline-none cursor-pointer">
+        <option value="en" selected>🇺🇸 English</option>
+        <option value="id">🇮🇩 Bahasa Indonesia</option>
+        <option value="ms">🇲🇾 Bahasa Melayu</option>
+        <option value="th">🇹🇭 ภาษาไทย</option>
+        <option value="vi">🇻🇳 Tiếng Việt</option>
+        <option value="fil">🇵🇭 Filipino</option>
+      </select>
+
+      <span class="text-slate-500 hidden md:inline">Analyst: <b class="text-slate-800 font-mono">analyst.rahmat@trustpay.dev</b></span>
+      <a href="index.html" class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-1 text-slate-600 hover:text-slate-900 font-bold hover:bg-slate-100">
+        Exit
+      </a>
+    </div>
+  </header>
+
+  <main class="flex-1 p-6 max-w-7xl mx-auto w-full space-y-6">
+
+    <!-- Metrics Ribbon -->
+    <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
+      <div class="bg-white border border-slate-200 rounded-xl p-3.5 shadow-xs">
+        <span class="text-[11px] font-bold text-slate-500 uppercase">Pending Initial Review</span>
+        <p class="text-2xl font-extrabold text-slate-900 mt-0.5">14</p>
+      </div>
+      <div class="bg-white border border-slate-200 rounded-xl p-3.5 shadow-xs">
+        <span class="text-[11px] font-bold text-slate-500 uppercase">Merchant Safe-Harbor</span>
+        <p class="text-2xl font-extrabold text-amber-600 mt-0.5">3</p>
+      </div>
+      <div class="bg-rose-50 border border-rose-200 rounded-xl p-3.5 shadow-xs">
+        <span class="text-[11px] font-bold text-rose-800 uppercase">Dual-Control Queue</span>
+        <p class="text-2xl font-extrabold text-rose-700 mt-0.5">2</p>
+      </div>
+      <div class="bg-white border border-slate-200 rounded-xl p-3.5 shadow-xs">
+        <span class="text-[11px] font-bold text-slate-500 uppercase">AI Slip Anomalies</span>
+        <p class="text-2xl font-extrabold text-orange-600 mt-0.5">5</p>
+      </div>
+      <div class="bg-white border border-slate-200 rounded-xl p-3.5 shadow-xs">
+        <span class="text-[11px] font-bold text-slate-500 uppercase">Regional Sync Node</span>
+        <p class="text-base font-extrabold text-emerald-700 mt-1">PDRM / OJK Online</p>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="flex gap-2 border-b border-slate-200 pb-2 text-sm font-bold">
+      <button onclick="switchTab('approvals')" id="btnApprovals" class="px-4 py-2 rounded-lg bg-blue-600 text-white flex items-center gap-2 shadow-xs">
+        <span>Dual-Control Approval Queue (ADR-021)</span>
+        <span class="bg-white text-blue-700 text-xs px-1.5 py-0.2 rounded-full font-bold">2</span>
+      </button>
+      <button onclick="switchTab('forensics')" id="btnForensics" class="px-4 py-2 rounded-lg text-slate-600 hover:text-slate-900">
+        AI Slip Forensics &amp; Manipulation Detection
+      </button>
+    </div>
+
+    <!-- SECTION: FOUR EYES APPROVALS -->
+    <div id="sectionApprovals" class="space-y-4">
+      <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 text-xs text-blue-900 leading-relaxed">
+        <b>ADR-021 Four-Eyes Principle Standard:</b> To guarantee institutional integrity and eliminate unilateral rogue actions or extortion bribery, every action to expunge a fraud report, approve a disputed merchant claim, or alter blacklist risk bands STRICTLY REQUIRES independent sign-off from two separate vetted analysts.
+      </div>
+
+      <!-- Item 1 -->
+      <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-xs space-y-3">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="bg-rose-50 text-rose-800 border border-rose-200 text-xs font-bold px-2 py-0.5 rounded">
+              ACTION: EXPUNGE_RESOLVED_DISPUTE_REPORT
+            </span>
+            <span class="text-xs text-slate-400 font-mono">Ticket #AP-8819</span>
+          </div>
+          <span class="text-xs text-amber-700 font-semibold bg-amber-50 px-2 py-0.5 rounded border border-amber-200">Expires in 68 hours</span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 bg-slate-50 p-3 rounded-lg border border-slate-200 text-xs">
+          <div>
+            <span class="text-slate-500 font-bold block">Account Entity:</span>
+            <span class="font-mono font-bold text-slate-900">BCA 8831924831 (PT MAKMUR ELEKTRONIK)</span>
+          </div>
+          <div>
+            <span class="text-slate-500 font-bold block">Initiated By:</span>
+            <span class="text-slate-800 font-medium font-mono">analyst.dewi@trustpay.dev (First Eye)</span>
+          </div>
+          <div>
+            <span class="text-slate-500 font-bold block">Justification &amp; Evidence:</span>
+            <span class="text-slate-700">Merchant submitted 3 authentic bank refund transaction slips matching all complainant loss amounts.</span>
+          </div>
+        </div>
+
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pt-2">
+          <span class="text-[11px] text-slate-500">
+            Your cryptographic approval will be permanently immutably logged into the SHA-256 audit ledger.
+          </span>
+          <div class="flex gap-2">
+            <button onclick="rejectAction(this)" class="px-3.5 py-1.5 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-100 text-xs font-bold transition-colors">
+              Reject Request
+            </button>
+            <button onclick="approveAction(this)" class="px-4 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition-colors">
+              ✓ Approve &amp; Execute (Second Eye)
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Item 2 -->
+      <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-xs space-y-3">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="bg-blue-50 text-blue-800 border border-blue-200 text-xs font-bold px-2 py-0.5 rounded">
+              ACTION: HIDE_REVIEW_CONFIRMED_DEFAMATION
+            </span>
+            <span class="text-xs text-slate-400 font-mono">Ticket #AP-8820</span>
+          </div>
+          <span class="text-xs text-slate-500 font-medium">Expires in 71 hours</span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 bg-slate-50 p-3 rounded-lg border border-slate-200 text-xs">
+          <div>
+            <span class="text-slate-500 font-bold block">Account Entity:</span>
+            <span class="font-mono font-bold text-slate-900">Maybank 51401209312 (KEDAI RUNCIT CHUA)</span>
+          </div>
+          <div>
+            <span class="text-slate-500 font-bold block">Initiated By:</span>
+            <span class="text-slate-800 font-medium font-mono">analyst.budi@trustpay.dev</span>
+          </div>
+          <div>
+            <span class="text-slate-500 font-bold block">Justification &amp; Evidence:</span>
+            <span class="text-slate-700">Reporter IP subnet clusters correlate directly with competing merchant entities in the same trade district.</span>
+          </div>
+        </div>
+
+        <div class="flex justify-end gap-2 pt-2">
+          <button onclick="rejectAction(this)" class="px-3.5 py-1.5 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-100 text-xs font-bold transition-colors">
+            Reject Request
+          </button>
+          <button onclick="approveAction(this)" class="px-4 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition-colors">
+            ✓ Approve &amp; Execute (Second Eye)
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION: FORENSICS -->
+    <div id="sectionForensics" class="space-y-4 hidden">
+      <div class="bg-white border border-slate-200 rounded-xl p-5 space-y-4 shadow-xs">
+        <div class="flex items-center justify-between">
+          <h3 class="text-sm font-bold text-slate-900">Transfer Slip AI Forensics &amp; Manipulation Signals &middot; Case #TR-8192</h3>
+          <span class="text-[10px] bg-rose-100 text-rose-800 font-bold px-2 py-0.5 rounded">High Anomaly Confidence</span>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+          <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2">
+            <span class="font-bold text-slate-800 block">AI Heuristic Image Tamper Checks:</span>
+            <div class="flex justify-between py-1 border-b border-slate-200">
+              <span class="text-slate-500">Perceptual Hash (pHash) Duplicate Check:</span>
+              <span class="text-emerald-700 font-bold">Unique Image (No Prior Matches)</span>
+            </div>
+            <div class="flex justify-between py-1 border-b border-slate-200">
+              <span class="text-slate-500">Font Glyph Tampering (Clone-Stamp / Edit):</span>
+              <span class="text-rose-700 font-bold">DETECTED (Amount Font Inconsistent)</span>
+            </div>
+            <div class="flex justify-between py-1">
+              <span class="text-slate-500">EXIF Camera Metadata:</span>
+              <span class="text-slate-700 font-medium">Sanitized by Normalizer Pipeline</span>
+            </div>
+          </div>
+
+          <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2">
+            <span class="font-bold text-slate-800 block">OCR Extracted Recipient Entities:</span>
+            <p class="font-mono text-slate-800 text-[11px] leading-relaxed bg-white p-2.5 rounded border border-slate-200">
+              RECIPIENT_NAME: BAMBANG SUJARWO<br>
+              ACCOUNT_NUMBER: BCA 8831924831<br>
+              AMOUNT: IDR 1,500,000<br>
+              REFERENCE_ID: 2026101288921102<br>
+              OCR_CONFIDENCE: 98.4%
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Unified Institutional Footer -->
+  <footer class="bg-slate-100 border-t border-slate-200 py-8 text-xs mt-auto">
+    <div class="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-slate-500 text-[11px]">
+      <div class="flex items-center gap-2">
+        <span class="font-bold text-slate-800">TrustPay SEA Analyst Console</span>
+        <span>&middot;</span>
+        <span>Restricted Access BFSI Adjudication Environment</span>
+      </div>
+      <div>
+        <span>&copy; 2026 TrustPay SEA. Dual-Control Protocol Active.</span>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    function switchTab(t) {
+      document.getElementById('sectionApprovals').classList.toggle('hidden', t !== 'approvals');
+      document.getElementById('sectionForensics').classList.toggle('hidden', t !== 'forensics');
+
+      document.getElementById('btnApprovals').className = t === 'approvals' ? 'px-4 py-2 rounded-lg bg-blue-600 text-white flex items-center gap-2 shadow-xs' : 'px-4 py-2 rounded-lg text-slate-600 hover:text-slate-900 flex items-center gap-2';
+      document.getElementById('btnForensics').className = t === 'forensics' ? 'px-4 py-2 rounded-lg bg-blue-600 text-white shadow-xs' : 'px-4 py-2 rounded-lg text-slate-600 hover:text-slate-900';
+    }
+
+    function approveAction(btn) {
+      const card = btn.closest('.rounded-xl');
+      card.innerHTML = `
+        <div class="p-4 bg-emerald-50 border border-emerald-300 rounded-lg text-emerald-800 text-xs font-bold text-center">
+          ✓ DUAL-CONTROL APPROVAL SUCCESSFUL. The action has been executed and immutably appended to the SHA-256 audit chain.
+        </div>
+      `;
+    }
+
+    function rejectAction(btn) {
+      const card = btn.closest('.rounded-xl');
+      card.innerHTML = `
+        <div class="p-4 bg-slate-100 border border-slate-300 rounded-lg text-slate-600 text-xs font-bold text-center">
+          ✕ Action proposal rejected by second analyst. Registry state remains unaltered.
+        </div>
+      `;
+    }
+
+    function switchLanguage(lang) {
+      if (lang === 'id') alert('Bahasa dialihkan ke Bahasa Indonesia.');
+      else if (lang === 'ms') alert('Bahasa ditukar ke Bahasa Melayu.');
+      else if (lang === 'th') alert('เปลี่ยนภาษาเป็นภาษาไทย');
+      else if (lang === 'vi') alert('Đã đổi ngôn ngữ sang Tiếng Việt.');
+      else if (lang === 'fil') alert('Pinalitan ang wika sa Filipino.');
+    }
+  </script>
+</body>
+</html>

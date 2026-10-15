@@ -102,13 +102,14 @@ npx playwright install chromium && npm run test:e2e
 4. **Admin portal UI** — flag/dispute queues, approve/resolve actions, approvals UI (ADR-021 queue + approve buttons exist), side-by-side evidence.
 5. **Conversions/keys** — partner API keys + scopes + rotation; move `/check` off the static bank mirror.
 6. **Coverage + E2E** — lift low-coverage services to ≥80%; add a full browser flow test with a running API.
-7. **i18n + legal** — translate the new surfaces; draft ToS/Privacy (G-12) and settle G-13 erasure semantics.
+8. **UI/UX Production Migration (`docs/12-ui-redesign-and-gaps.md`)** — A complete high-trust BFSI static prototype suite was built in [`prototype/`](../prototype/) (`index.html`, `check.html`, `report.html`, `claim.html`, `recovery.html`, `admin.html`, `receipt.html`). Migrates directly into `apps/web/` with the Asymmetric PII Redaction standard, Name Matcher Radar (ADR-016), and Risk Gauge polarity (NG-2). See **`docs/12-ui-redesign-and-gaps.md`** for detailed migration steps.
 
 ---
 
 ## 8. Do-Not-Regress Invariants
 
 - Accounts stored only as **KMS-keyed HMAC** (`hash_version`); public surfaces masked; holder-name disclosure exact-match-only (ADR-016).
+- **Asymmetric PII Redaction**: Fail-closed blurring for victim/reporter details (balance, sender account, real name); scammer destination account and holder name remain CLEAR and unredacted on exact queries and slips (see Doc 12).
 - **Fail-closed redaction**: never publish unredacted evidence; redaction failure ⇒ `PROCESSING`/`FAILED`.
 - **Rise-only dispute freeze**: `apply_dispute_cap` never lowers an existing/high score; gov listings stay 100.
 - **Hash-chained append-only** `audit_logs`; every trust-altering admin action audited (four-eyes for destructive ops).
@@ -118,4 +119,5 @@ npx playwright install chromium && npm run test:e2e
 
 ---
 
-*Predecessor handoff: `docs/README.md` → "Handoff Message". This document continues it after Phases 2–7 were implemented (2026-10-14).*
+*Predecessor handoff: `docs/README.md` → "Handoff Message". Continued by `docs/12-ui-redesign-and-gaps.md` for UI overhaul and gap resolutions (2026-10-15).*
+

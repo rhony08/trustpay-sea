@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Report Fraudulent Account or Scam — TrustPay SEA</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+    .censored-blur { filter: blur(5px); user-select: none; }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col antialiased">
+
+  <!-- Emergency Top Hotline Banner -->
+  <div class="bg-rose-50 border-b border-rose-200 text-rose-900 text-xs py-2 px-4">
+    <div class="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-2">
+      <div class="flex items-center gap-2">
+        <span class="inline-flex items-center justify-center h-4 w-4 rounded-full bg-rose-600 text-white font-bold text-[10px]">!</span>
+        <span class="font-bold">Emergency Payment Scam Hotlines:</span>
+        <span class="text-rose-800">
+          <b>Indonesia:</b> OJK 157 / IASC · <b>Malaysia:</b> NSRC 997 · <b>Singapore:</b> 1799 · <b>Thailand:</b> AOC 1441
+        </span>
+      </div>
+      <a href="recovery.html" class="text-rose-700 hover:text-rose-900 font-bold underline inline-flex items-center gap-1">
+        Bank Account Freeze Guide &rarr;
+      </a>
+    </div>
+  </div>
+
+  <!-- Unified Institutional Header -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-xs">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+      <!-- Unified Shield SVG Brand Logo -->
+      <a href="index.html" class="flex items-center gap-3 group">
+        <div class="h-10 w-10 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold text-xl shadow-xs transition-transform group-hover:scale-105">
+          <svg class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+          </svg>
+        </div>
+        <div>
+          <div class="flex items-center gap-1.5">
+            <span class="text-xl font-bold tracking-tight text-slate-900">TrustPay</span>
+            <span class="bg-blue-100 text-blue-800 text-[11px] font-bold px-1.5 py-0.2 rounded border border-blue-200">
+              SEA
+            </span>
+          </div>
+          <p class="text-[11px] text-slate-500 font-medium">Digital Payment Risk &amp; Reputation Registry</p>
+        </div>
+      </a>
+
+      <!-- Desktop Navigation -->
+      <nav class="hidden md:flex items-center gap-1 text-sm font-medium">
+        <a href="check.html" class="px-3.5 py-2 rounded-lg text-slate-700 hover:text-slate-900 hover:bg-slate-100 transition-colors">
+          Check Account / QR
+        </a>
+        <a href="report.html" class="px-3.5 py-2 rounded-lg text-rose-700 bg-rose-50 font-semibold border border-rose-200">
+          Report Fraud
+        </a>
+        <a href="claim.html" class="px-3.5 py-2 rounded-lg text-slate-700 hover:text-slate-900 hover:bg-slate-100 transition-colors">
+          Merchant Shield
+        </a>
+        <a href="recovery.html" class="px-3.5 py-2 rounded-lg text-slate-700 hover:text-slate-900 hover:bg-slate-100 transition-colors">
+          Emergency SOS
+        </a>
+        <a href="receipt.html" class="px-3.5 py-2 rounded-lg text-slate-700 hover:text-slate-900 hover:bg-slate-100 transition-colors">
+          Diligence Slip
+        </a>
+      </nav>
+
+      <!-- Right Utility Controls -->
+      <div class="flex items-center gap-3">
+        <!-- Language Switcher Dropdown -->
+        <select id="langSelect" onchange="switchLanguage(this.value)" class="bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-slate-700 outline-none cursor-pointer">
+          <option value="en" selected>🇺🇸 English</option>
+          <option value="id">🇮🇩 Bahasa Indonesia</option>
+          <option value="ms">🇲🇾 Bahasa Melayu</option>
+          <option value="th">🇹🇭 ภาษาไทย</option>
+          <option value="vi">🇻🇳 Tiếng Việt</option>
+          <option value="fil">🇵🇭 Filipino</option>
+        </select>
+
+        <a href="check.html" class="hidden sm:inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-100 text-xs font-semibold">
+          Check an Account &rarr;
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main class="flex-1 py-10">
+    <div class="max-w-2xl mx-auto px-4 sm:px-6">
+
+      <div class="mb-6">
+        <a href="index.html" class="text-xs text-slate-500 hover:text-blue-600 inline-block mb-1 font-medium">
+          &larr; Back to Home
+        </a>
+        <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900">
+          Report Fraudulent Account or Scam Incident
+        </h1>
+        <p class="text-xs sm:text-sm text-slate-600 mt-1">
+          Your verified report helps protect millions of citizens across Southeast Asia from payment scams, mule networks, and fraudulent merchants.
+        </p>
+      </div>
+
+      <!-- Clean Step Indicator -->
+      <div class="mb-8 flex items-center justify-between text-xs font-bold text-slate-500 border-b border-slate-200 pb-4">
+        <div id="stepIndicator1" class="flex items-center gap-2 text-blue-700">
+          <span class="h-6 w-6 rounded-full bg-blue-100 border border-blue-400 text-blue-800 flex items-center justify-center text-xs font-bold">1</span>
+          <span>Recipient Account</span>
+        </div>
+        <div class="h-0.5 w-8 bg-slate-200"></div>
+        <div id="stepIndicator2" class="flex items-center gap-2">
+          <span class="h-6 w-6 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center text-xs" id="stepCircle2">2</span>
+          <span>Loss &amp; Timeline</span>
+        </div>
+        <div class="h-0.5 w-8 bg-slate-200"></div>
+        <div id="stepIndicator3" class="flex items-center gap-2">
+          <span class="h-6 w-6 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center text-xs" id="stepCircle3">3</span>
+          <span>Proof &amp; AI Redaction</span>
+        </div>
+        <div class="h-0.5 w-8 bg-slate-200"></div>
+        <div id="stepIndicator4" class="flex items-center gap-2">
+          <span class="h-6 w-6 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center text-xs" id="stepCircle4">4</span>
+          <span>Declaration</span>
+        </div>
+      </div>
+
+      <!-- Clean White Form Card -->
+      <div class="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-xs">
+
+        <!-- STEP 1 -->
+        <div id="step1" class="space-y-4">
+          <h2 class="text-base font-bold text-slate-900">
+            Step 1: Which Account or E-Wallet Received Your Funds?
+          </h2>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">Destination Country</label>
+              <select id="reportCountry" onchange="updateReportBanks()" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-sm text-slate-900 outline-none focus:border-blue-600">
+                <option value="ID" selected>🇮🇩 Indonesia (BCA, Mandiri, BRI, GoPay)</option>
+                <option value="MY">🇲🇾 Malaysia (Maybank, CIMB, DuitNow)</option>
+                <option value="SG">🇸🇬 Singapore (DBS, OCBC, PayNow)</option>
+                <option value="TH">🇹🇭 Thailand (PromptPay, SCB, KBank)</option>
+                <option value="VN">🇻🇳 Vietnam (Vietcombank, MoMo)</option>
+                <option value="PH">🇵🇭 Philippines (GCash, BDO, Maya)</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">Bank / E-Wallet Entity</label>
+              <select id="reportBank" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-sm text-slate-900 outline-none focus:border-blue-600">
+                <option>Bank Central Asia (BCA)</option>
+                <option>Bank Rakyat Indonesia (BRI)</option>
+                <option>Bank Mandiri</option>
+                <option>Bank Negara Indonesia (BNI)</option>
+                <option>GoPay E-Wallet</option>
+                <option>DANA E-Wallet</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Destination Account Number or Phone</label>
+            <input type="text" id="reportAccount" placeholder="e.g. 8831924831" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3.5 py-2.5 text-base font-mono font-bold text-slate-900 outline-none focus:border-blue-600" />
+            <p class="text-[11px] text-slate-500 mt-1">Must match the exact recipient account number on your bank transfer slip.</p>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Seller / Scammer Claimed Name or Alias</label>
+            <input type="text" id="reportClaimedName" placeholder="e.g. 'Admin Siti' or 'Toko Jaya Mandiri'" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3.5 py-2.5 text-sm text-slate-900 outline-none focus:border-blue-600" />
+            <p class="text-[11px] text-slate-500 mt-1">Helps our Name-Matching Radar detect mule accounts when the real holder name differs.</p>
+          </div>
+
+          <div class="pt-4 flex justify-end">
+            <button onclick="goToStep(2)" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-2.5 rounded-xl text-sm shadow-xs transition-colors">
+              Continue to Loss &amp; Timeline &rarr;
+            </button>
+          </div>
+        </div>
+
+        <!-- STEP 2 -->
+        <div id="step2" class="space-y-4 hidden">
+          <h2 class="text-base font-bold text-slate-900">Step 2: Financial Loss &amp; Incident Timeline</h2>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1.5">Scam Modus Operandi Category</label>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+              <label class="p-3 rounded-xl border border-slate-200 bg-slate-50 flex items-center gap-2.5 cursor-pointer hover:bg-white hover:border-blue-400">
+                <input type="radio" name="cat" checked class="accent-blue-600" />
+                <span>🛍️ Online Shopping (Goods Never Sent)</span>
+              </label>
+              <label class="p-3 rounded-xl border border-slate-200 bg-slate-50 flex items-center gap-2.5 cursor-pointer hover:bg-white hover:border-blue-400">
+                <input type="radio" name="cat" class="accent-blue-600" />
+                <span>🎫 Concert / Event Ticket Fraud</span>
+              </label>
+              <label class="p-3 rounded-xl border border-slate-200 bg-slate-50 flex items-center gap-2.5 cursor-pointer hover:bg-white hover:border-blue-400">
+                <input type="radio" name="cat" class="accent-blue-600" />
+                <span>💼 Fake Freelance Job / Task Scam</span>
+              </label>
+              <label class="p-3 rounded-xl border border-slate-200 bg-slate-50 flex items-center gap-2.5 cursor-pointer hover:bg-white hover:border-blue-400">
+                <input type="radio" name="cat" class="accent-blue-600" />
+                <span>👤 Friend / Family Impersonation Borrowing</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">Financial Loss Amount</label>
+              <div class="flex">
+                <span class="bg-slate-100 border border-r-0 border-slate-300 rounded-l-lg px-3 py-2 text-xs font-bold text-slate-600 flex items-center">IDR</span>
+                <input type="number" placeholder="1500000" class="flex-1 bg-slate-50 border border-slate-300 rounded-r-lg px-3 py-2 text-sm font-mono font-bold outline-none" />
+              </div>
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">Transaction Date</label>
+              <input type="date" id="reportDate" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-sm text-slate-900" />
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Incident Narrative &amp; Communication Details</label>
+            <textarea rows="3" placeholder="Describe how the perpetrator approached you, what promises were made, and when they cut off communication. Never share personal passwords, PINs, or OTPs." class="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-xs outline-none focus:border-blue-600"></textarea>
+          </div>
+
+          <div class="pt-4 flex justify-between">
+            <button onclick="goToStep(1)" class="border border-slate-300 bg-slate-50 text-slate-700 font-bold px-4 py-2 rounded-xl text-xs hover:bg-slate-100">
+              &larr; Back
+            </button>
+            <button onclick="goToStep(3)" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-2.5 rounded-xl text-sm shadow-xs transition-colors">
+              Continue to Transfer Slip Proof &rarr;
+            </button>
+          </div>
+        </div>
+
+        <!-- STEP 3 -->
+        <div id="step3" class="space-y-4 hidden">
+          <div class="flex items-center justify-between">
+            <h2 class="text-base font-bold text-slate-900">Step 3: Transfer Slip &amp; Asymmetric AI Privacy Redaction</h2>
+            <span class="bg-emerald-50 text-emerald-800 border border-emerald-200 text-[10px] font-bold px-2 py-0.5 rounded">
+              🔒 Fail-Closed Privacy Protected
+            </span>
+          </div>
+
+          <!-- Clean Upload Box -->
+          <div class="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center bg-slate-50 cursor-pointer hover:border-blue-500 transition-colors">
+            <span class="text-3xl block mb-1">🧾</span>
+            <p class="text-sm font-bold text-slate-800">Click to Select Bank Transfer Slip or Screenshot</p>
+            <p class="text-xs text-slate-500 mt-1">Supports JPG, PNG, or PDF formats (Max 10MB)</p>
+          </div>
+
+          <!-- Asymmetric PII Redaction Standard Highlight (Doc 12) -->
+          <div class="bg-blue-50/60 border border-blue-200 rounded-xl p-4 space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-blue-900 uppercase tracking-wide">
+                How We Protect Your Identity (Asymmetric Redaction Standard):
+              </span>
+              <span class="text-[10px] bg-blue-200 text-blue-900 font-bold px-1.5 py-0.2 rounded">ADR-016 Standard</span>
+            </div>
+            <p class="text-xs text-slate-600 leading-relaxed">
+              To keep you completely safe from retaliatory harassment or doxxing, your sensitive personal information is automatically blurred before public display. However, the destination scammer's bank account and verified holder name remain <b>100% UNREDACTED</b> so other citizens can reliably identify the perpetrator.
+            </p>
+
+            <div class="bg-white p-4 rounded-xl border border-slate-200 font-mono text-xs max-w-sm mx-auto shadow-xs space-y-2">
+              <div class="text-center pb-2 border-b border-slate-100">
+                <span class="font-bold text-slate-700 text-[11px] font-sans">TRANSFER SLIP PRIVACY FORENSICS</span>
+              </div>
+              <div class="flex justify-between items-center">
+                <span class="text-slate-500 font-sans">Reporter Name:</span>
+                <span class="censored-blur bg-slate-200 px-1.5 py-0.5 rounded font-bold text-[11px]">Rina Andriani</span>
+              </div>
+              <div class="flex justify-between items-center">
+                <span class="text-slate-500 font-sans">Reporter Balance:</span>
+                <span class="censored-blur bg-slate-200 px-1.5 py-0.5 rounded font-bold text-[11px]">IDR 8,421,900</span>
+              </div>
+              <div class="flex justify-between items-center pt-1 border-t border-slate-100 font-bold">
+                <span class="text-rose-700 font-sans">Scammer Account:</span>
+                <span class="text-rose-700 bg-rose-50 px-1.5 py-0.5 rounded border border-rose-200">BCA 8831924831</span>
+              </div>
+              <div class="flex justify-between items-center font-bold">
+                <span class="text-rose-700 font-sans">Scammer Name:</span>
+                <span class="text-slate-900 bg-amber-50 px-1 rounded border border-amber-200">BAMBANG SUJARWO</span>
+              </div>
+              <p class="text-[10px] font-sans text-emerald-700 text-center pt-2 font-medium">
+                ✓ Reporter details remain strictly private. Scammer destination is published to prevent further losses.
+              </p>
+            </div>
+          </div>
+
+          <div class="pt-4 flex justify-between">
+            <button onclick="goToStep(2)" class="border border-slate-300 bg-slate-50 text-slate-700 font-bold px-4 py-2 rounded-xl text-xs hover:bg-slate-100">
+              &larr; Back
+            </button>
+            <button onclick="goToStep(4)" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-2.5 rounded-xl text-sm shadow-xs transition-colors">
+              Continue to Declaration &rarr;
+            </button>
+          </div>
+        </div>
+
+        <!-- STEP 4 -->
+        <div id="step4" class="space-y-4 hidden">
+          <h2 class="text-base font-bold text-slate-900">Step 4: Statutory Legal Declaration &amp; Submission</h2>
+
+          <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3 text-xs text-slate-700 leading-relaxed">
+            <label class="flex items-start gap-2.5 cursor-pointer">
+              <input type="checkbox" id="truthCheck" required class="mt-0.5 accent-blue-600 h-4 w-4 shrink-0" />
+              <span>
+                <b>Statutory Anti-Perjury Declaration:</b> I declare under penalty of law that this report is true and accurately reflects an actual transaction in which I suffered financial harm or scam attempt. I understand that submitting intentional false reports or smear reviews against innocent entities is subject to legal prosecution under regional Cybercrime and Defamation laws.
+              </span>
+            </label>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Official Police Report Reference Number (Optional if filed with local Police / Cybercrime unit)</label>
+            <input type="text" placeholder="e.g. LP/B/921/X/2026/SPKT or PDRM/RPT/2026/410" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-900 outline-none focus:border-blue-600" />
+            <p class="text-[11px] text-slate-500 mt-1">Providing a valid police case reference expedites verified tier badge escalation.</p>
+          </div>
+
+          <div class="pt-4 flex justify-between">
+            <button onclick="goToStep(3)" class="border border-slate-300 bg-slate-50 text-slate-700 font-bold px-4 py-2 rounded-xl text-xs hover:bg-slate-100">
+              &larr; Back
+            </button>
+            <button onclick="submitFinalReport()" class="bg-rose-600 hover:bg-rose-700 text-white font-bold px-6 py-2.5 rounded-xl text-sm shadow-xs transition-colors">
+              Submit Scam Incident Report
+            </button>
+          </div>
+        </div>
+
+        <!-- SUCCESS NOTIFICATION -->
+        <div id="reportSuccess" class="space-y-4 text-center py-6 hidden">
+          <div class="h-14 w-14 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-2xl mx-auto border border-emerald-200">
+            ✓
+          </div>
+          <h2 class="text-xl font-bold text-slate-900">Scam Incident Report Published Successfully</h2>
+          <p class="text-xs text-slate-600 max-w-md mx-auto">
+            Incident Reference Number: <b class="font-mono text-slate-900">#TR-2026-9912</b>. The destination account has been indexed into the risk registry with immediate community alert broadcast.
+          </p>
+          <div class="pt-3 flex flex-wrap justify-center gap-3">
+            <a href="check.html" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-5 py-2 rounded-xl text-xs shadow-xs">
+              View Risk Verification Result &rarr;
+            </a>
+            <a href="recovery.html" class="bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 font-bold px-5 py-2 rounded-xl text-xs">
+              Open Bank Freeze Guide
+            </a>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Unified Institutional Footer -->
+  <footer class="bg-slate-100 border-t border-slate-200 py-12 text-xs">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+        <div>
+          <div class="flex items-center gap-2 mb-3">
+            <div class="h-6 w-6 rounded bg-blue-600 text-white flex items-center justify-center">
+              <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              </svg>
+            </div>
+            <span class="font-bold text-slate-900 text-sm">TrustPay SEA</span>
+          </div>
+          <p class="text-slate-500 text-[11px] leading-relaxed">
+            Southeast Asia's community payment protection and pre-transfer intelligence registry.
+          </p>
+        </div>
+
+        <div>
+          <h4 class="font-bold text-slate-900 mb-2 text-xs uppercase tracking-wider">Services</h4>
+          <ul class="space-y-1.5 text-slate-600">
+            <li><a href="check.html" class="hover:text-blue-600">Check Account / QR</a></li>
+            <li><a href="report.html" class="hover:text-blue-600">Report a Scam</a></li>
+            <li><a href="claim.html" class="hover:text-blue-600">Merchant Dispute (Safe-Harbor)</a></li>
+            <li><a href="recovery.html" class="hover:text-blue-600">Bank Freeze Procedures</a></li>
+            <li><a href="receipt.html" class="hover:text-blue-600">Diligence Slip Generator</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 class="font-bold text-slate-900 mb-2 text-xs uppercase tracking-wider">Emergency Hotlines</h4>
+          <ul class="space-y-1 text-slate-600 text-[11px]">
+            <li>🇮🇩 <b>Indonesia:</b> OJK 157 / IASC · Patroli Siber</li>
+            <li>🇲🇾 <b>Malaysia:</b> NSRC 997 · Semak Mule</li>
+            <li>🇸🇬 <b>Singapore:</b> SPF 1799</li>
+            <li>🇹🇭 <b>Thailand:</b> AOC 1441</li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 class="font-bold text-slate-900 mb-2 text-xs uppercase tracking-wider">Legal Compliance</h4>
+          <p class="text-[11px] text-slate-500 leading-relaxed">
+            Strictly compliant with regional Data Privacy Acts (UU PDP, Singapore PDPA, Malaysia PDPA). KMS-keyed HMAC account indexing protects PII.
+          </p>
+        </div>
+      </div>
+
+      <div class="border-t border-slate-200 pt-6 text-[11px] text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-2">
+        <p>
+          <b>Statutory Notice:</b> TrustPay SEA is an independent, community-driven payment risk intelligence registry. Not a bank, not a payment gateway, and does not hold consumer deposits.
+        </p>
+        <span class="shrink-0">&copy; 2026 TrustPay SEA. Open Standard.</span>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    const COUNTRY_BANKS = {
+      ID: ["Bank Central Asia (BCA)", "Bank Rakyat Indonesia (BRI)", "Bank Mandiri", "Bank Negara Indonesia (BNI)", "GoPay E-Wallet", "DANA E-Wallet", "OVO E-Wallet"],
+      MY: ["Maybank", "CIMB Bank", "Public Bank", "RHB Bank", "Touch 'n Go eWallet"],
+      SG: ["DBS Bank / POSB", "OCBC Bank", "United Overseas Bank (UOB)", "GrabPay"],
+      TH: ["Kasikornbank (KBank)", "Siam Commercial Bank (SCB)", "Bangkok Bank", "TrueMoney"],
+      VN: ["Vietcombank", "Techcombank", "BIDV", "MoMo E-Wallet"],
+      PH: ["BDO Unibank", "Bank of the Philippine Islands (BPI)", "GCash", "Maya"]
+    };
+
+    function updateReportBanks() {
+      const country = document.getElementById('reportCountry').value;
+      const bankSelect = document.getElementById('reportBank');
+      bankSelect.innerHTML = '';
+      const banks = COUNTRY_BANKS[country] || COUNTRY_BANKS.ID;
+      banks.forEach(b => {
+        const opt = document.createElement('option');
+        opt.value = b;
+        opt.textContent = b;
+        bankSelect.appendChild(opt);
+      });
+    }
+
+    function goToStep(s) {
+      document.getElementById('step1').classList.toggle('hidden', s !== 1);
+      document.getElementById('step2').classList.toggle('hidden', s !== 2);
+      document.getElementById('step3').classList.toggle('hidden', s !== 3);
+      document.getElementById('step4').classList.toggle('hidden', s !== 4);
+
+      document.getElementById('stepCircle2').className = s >= 2 ? 'h-6 w-6 rounded-full bg-blue-100 border border-blue-400 text-blue-800 flex items-center justify-center text-xs font-bold' : 'h-6 w-6 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center text-xs';
+      document.getElementById('stepCircle3').className = s >= 3 ? 'h-6 w-6 rounded-full bg-blue-100 border border-blue-400 text-blue-800 flex items-center justify-center text-xs font-bold' : 'h-6 w-6 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center text-xs';
+      document.getElementById('stepCircle4').className = s >= 4 ? 'h-6 w-6 rounded-full bg-blue-100 border border-blue-400 text-blue-800 flex items-center justify-center text-xs font-bold' : 'h-6 w-6 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center text-xs';
+    }
+
+    function submitFinalReport() {
+      if (!document.getElementById('truthCheck').checked) {
+        alert('Please acknowledge the Statutory Anti-Perjury Legal Declaration before submitting.');
+        return;
+      }
+      document.getElementById('step4').classList.add('hidden');
+      document.getElementById('reportSuccess').classList.remove('hidden');
+    }
+
+    function switchLanguage(lang) {
+      if (lang === 'id') alert('Bahasa dialihkan ke Bahasa Indonesia.');
+      else if (lang === 'ms') alert('Bahasa ditukar ke Bahasa Melayu.');
+      else if (lang === 'th') alert('เปลี่ยนภาษาเป็นภาษาไทย');
+      else if (lang === 'vi') alert('Đã đổi ngôn ngữ sang Tiếng Việt.');
+      else if (lang === 'fil') alert('Pinalitan ang wika sa Filipino.');
+    }
+
+    document.getElementById('reportDate').valueAsDate = new Date();
+  </script>
+</body>
+</html>

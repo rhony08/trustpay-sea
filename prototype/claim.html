@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Merchant Shield &amp; Name-Clearing Dispute — TrustPay SEA</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col antialiased">
+
+  <!-- Emergency Top Hotline Banner -->
+  <div class="bg-rose-50 border-b border-rose-200 text-rose-900 text-xs py-2 px-4">
+    <div class="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-2">
+      <div class="flex items-center gap-2">
+        <span class="inline-flex items-center justify-center h-4 w-4 rounded-full bg-rose-600 text-white font-bold text-[10px]">!</span>
+        <span class="font-bold">Emergency Payment Scam Hotlines:</span>
+        <span class="text-rose-800">
+          <b>Indonesia:</b> OJK 157 / IASC · <b>Malaysia:</b> NSRC 997 · <b>Singapore:</b> 1799 · <b>Thailand:</b> AOC 1441
+        </span>
+      </div>
+      <a href="recovery.html" class="text-rose-700 hover:text-rose-900 font-bold underline inline-flex items-center gap-1">
+        Bank Account Freeze Guide &rarr;
+      </a>
+    </div>
+  </div>
+
+  <!-- Unified Institutional Header -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-xs">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+      <!-- Unified Shield SVG Brand Logo -->
+      <a href="index.html" class="flex items-center gap-3 group">
+        <div class="h-10 w-10 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold text-xl shadow-xs transition-transform group-hover:scale-105">
+          <svg class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+          </svg>
+        </div>
+        <div>
+          <div class="flex items-center gap-1.5">
+            <span class="text-xl font-bold tracking-tight text-slate-900">TrustPay</span>
+            <span class="bg-blue-100 text-blue-800 text-[11px] font-bold px-1.5 py-0.2 rounded border border-blue-200">
+              SEA
+            </span>
+          </div>
+          <p class="text-[11px] text-slate-500 font-medium">Digital Payment Risk &amp; Reputation Registry</p>
+        </div>
+      </a>
+
+      <!-- Desktop Navigation -->
+      <nav class="hidden md:flex items-center gap-1 text-sm font-medium">
+        <a href="check.html" class="px-3.5 py-2 rounded-lg text-slate-700 hover:text-slate-900 hover:bg-slate-100 transition-colors">
+          Check Account / QR
+        </a>
+        <a href="report.html" class="px-3.5 py-2 rounded-lg text-slate-700 hover:text-slate-900 hover:bg-slate-100 transition-colors">
+          Report Fraud
+        </a>
+        <a href="claim.html" class="px-3.5 py-2 rounded-lg text-blue-700 bg-blue-50 font-semibold border border-blue-200">
+          Merchant Shield
+        </a>
+        <a href="recovery.html" class="px-3.5 py-2 rounded-lg text-slate-700 hover:text-slate-900 hover:bg-slate-100 transition-colors">
+          Emergency SOS
+        </a>
+        <a href="receipt.html" class="px-3.5 py-2 rounded-lg text-slate-700 hover:text-slate-900 hover:bg-slate-100 transition-colors">
+          Diligence Slip
+        </a>
+      </nav>
+
+      <!-- Right Utility Controls -->
+      <div class="flex items-center gap-3">
+        <!-- Language Switcher Dropdown -->
+        <select id="langSelect" onchange="switchLanguage(this.value)" class="bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-slate-700 outline-none cursor-pointer">
+          <option value="en" selected>🇺🇸 English</option>
+          <option value="id">🇮🇩 Bahasa Indonesia</option>
+          <option value="ms">🇲🇾 Bahasa Melayu</option>
+          <option value="th">🇹🇭 ภาษาไทย</option>
+          <option value="vi">🇻🇳 Tiếng Việt</option>
+          <option value="fil">🇵🇭 Filipino</option>
+        </select>
+
+        <a href="report.html" class="hidden sm:inline-flex items-center gap-1 px-3.5 py-2 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-xs transition-colors">
+          + Report a Scam
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main class="flex-1 py-10">
+    <div class="max-w-3xl mx-auto px-4 sm:px-6">
+
+      <div class="text-center max-w-2xl mx-auto mb-8">
+        <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-bold mb-3 border border-blue-200">
+          <span>🛡️ Protecting Legitimate Merchants &amp; Sellers from Extortion and Smears</span>
+        </div>
+        <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900">
+          Merchant Shield: Name-Clearing &amp; Dispute Portal
+        </h1>
+        <p class="text-xs sm:text-sm text-slate-600 mt-2 leading-relaxed">
+          Your business reputation should never be damaged by bad-faith competitor reviews, logistics misunderstandings, or false accusations. Submit verified KYC ownership to activate an immediate <b>Safe-Harbor Score Freeze</b>.
+        </p>
+      </div>
+
+      <!-- Safe Harbor Legal Policy Card (ADR-004 & ADR-014) -->
+      <div class="bg-blue-50/70 border border-blue-200 rounded-2xl p-5 mb-8 shadow-xs">
+        <div class="flex items-center justify-between mb-2">
+          <h3 class="text-xs font-bold text-blue-900 uppercase tracking-wide flex items-center gap-2">
+            <span>⚖ Statutory Safe-Harbor Protection Mechanism (ADR-004 &amp; ADR-014)</span>
+          </h3>
+          <span class="text-[10px] bg-blue-200 text-blue-900 font-bold px-2 py-0.5 rounded">
+            Anti-Extortion Protocol
+          </span>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs text-slate-700 mt-3">
+          <div class="bg-white p-3.5 rounded-xl border border-blue-100 shadow-xs">
+            <b class="text-slate-900 block mb-1">1. Mandatory Proof of Identity</b>
+            Actual scammers cannot arbitrarily remove victim warnings. Business registration (NIB/SSM/ACRA) or official banking KYC is strictly required.
+          </div>
+          <div class="bg-white p-3.5 rounded-xl border border-blue-100 shadow-xs">
+            <b class="text-blue-700 block mb-1">2. Instant Safe-Harbor Freeze</b>
+            Upon dispute submission, risk score penalties are capped at <b>45 / 100 max</b>, preventing systemic blocking while your case is under review.
+          </div>
+          <div class="bg-white p-3.5 rounded-xl border border-blue-100 shadow-xs">
+            <b class="text-slate-900 block mb-1">3. Dual-Control Adjudication</b>
+            Our independent analyst team audits refund slips and evidence. Bad-faith smear reviews are permanently expunged from search indexes.
+          </div>
+        </div>
+      </div>
+
+      <!-- Clean Form Card -->
+      <div class="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-xs space-y-6">
+
+        <!-- 1. Entity -->
+        <div class="space-y-3">
+          <h3 class="text-xs font-bold text-slate-900 uppercase tracking-wider">
+            1. Business Bank Account or QRIS Identity
+          </h3>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">Bank / Payment Institution</label>
+              <select class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-sm text-slate-900 outline-none focus:border-blue-600">
+                <option>Bank Central Asia (BCA)</option>
+                <option>Bank Mandiri</option>
+                <option>Bank Rakyat Indonesia (BRI)</option>
+                <option>Maybank Malaysia</option>
+                <option>DBS Singapore</option>
+                <option>QRIS National Merchant ID (NMID)</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">Account Number / NMID</label>
+              <input type="text" value="8831924831" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3.5 py-2 text-sm font-mono font-bold text-slate-900 outline-none focus:border-blue-600" />
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Proof Tier -->
+        <div class="space-y-3 pt-4 border-t border-slate-100">
+          <h3 class="text-xs font-bold text-slate-900 uppercase tracking-wider">
+            2. Verified Ownership Verification Tier
+          </h3>
+          <div class="space-y-2">
+            <label class="p-3.5 rounded-xl border border-slate-200 bg-slate-50 flex items-start gap-3 cursor-pointer hover:bg-blue-50/40 hover:border-blue-300 transition-colors">
+              <input type="radio" name="tier" checked class="mt-1 accent-blue-600" />
+              <div>
+                <span class="text-xs font-bold text-slate-900 block">Tier 1: Verified QRIS NMID / Corporate Acquirer Dashboard</span>
+                <span class="text-[11px] text-slate-500">Upload screenshot of official acquirer portal (BCA Merchant, Mandiri QR, DuitNow Merchant) or Business Registration Certificate (NIB/SSM/ACRA).</span>
+              </div>
+            </label>
+
+            <label class="p-3.5 rounded-xl border border-slate-200 bg-slate-50 flex items-start gap-3 cursor-pointer hover:bg-blue-50/40 hover:border-blue-300 transition-colors">
+              <input type="radio" name="tier" class="mt-1 accent-blue-600" />
+              <div>
+                <span class="text-xs font-bold text-slate-900 block">Tier 2: Official Bank Passbook or Verified M-Banking Profile</span>
+                <span class="text-[11px] text-slate-500">Photograph of bank book showing matching account holder name and account number.</span>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- 3. Dispute Narrative -->
+        <div class="space-y-3 pt-4 border-t border-slate-100">
+          <h3 class="text-xs font-bold text-slate-900 uppercase tracking-wider">
+            3. Official Clarification &amp; Counter-Evidence
+          </h3>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Dispute Reason Taxonomy</label>
+            <select class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-900 outline-none focus:border-blue-600">
+              <option>Competitor Smear Attack / Coordinated Fake Reviews</option>
+              <option>Logistics Delay Resolved with 100% Customer Refund</option>
+              <option>Mistaken Identity / Customer Entered Wrong Account</option>
+              <option>Blackmail or Extortion Attempt</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Official Response Pinned Directly to Public Search Results</label>
+            <textarea rows="3" placeholder="This clarification will be pinned beneath contested reports (e.g. 'Customer delivery was temporarily delayed due to courier strike. Full refund was remitted on October 2nd via BCA Ref #99128...')" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-xs text-slate-900 outline-none focus:border-blue-600"></textarea>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Supporting Evidence (Shipping Waybill, Customer Chats, or Refund Receipt)</label>
+            <div class="border-2 border-dashed border-slate-300 rounded-xl p-4 text-center cursor-pointer hover:border-blue-500 bg-slate-50 transition-colors">
+              <span class="text-xs font-semibold text-slate-600">Click to upload supporting documents (PDF, JPG, PNG up to 10MB)</span>
+            </div>
+          </div>
+        </div>
+
+        <button onclick="handleClaimSubmit()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl shadow-xs text-sm transition-colors flex items-center justify-center gap-2">
+          <span>🛡️ Submit Official Dispute &amp; Activate Safe-Harbor Freeze</span>
+        </button>
+
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Unified Institutional Footer -->
+  <footer class="bg-slate-100 border-t border-slate-200 py-12 text-xs">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+        <div>
+          <div class="flex items-center gap-2 mb-3">
+            <div class="h-6 w-6 rounded bg-blue-600 text-white flex items-center justify-center">
+              <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              </svg>
+            </div>
+            <span class="font-bold text-slate-900 text-sm">TrustPay SEA</span>
+          </div>
+          <p class="text-slate-500 text-[11px] leading-relaxed">
+            Southeast Asia's community payment protection and pre-transfer intelligence registry.
+          </p>
+        </div>
+
+        <div>
+          <h4 class="font-bold text-slate-900 mb-2 text-xs uppercase tracking-wider">Services</h4>
+          <ul class="space-y-1.5 text-slate-600">
+            <li><a href="check.html" class="hover:text-blue-600">Check Account / QR</a></li>
+            <li><a href="report.html" class="hover:text-blue-600">Report a Scam</a></li>
+            <li><a href="claim.html" class="hover:text-blue-600">Merchant Dispute (Safe-Harbor)</a></li>
+            <li><a href="recovery.html" class="hover:text-blue-600">Bank Freeze Procedures</a></li>
+            <li><a href="receipt.html" class="hover:text-blue-600">Diligence Slip Generator</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 class="font-bold text-slate-900 mb-2 text-xs uppercase tracking-wider">Emergency Hotlines</h4>
+          <ul class="space-y-1 text-slate-600 text-[11px]">
+            <li>🇮🇩 <b>Indonesia:</b> OJK 157 / IASC · Patroli Siber</li>
+            <li>🇲🇾 <b>Malaysia:</b> NSRC 997 · Semak Mule</li>
+            <li>🇸🇬 <b>Singapore:</b> SPF 1799</li>
+            <li>🇹🇭 <b>Thailand:</b> AOC 1441</li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 class="font-bold text-slate-900 mb-2 text-xs uppercase tracking-wider">Legal Compliance</h4>
+          <p class="text-[11px] text-slate-500 leading-relaxed">
+            Strictly compliant with regional Data Privacy Acts (UU PDP, Singapore PDPA, Malaysia PDPA). KMS-keyed HMAC account indexing protects PII.
+          </p>
+        </div>
+      </div>
+
+      <div class="border-t border-slate-200 pt-6 text-[11px] text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-2">
+        <p>
+          <b>Statutory Notice:</b> TrustPay SEA is an independent, community-driven payment risk intelligence registry. Not a bank, not a payment gateway, and does not hold consumer deposits.
+        </p>
+        <span class="shrink-0">&copy; 2026 TrustPay SEA. Open Standard.</span>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    function handleClaimSubmit() {
+      alert('Ownership claim and dispute submitted successfully. Safe-Harbor Freeze is now ACTIVE (score penalty capped at <= 45). Tracking Ticket #DISP-2026-4412.');
+      window.location.href = 'check.html?demo=dispute';
+    }
+
+    function switchLanguage(lang) {
+      if (lang === 'id') alert('Bahasa dialihkan ke Bahasa Indonesia.');
+      else if (lang === 'ms') alert('Bahasa ditukar ke Bahasa Melayu.');
+      else if (lang === 'th') alert('เปลี่ยนภาษาเป็นภาษาไทย');
+      else if (lang === 'vi') alert('Đã đổi ngôn ngữ sang Tiếng Việt.');
+      else if (lang === 'fil') alert('Pinalitan ang wika sa Filipino.');
+    }
+  </script>
+</body>
+</html>
