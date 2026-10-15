@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import {
   ApiError,
   addWatch,
+  enrollPasskey,
   eraseData,
   exportData,
   getNotifications,
@@ -12,6 +13,7 @@ import {
   getQuiz,
   getToken,
   getWatchlist,
+  listPasskeys,
   login,
   markNotificationRead,
   removeWatch,
@@ -52,11 +54,14 @@ export default function ProfilePage() {
   const [phone, setPhone] = useState("");
   const [devCode, setDevCode] = useState<string | null>(null);
   const [code, setCode] = useState("");
+  const [passkeys, setPasskeys] = useState<{ credential_id: string; created_at: string | null }[]>([]);
+  const [passkeyMsg, setPasskeyMsg] = useState<string | null>(null);
 
   const refresh = useCallback(async (t: string) => {
     setProfile(await getProfile(t));
     setWatchlist(await getWatchlist(t));
     setNotifications(await getNotifications(t));
+    listPasskeys().then(setPasskeys).catch(() => undefined);
   }, []);
 
   useEffect(() => setTokenState(getToken()), []);
@@ -84,7 +89,47 @@ export default function ProfilePage() {
         <Link href="/" className="text-sm text-slate-400 hover:text-slate-200">
           ← TrustPay SEA
         </Link>
-        <h1 className="text-2xl font-bold">Your trust profile</h1>
+      <h1 className="text-2xl font-bold">Your trust profile</h1>
+
+      <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-5">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="font-semibold">Passkey (MFA)</p>
+            <p className="text-xs text-slate-400">
+              Admin accounts must have one enrolled (ADR-020).
+            </p>
+          </div>
+          <button
+            className="rounded-lg bg-emerald-500 px-3 py-2 text-sm font-semibold text-slate-950 disabled:opacity-50"
+            onClick={async () => {
+              setPasskeyMsg(null);
+              try {
+                await enrollPasskey();
+                setPasskeyMsg("Passkey enrolled.");
+                setPasskeys(await listPasskeys());
+              } catch (err) {
+                setPasskeyMsg(err instanceof ApiError ? err.message : "Enrollment failed");
+              }
+            }}
+          >
+            {passkeys.length > 0 ? "Add another" : "Enroll passkey"}
+          </button>
+        </div>
+        {passkeys.length > 0 ? (
+          <ul className="mt-3 space-y-1 text-xs text-slate-300">
+            {passkeys.map((p) => (
+              <li key={p.credential_id} className="flex justify-between gap-3">
+                <span className="truncate font-mono">{p.credential_id.slice(0, 20)}…</span>
+                <span>{p.created_at ? p.created_at.slice(0, 10) : ""}</span>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="mt-2 text-xs text-amber-300">No passkey yet.</p>
+        )}
+        {passkeyMsg && <p className="mt-2 text-xs text-slate-400">{passkeyMsg}</p>}
+      </div>
+
         <form className="flex flex-col gap-3" onSubmit={authenticate}>
           <input className={input} type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required />
           <input className={input} type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} minLength={8} required />

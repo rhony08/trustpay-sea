@@ -40,10 +40,10 @@
 
 1. **Live AI validation** — enable `AI_PROVIDER=gcp` (Vertex + ADC) or `openrouter`, add keys, run the report pipeline against real slips, validate JSON parsing/grounding/fail-closed.
 2. **Storage hardening** — R2/S3 presigned POST, quarantine encryption (AES-GCM), ClamAV, cookieless public media domain (retention purge job ✅ done — `docs/10`).
-3. **Auth hardening** — docs §9.2 specify HttpOnly/Secure cookies + CSRF; current API returns bearer tokens and the PWA stores them in `localStorage`. **WebAuthn MFA for ANALYST/SENIOR_ANALYST/SUPERADMIN is required and not implemented.**
+3. ~~**Auth hardening**~~ — ✅ **DONE 2026-10-15 (ADR-020)**: HttpOnly `tp_access`/`tp_refresh` cookies + double-submit CSRF (`X-CSRF-Token`, enforced only for cookie-authenticated mutations), WebAuthn passkeys (`webauthn_credentials`, `py_webauthn`) with MFA login step for ANALYST+, `mfa_at` step-up guard on approval endpoints, `MFA_REQUIRED_FOR_ADMINS` prod gate (no passkey → no admin login). Bearer mode still supported for non-browser clients.
 4. **Admin portal UI** — backend endpoints exist (`/admin/dashboard`, `/admin/audit`, `/admin/approvals`, `/admin/flags`, `/admin/disputes`), but the `/admin` page is a read-only dashboard. No queue action UI, no side-by-side evidence review, no approvals UI.
 5. **Partner/Open API** — **screen API keys implemented** (`docs/09`): `api_keys` table, `X-API-Key` auth, tiers (visitor keyless / demo / partner / enterprise), per-tier daily quotas + `X-RateLimit-*`, distinct-entity probe detection, issue/rotate/revoke/usage endpoints, audit-logged; public `/api/v1/screen/account|qr` are privacy-safe (no holder names). **Still deferred**: App Check/reCAPTCHA handoff, partner webhooks, freshness labels, key-scoped `reports:write` ingestion endpoint.
-6. **Dual-control coverage** — four-eyes gating is implemented only for `gov_override` and `ban_user`. Report removal and gov-override-flip should also be dual-controlled.
+6. ~~**Dual-control coverage**~~ — ✅ **DONE 2026-10-15 (ADR-021)**: four-eyes extended to `hide_report` (flag UPHELD), `remove_report` (dispute APPROVED_REMOVED) and `settlement`; approvals expire after 72h; requester-only cancel endpoint; flag/dispute resolve endpoints now *request* approval instead of executing. `gov_override`/`ban_user` unchanged. Still single-step by design: flag DISMISSED (non-destructive).
 7. **Legal/consent** — report consent checkbox exists; **ToS/Privacy pages are not drafted** (G-12). DSAR export/erase implemented as *hard delete* (G-13 semantics: docs mention tombstone + search removal — not fully implemented).
 8. **i18n** — `en` + `id` catalog exists, but most Phase 3B–6 UI surfaces are English-only.
 9. **E2E** — Playwright smoke (static routes) + backend journey test only; no full browser flow (report→publish→flag→claim) through a running API.
@@ -98,8 +98,8 @@ npx playwright install chromium && npm run test:e2e
 
 1. **Live AI validation** — run the pipeline against a real invoice/slip on Vertex; verify JSON schema, grounding, fail-closed (ADR-019 records the provider design).
 2. **Storage hardening** — S3/R2 presigned uploads, AV scan, cookieless media domain, retention/legal-hold job. **Retention/legal-hold job now implemented (`docs/10`, Phase 10; dry-run by default).** Remaining: S3/R2 presigned uploads, AV scan, cookieless media domain.
-3. **Auth hardening** — HttpOnly cookie sessions + CSRF; WebAuthn MFA mandatory for admins.
-4. **Admin portal UI** — flag/dispute queues, approve/resolve actions, approvals UI, side-by-side evidence.
+3. ~~**Auth hardening**~~ — ✅ done 2026-10-15 (ADR-020): HttpOnly cookie sessions + CSRF; WebAuthn MFA mandatory for admins (`MFA_REQUIRED_FOR_ADMINS=true` in prod). Next possible step: Playwright virtual-authenticator e2e for the MFA flow + retire the `localStorage` token fallback in `lib/api.ts`.
+4. **Admin portal UI** — flag/dispute queues, approve/resolve actions, approvals UI (ADR-021 queue + approve buttons exist), side-by-side evidence.
 5. **Conversions/keys** — partner API keys + scopes + rotation; move `/check` off the static bank mirror.
 6. **Coverage + E2E** — lift low-coverage services to ≥80%; add a full browser flow test with a running API.
 7. **i18n + legal** — translate the new surfaces; draft ToS/Privacy (G-12) and settle G-13 erasure semantics.

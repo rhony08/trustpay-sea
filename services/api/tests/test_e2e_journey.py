@@ -49,10 +49,12 @@ async def test_full_user_journey(client: httpx.AsyncClient) -> None:
     voter = await _signup(client, "journey-voter@trustpay.dev")
     owner = await _signup(client, "journey-owner@trustpay.dev")
     admin = await _signup(client, "journey-admin@trustpay.dev")
+    second_admin = await _signup(client, "journey-admin2@trustpay.dev")
 
     async with SessionLocal() as db:
-        user = await db.scalar(select(User).where(User.email == "journey-admin@trustpay.dev"))
-        user.role = Role.ANALYST.value
+        for email in ("journey-admin@trustpay.dev", "journey-admin2@trustpay.dev"):
+            user = await db.scalar(select(User).where(User.email == email))
+            user.role = Role.ANALYST.value
         await db.commit()
 
     # 1. Report + evidence
@@ -96,12 +98,21 @@ async def test_full_user_journey(client: httpx.AsyncClient) -> None:
     )
     flag_id = flag.json()["data"]["id"]
 
-    # 5. Admin upholds the flag → report hidden, reporter warned
+    # 5. Admin upholds the flag → ADR-021 queues hide_report; 2nd admin approves
     await client.post(
         f"/api/v1/admin/flags/{flag_id}/resolve",
         json={"decision": "UPHELD"},
         headers=_auth(admin),
     )
+    approvals = await client.get(
+        "/api/v1/admin/approvals", params={"status_filter": "PENDING"}, headers=_auth(admin)
+    )
+    hide = [a for a in approvals.json()["data"]["approvals"] if a["action"] == "hide_report"]
+    assert hide, "expected pending hide_report approval"
+    done = await client.post(
+        f"/api/v1/admin/approvals/{hide[-1]['id']}/approve", headers=_auth(second_admin)
+    )
+    assert done.json()["data"]["status"] == "APPROVED"
     async with SessionLocal() as db:
         report = await db.get(FraudReport, uuid.UUID(report_id))
         reporter_user = await db.scalar(
@@ -123,12 +134,27 @@ async def test_full_user_journey(client: httpx.AsyncClient) -> None:
         headers=_auth(owner),
     )
     dispute_id = dispute.json()["data"]["id"]
-    settled = await client.post(
+    requested = await client.post(
         f"/api/v1/admin/disputes/{dispute_id}/resolve",
         json={"decision": "SETTLEMENT", "notes": "Refund issued"},
         headers=_auth(admin),
     )
-    assert settled.json()["data"]["status"] == "SETTLEMENT"
+    # ADR-021: settlement queues for a second admin
+    assert requested.json()["data"]["status"] in ("UNDER_REVIEW", "SUBMITTED")
+    approvals = await client.get(
+        "/api/v1/admin/approvals", params={"status_filter": "PENDING"}, headers=_auth(admin)
+    )
+    settle = [a for a in approvals.json()["data"]["approvals"] if a["action"] == "settlement"]
+    assert settle, "expected pending settlement approval"
+    done = await client.post(
+        f"/api/v1/admin/approvals/{settle[-1]['id']}/approve", headers=_auth(second_admin)
+    )
+    assert done.json()["data"]["status"] == "APPROVED"
+    async with SessionLocal() as db:
+        from app.models import OwnerDispute
+
+        dispute_row = await db.get(OwnerDispute, uuid.UUID(dispute_id))
+    assert dispute_row.status == "SETTLEMENT"
 
     # 7. Admin dashboard + audit remain consistent
     dash = await client.get("/api/v1/admin/dashboard", headers=_auth(admin))

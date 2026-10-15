@@ -11,7 +11,7 @@ from app.config import get_settings
 from app.core import audit
 from app.db import SessionLocal
 from app.enums import ReportStatus, Role, UserStatus
-from app.models import AuditLog, FraudReport, User
+from app.models import AuditLog, FraudReport, ReviewFlag, User
 
 PASSWORD = "s3cure-Passw0rd"
 
@@ -124,7 +124,9 @@ async def test_upheld_flag_hides_report_and_warns_reporter(client: httpx.AsyncCl
     reporter = await _signup(client, "upheld-reporter@trustpay.dev")
     flagger = await _signup(client, "upheld-flagger@trustpay.dev")
     admin = await _signup(client, "upheld-admin@trustpay.dev")
+    second = await _signup(client, "upheld-admin2@trustpay.dev")
     await _make_admin("upheld-admin@trustpay.dev")
+    await _make_admin("upheld-admin2@trustpay.dev")
 
     report_id = await _report(client, reporter, "8100000003")
     flag = await client.post(
@@ -134,21 +136,38 @@ async def test_upheld_flag_hides_report_and_warns_reporter(client: httpx.AsyncCl
     )
     flag_id = flag.json()["data"]["id"]
 
-    resolved = await client.post(
+    requested = await client.post(
         f"/api/v1/admin/flags/{flag_id}/resolve",
         json={"decision": "UPHELD", "notes": "Confirmed spam"},
         headers=_auth(admin),
     )
-    assert resolved.json()["data"]["status"] == "UPHELD"
+    # ADR-021: UPHELD queues a hide_report approval — nothing is hidden yet
+    assert requested.json()["data"]["status"] == "PENDING"
+    async with SessionLocal() as db:
+        report = await db.get(FraudReport, uuid.UUID(report_id))
+    assert report.status == ReportStatus.ACTIVE
+
+    pending = await client.get(
+        "/api/v1/admin/approvals", params={"status_filter": "PENDING"}, headers=_auth(admin)
+    )
+    approvals = [a for a in pending.json()["data"]["approvals"] if a["action"] == "hide_report"]
+    assert approvals, "expected a pending hide_report approval"
+
+    done = await client.post(
+        f"/api/v1/admin/approvals/{approvals[-1]['id']}/approve", headers=_auth(second)
+    )
+    assert done.json()["data"]["status"] == "APPROVED"
 
     async with SessionLocal() as db:
         report = await db.get(FraudReport, uuid.UUID(report_id))
+        flag_row = await db.get(ReviewFlag, uuid.UUID(flag_id))
         reporter_user = await db.scalar(
             select(User).where(User.email == "upheld-reporter@trustpay.dev")
         )
         audit_count = await db.scalar(select(func.count(AuditLog.id)))
         chain_ok = await audit.verify_chain(db)
     assert report.status == ReportStatus.HIDDEN
+    assert flag_row.status == "UPHELD"
     assert reporter_user.status == UserStatus.WARNED
     assert audit_count >= 1
     assert chain_ok is True

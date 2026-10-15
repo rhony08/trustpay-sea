@@ -166,8 +166,29 @@ export class ApiError extends Error {
   }
 }
 
+function readCookie(name: string): string | null {
+  if (typeof document === "undefined") return null;
+  const match = document.cookie.match(new RegExp(`(?:^|;\\s*)${name}=([^;]*)`));
+  return match ? decodeURIComponent(match[1]) : null;
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const resp = await fetch(`${API}${path}`, init);
+  const method = (init?.method ?? "GET").toUpperCase();
+  const headers: Record<string, string> = {
+    ...(init?.headers as Record<string, string> | undefined),
+  };
+  // ADR-020: browser sessions ride HttpOnly cookies; mutating requests echo
+  // the readable CSRF cookie in X-CSRF-Token (double submit). An explicit
+  // Authorization header (legacy token) bypasses both, server-side.
+  if (method !== "GET" && method !== "HEAD") {
+    const csrf = readCookie("tp_csrf");
+    if (csrf && !headers["X-CSRF-Token"]) headers["X-CSRF-Token"] = csrf;
+  }
+  const resp = await fetch(`${API}${path}`, {
+    ...init,
+    headers,
+    credentials: "include",
+  });
   const body = await resp.json().catch(() => ({}));
   if (!resp.ok) {
     throw new ApiError(resp.status, body?.detail ?? `HTTP ${resp.status}`);
@@ -325,24 +346,217 @@ export interface CreateReportInput {
   consent: boolean;
 }
 
+interface LoginResult {
+  mfa_required?: boolean;
+  mfa_token?: string;
+  access_token?: string;
+}
+
 export async function signup(email: string, password: string, displayName?: string): Promise<string> {
-  const body = await request<{ access_token: string }>("/api/v1/auth/signup", {
+  const body = await request<LoginResult>("/api/v1/auth/signup", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, password, display_name: displayName }),
   });
-  setToken(body.access_token);
-  return body.access_token;
+  if (body.access_token) setToken(body.access_token);
+  return body.access_token ?? "";
 }
 
+/**
+ * ADR-020: admin roles with a passkey get `{mfa_required, mfa_token}` instead of
+ * tokens — the caller must finish `finishMfaLogin` to obtain a session.
+ */
 export async function login(email: string, password: string): Promise<string> {
-  const body = await request<{ access_token: string }>("/api/v1/auth/login", {
+  const body = await request<LoginResult>("/api/v1/auth/login", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, password }),
   });
-  setToken(body.access_token);
-  return body.access_token;
+  if (body.access_token) {
+    setToken(body.access_token);
+    return body.access_token;
+  }
+  if (body.mfa_required && body.mfa_token) {
+    return await finishMfaLogin(body.mfa_token);
+  }
+  throw new ApiError(401, "login returned no credentials");
+}
+
+/** Server WebAuthn options: b64url strings (not browser-native ArrayBuffers). */
+interface ServerWebAuthnOptions {
+  options: Record<string, unknown> & { publicKey?: Record<string, unknown> };
+  challenge: string;
+}
+
+/** Run the WebAuthn assertion and exchange it for the session. */
+export async function finishMfaLogin(mfaToken: string): Promise<string> {
+  const options = await request<ServerWebAuthnOptions>(
+    "/api/v1/auth/mfa/webauthn/options",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ mfa_token: mfaToken }),
+    },
+  );
+  const assertion = (await navigator.credentials.get(
+    webauthnToRequestOptions(options.options),
+  )) as PublicKeyCredential | null;
+  if (!assertion) throw new ApiError(401, "passkey verification cancelled");
+  const verified = await request<LoginResult>("/api/v1/auth/mfa/webauthn/verify", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      mfa_token: mfaToken,
+      challenge: options.challenge,
+      credential: credentialToJSON(assertion),
+    }),
+  });
+  if (verified.access_token) setToken(verified.access_token);
+  return verified.access_token ?? "";
+}
+
+/** Enroll a passkey for the current user (admins need one in prod). */
+export async function enrollPasskey(): Promise<void> {
+  const token = getToken();
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  if (token) headers.Authorization = `Bearer ${token}`;
+  const options = await request<ServerWebAuthnOptions>(
+    "/api/v1/auth/webauthn/register/options",
+    { method: "POST", headers },
+  );
+  const created = (await navigator.credentials.create(
+    webauthnToCreationOptions(options.options),
+  )) as PublicKeyCredential | null;
+  if (!created) throw new ApiError(400, "passkey creation cancelled");
+  await request("/api/v1/auth/webauthn/register/verify", {
+    method: "POST",
+    headers,
+    body: JSON.stringify({
+      challenge: options.challenge,
+      credential: credentialToJSON(created),
+    }),
+  });
+}
+
+export async function listPasskeys(): Promise<{ credential_id: string; created_at: string | null }[]> {
+  const token = getToken();
+  const headers: Record<string, string> = {};
+  if (token) headers.Authorization = `Bearer ${token}`;
+  const body = await request<{ data: { credentials: { credential_id: string; created_at: string | null }[] } }>(
+    "/api/v1/auth/webauthn/credentials",
+    { headers },
+  );
+  return body.data.credentials;
+}
+
+// --- WebAuthn JSON (b64url) <-> browser API helpers -----------------------
+
+function b64urlToBuffer(value: string): ArrayBuffer {
+  const pad = "=".repeat((4 - (value.length % 4)) % 4);
+  const b64 = (value + pad).replace(/-/g, "+").replace(/_/g, "/");
+  const bin = atob(b64);
+  const buf = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i += 1) buf[i] = bin.charCodeAt(i);
+  return buf.buffer;
+}
+
+function bufferToB64url(buf: ArrayBuffer): string {
+  const bytes = new Uint8Array(buf);
+  let bin = "";
+  for (const b of bytes) bin += String.fromCharCode(b);
+  return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+interface WebAuthnJson {
+  id: string;
+  rawId: string;
+  response: Record<string, unknown>;
+  type: string;
+  clientExtensionResults?: Record<string, unknown>;
+  authenticatorAttachment?: string;
+}
+
+function credentialToJSON(cred: PublicKeyCredential): WebAuthnJson {
+  const response = cred.response;
+  const json: WebAuthnJson = {
+    id: cred.id,
+    rawId: bufferToB64url(cred.rawId),
+    type: cred.type,
+    response: {},
+    clientExtensionResults: cred.getClientExtensionResults() as Record<string, unknown>,
+  };
+  if (response instanceof AuthenticatorAttestationResponse) {
+    json.response = {
+      clientDataJSON: bufferToB64url(response.clientDataJSON),
+      attestationObject: bufferToB64url(response.attestationObject),
+      transports: response.getTransports?.() ?? [],
+    };
+  } else if (response instanceof AuthenticatorAssertionResponse) {
+    json.response = {
+      clientDataJSON: bufferToB64url(response.clientDataJSON),
+      authenticatorData: bufferToB64url(response.authenticatorData),
+      signature: bufferToB64url(response.signature),
+      userHandle: response.userHandle ? bufferToB64url(response.userHandle) : null,
+    };
+  }
+  return json;
+}
+
+function toB64urlString(value: unknown): string {
+  if (typeof value === "string") return value;
+  if (value instanceof ArrayBuffer) return bufferToB64url(value);
+  if (ArrayBuffer.isView(value)) return bufferToB64url(value.buffer as ArrayBuffer);
+  return String(value);
+}
+
+/** Server sends b64url strings where the browser API wants ArrayBuffers. */
+function webauthnToCreationOptions(
+  options: Record<string, unknown>,
+): CredentialCreationOptions {
+  const publicKey = options.publicKey as
+    | (Record<string, unknown> & {
+        challenge?: unknown;
+        user?: Record<string, unknown> & { id?: unknown };
+        excludeCredentials?: { id: unknown }[];
+      })
+    | undefined;
+  if (!publicKey) return {};
+  return {
+    publicKey: {
+      ...publicKey,
+      challenge: b64urlToBuffer(toB64urlString(publicKey.challenge)),
+      user: {
+        ...(publicKey.user as object),
+        id: b64urlToBuffer(toB64urlString(publicKey.user?.id)),
+      },
+      excludeCredentials: publicKey.excludeCredentials?.map((c) => ({
+        ...(c as object),
+        id: b64urlToBuffer(toB64urlString(c.id)),
+      })),
+    },
+  } as CredentialCreationOptions;
+}
+
+function webauthnToRequestOptions(
+  options: Record<string, unknown>,
+): CredentialRequestOptions {
+  const publicKey = options.publicKey as
+    | (Record<string, unknown> & {
+        challenge?: unknown;
+        allowCredentials?: { id: unknown }[];
+      })
+    | undefined;
+  if (!publicKey) return {};
+  return {
+    publicKey: {
+      ...publicKey,
+      challenge: b64urlToBuffer(toB64urlString(publicKey.challenge)),
+      allowCredentials: publicKey.allowCredentials?.map((c) => ({
+        ...(c as object),
+        id: b64urlToBuffer(toB64urlString(c.id)),
+      })),
+    },
+  } as CredentialRequestOptions;
 }
 
 export async function listBanks(country: string): Promise<Bank[]> {

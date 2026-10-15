@@ -50,7 +50,9 @@ def create_app() -> FastAPI:
         title=settings.app_name,
         version=settings.version,
         lifespan=lifespan,
-        dependencies=[Depends(enforce_rate_limit)],  # noqa: F821 — see import below
+        # CSRF (ADR-020) is enforced inside get_auth_payload — only requests
+        # that authenticate via the tp_access cookie on mutating methods.
+        dependencies=[Depends(enforce_rate_limit)],  # noqa: F821
     )
     # CORS for the first-party PWA (BFF/proxy preferred for prod keys, §9.5)
     allow_origins = [o.strip() for o in settings.cors_allow_origins.split(",") if o.strip()]

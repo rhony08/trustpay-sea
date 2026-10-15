@@ -192,6 +192,13 @@ async def resolve_dispute(
     decision: str,
     notes: str | None = None,
 ) -> OwnerDispute:
+    """Adjudicate a dispute.
+
+    ADR-021: destructive outcomes (APPROVED_REMOVED / SETTLEMENT) no longer
+    execute immediately — they enter the four-eyes approval queue and only a
+    second admin's approval applies the effects (apply_adjudication).
+    REJECTED_UPHELD is not destructive (the review stays) and remains immediate.
+    """
     if decision not in (
         DisputeStatus.APPROVED_REMOVED,
         DisputeStatus.REJECTED_UPHELD,
@@ -199,6 +206,45 @@ async def resolve_dispute(
     ):
         raise DisputeError("decision must be APPROVED_REMOVED, REJECTED_UPHELD or SETTLEMENT")
 
+    if decision in (DisputeStatus.APPROVED_REMOVED, DisputeStatus.SETTLEMENT):
+        from app.services.admin_service import request_approval
+
+        approval = await request_approval(
+            db,
+            admin=admin,
+            action="remove_report" if decision == DisputeStatus.APPROVED_REMOVED else "settlement",
+            subject_type="owner_dispute",
+            subject_id=dispute.id,
+            payload={"decision": decision, "notes": notes},
+        )
+        await append_audit(
+            db,
+            action=f"dispute.{decision.lower()}_requested",
+            actor_user_id=admin.id,
+            subject_type="owner_dispute",
+            subject_id=dispute.id,
+            after={"approval_id": str(approval.id)},
+            note=notes,
+        )
+        await db.refresh(dispute)
+        return dispute
+
+    return await apply_adjudication(
+        db, dispute=dispute, entity=entity, admin=admin, decision=decision, notes=notes
+    )
+
+
+async def apply_adjudication(
+    db: AsyncSession,
+    *,
+    dispute: OwnerDispute,
+    entity: PaymentEntity,
+    admin: User,
+    decision: str,
+    notes: str | None = None,
+) -> OwnerDispute:
+    """Apply an adjudicated decision's effects (called inline for REJECTED_UPHELD
+    or by the four-eyes approval executor for destructive decisions — ADR-021)."""
     dispute.status = decision
     dispute.claim_stage = decision
     dispute.reviewed_by_admin_id = admin.id
@@ -292,6 +338,7 @@ async def pin_owner_response(
 
 __all__ = [
     "DisputeError",
+    "apply_adjudication",
     "apply_dispute_cap",
     "pin_owner_response",
     "resolve_dispute",

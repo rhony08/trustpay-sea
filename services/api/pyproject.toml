@@ -22,6 +22,7 @@ dependencies = [
     "python-multipart>=0.0.9",
     "google-genai>=1.0.0",  # Vertex AI (GCP provider)
     "openai>=1.50.0",  # OpenRouter (OpenAI-compatible provider)
+    "webauthn>=2.0.0",  # passkeys / MFA for admin roles (ADR-020)
 ]
 
 [project.optional-dependencies]

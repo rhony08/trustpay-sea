@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -73,6 +73,9 @@ async def audit_view(db: AsyncSession, *, limit: int = 50) -> dict:
     }
 
 
+APPROVAL_TTL_HOURS = 72  # ADR-021: stale destructive requests must not be cashed in
+
+
 async def request_approval(
     db: AsyncSession,
     *,
@@ -91,6 +94,7 @@ async def request_approval(
         payload=payload or {},
         requested_by=admin.id,
         status="PENDING",
+        expires_at=datetime.now(UTC) + timedelta(hours=APPROVAL_TTL_HOURS),
     )
     db.add(approval)
     await db.commit()
@@ -101,6 +105,8 @@ async def request_approval(
 async def approve(db: AsyncSession, *, approval: AdminApproval, admin: User) -> AdminApproval:
     if approval.status != "PENDING":
         raise AdminError("approval is not pending")
+    if approval.expires_at is not None and approval.expires_at < datetime.now(UTC):
+        raise AdminError("approval expired (72h) — request a fresh one")
     if approval.requested_by == admin.id:
         raise AdminError("a second, different admin must approve (four-eyes)")
     approval.status = "APPROVED"
@@ -111,6 +117,28 @@ async def approve(db: AsyncSession, *, approval: AdminApproval, admin: User) -> 
     await append_audit(
         db,
         action=f"admin.approval.{approval.action}",
+        actor_user_id=admin.id,
+        subject_type=approval.subject_type,
+        subject_id=approval.subject_id,
+        after={"approval_id": str(approval.id)},
+    )
+    await db.refresh(approval)
+    return approval
+
+
+async def cancel_approval(
+    db: AsyncSession, *, approval: AdminApproval, admin: User
+) -> AdminApproval:
+    """The requester may withdraw their own pending request (not an execution)."""
+    if approval.status != "PENDING":
+        raise AdminError("approval is not pending")
+    if approval.requested_by != admin.id:
+        raise AdminError("only the requester may cancel")
+    approval.status = "CANCELLED"
+    await db.commit()
+    await append_audit(
+        db,
+        action="admin.approval.cancelled",
         actor_user_id=admin.id,
         subject_type=approval.subject_type,
         subject_id=approval.subject_id,
@@ -140,9 +168,62 @@ async def _execute_ban_user(db: AsyncSession, approval: AdminApproval) -> None:
     await db.commit()
 
 
+async def _execute_hide_report(db: AsyncSession, approval: AdminApproval) -> None:
+    """ADR-021: second admin approval finalizes an UPHELD flag (hides report)."""
+    from app.services.moderation_service import apply_upheld_flag
+
+    flag = await db.get(ReviewFlag, approval.subject_id)
+    if flag is None:
+        raise AdminError("review flag not found")
+    approver = await db.get(User, approval.approved_by)
+    if approver is None:
+        raise AdminError("approver not found")
+    await apply_upheld_flag(db, flag=flag, approving_admin=approver)
+
+
+async def _execute_remove_report(db: AsyncSession, approval: AdminApproval) -> None:
+    """ADR-021: second admin approval applies dispute APPROVED_REMOVED."""
+    await _execute_dispute_outcome(db, approval, DisputeStatus.APPROVED_REMOVED)
+
+
+async def _execute_settlement(db: AsyncSession, approval: AdminApproval) -> None:
+    """ADR-021: second admin approval applies dispute SETTLEMENT."""
+    await _execute_dispute_outcome(db, approval, DisputeStatus.SETTLEMENT)
+
+
+async def _execute_dispute_outcome(
+    db: AsyncSession, approval: AdminApproval, expected: DisputeStatus
+) -> None:
+    from app.services.dispute_service import apply_adjudication
+
+    dispute = await db.get(OwnerDispute, approval.subject_id)
+    if dispute is None:
+        raise AdminError("dispute not found")
+    payload = approval.payload or {}
+    if payload.get("decision") and payload["decision"] != expected.value:
+        raise AdminError(f"approval payload decision mismatch: {payload['decision']}")
+    entity = await db.get(PaymentEntity, dispute.payment_entity_id)
+    if entity is None:
+        raise AdminError("entity not found")
+    approver = await db.get(User, approval.approved_by)
+    if approver is None:
+        raise AdminError("approver not found")
+    await apply_adjudication(
+        db,
+        dispute=dispute,
+        entity=entity,
+        admin=approver,
+        decision=expected.value,
+        notes=payload.get("notes"),
+    )
+
+
 _EXECUTORS = {
     "gov_override": _execute_gov_override,
     "ban_user": _execute_ban_user,
+    "hide_report": _execute_hide_report,
+    "remove_report": _execute_remove_report,
+    "settlement": _execute_settlement,
 }
 
 

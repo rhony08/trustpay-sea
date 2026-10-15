@@ -174,16 +174,37 @@ async def resolve_flag(
 ) -> ReviewFlag:
     if decision not in (ReviewFlagStatus.UPHELD, ReviewFlagStatus.DISMISSED):
         raise ModerationError("decision must be UPHELD or DISMISSED")
-    flag.status = decision
-    flag.reviewed_by_admin_id = admin.id
 
     report = await db.get(FraudReport, flag.report_id)
+
     if decision == ReviewFlagStatus.UPHELD and report is not None:
-        # Enforcement: upheld flag hides the report (excluded from score + feed).
-        report.status = ReportStatus.HIDDEN
-        reporter = await db.get(User, report.reporter_user_id) if report.reporter_user_id else None
-        if reporter is not None and reporter.status == UserStatus.ACTIVE:
-            reporter.status = UserStatus.WARNED
+        # ADR-021: hiding published content is destructive → four-eyes queue.
+        # The flag stays PENDING until a second admin approves; the executor
+        # hides the report, warns the reporter and finalizes the flag.
+        from app.services.admin_service import request_approval
+
+        await request_approval(
+            db,
+            admin=admin,
+            action="hide_report",
+            subject_type="review_flag",
+            subject_id=flag.id,
+            payload={"report_id": str(report.id), "notes": notes},
+        )
+        await append_audit(
+            db,
+            action="flag.uphold_requested",
+            actor_user_id=admin.id,
+            subject_type="review_flag",
+            subject_id=flag.id,
+            after={"report_id": str(report.id)},
+            note=notes,
+        )
+        await db.refresh(flag)
+        return flag
+
+    flag.status = decision
+    flag.reviewed_by_admin_id = admin.id
     await db.commit()
 
     await append_audit(
@@ -197,10 +218,48 @@ async def resolve_flag(
     )
     await _check_bad_faith(db, flag.flagged_by_user_id)
     if report is not None:
+        from app.services.risk_scorer import recompute_entity_score
+
+        entity = await db.get(PaymentEntity, report.payment_entity_id)
+        if entity is not None:
+            await recompute_entity_score(db, entity)
+    await db.refresh(flag)
+    return flag
+
+
+async def apply_upheld_flag(
+    db: AsyncSession,
+    *,
+    flag: ReviewFlag,
+    approving_admin: User,
+) -> ReviewFlag:
+    """Effects of an UPHELD flag — called by the four-eyes approval executor
+    (ADR-021), never directly from the resolve endpoint."""
+    report = await db.get(FraudReport, flag.report_id)
+    flag.status = ReviewFlagStatus.UPHELD
+    flag.reviewed_by_admin_id = approving_admin.id
+    if report is not None:
+        report.status = ReportStatus.HIDDEN
+        if report.reporter_user_id:
+            reporter = await db.get(User, report.reporter_user_id)
+            if reporter is not None and reporter.status == UserStatus.ACTIVE:
+                reporter.status = UserStatus.WARNED
+    await db.commit()
+
+    await append_audit(
+        db,
+        action="flag.upheld",
+        actor_user_id=approving_admin.id,
+        subject_type="review_flag",
+        subject_id=flag.id,
+        after={"decision": "UPHELD", "report_id": str(flag.report_id)},
+    )
+    await _check_bad_faith(db, flag.flagged_by_user_id)
+    if report is not None:
         from app.services.notifications import notify
         from app.services.risk_scorer import recompute_entity_score
 
-        if decision == ReviewFlagStatus.UPHELD and report.reporter_user_id:
+        if report.reporter_user_id:
             await notify(
                 db,
                 user_id=report.reporter_user_id,

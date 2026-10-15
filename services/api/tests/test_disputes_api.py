@@ -11,7 +11,7 @@ from app.config import get_settings
 from app.core import audit
 from app.db import SessionLocal
 from app.enums import ReportStatus, Role, UserStatus
-from app.models import FraudReport, PaymentEntity, User
+from app.models import FraudReport, OwnerDispute, PaymentEntity, User
 from app.services.dispute_service import apply_dispute_cap
 
 PASSWORD = "s3cure-Passw0rd"
@@ -149,11 +149,23 @@ async def test_micro_deposit_verification(client: httpx.AsyncClient) -> None:
     assert good.json()["data"]["claim_stage"] == "UNDER_REVIEW"
 
 
+async def _latest_pending_approval(client: httpx.AsyncClient, admin_token: str) -> str:
+    """ADR-021: destructive decisions queue an approval — return its id."""
+    resp = await client.get(
+        "/api/v1/admin/approvals", params={"status_filter": "PENDING"}, headers=_auth(admin_token)
+    )
+    approvals = resp.json()["data"]["approvals"]
+    assert approvals, "expected a pending four-eyes approval"
+    return approvals[-1]["id"]
+
+
 async def test_dispute_and_admin_resolution_removes_review(client: httpx.AsyncClient) -> None:
     reporter = await _signup(client, "dis-reporter@trustpay.dev")
     owner = await _signup(client, "dis-owner@trustpay.dev")
     admin = await _signup(client, "dis-admin@trustpay.dev")
+    second = await _signup(client, "dis-admin2@trustpay.dev")
     await _make_admin("dis-admin@trustpay.dev")
+    await _make_admin("dis-admin2@trustpay.dev")
     entity_id, report_id = await _entity_for(client, reporter, "8500000004")
 
     await client.post(
@@ -175,21 +187,35 @@ async def test_dispute_and_admin_resolution_removes_review(client: httpx.AsyncCl
     mine = await client.get("/api/v1/disputes/me", headers=_auth(owner))
     assert len(mine.json()["data"]["disputes"]) == 1
 
-    resolved = await client.post(
+    requested = await client.post(
         f"/api/v1/admin/disputes/{dispute_id}/resolve",
         json={"decision": "APPROVED_REMOVED", "notes": "Ownership confirmed"},
         headers=_auth(admin),
     )
-    assert resolved.json()["data"]["status"] == "APPROVED_REMOVED"
+    # ADR-021: request only — dispute stays UNDER_REVIEW until a 2nd admin approves
+    assert requested.json()["data"]["status"] in ("UNDER_REVIEW", "SUBMITTED")
+    approval_id = await _latest_pending_approval(client, admin)
+
+    same_admin = await client.post(
+        f"/api/v1/admin/approvals/{approval_id}/approve", headers=_auth(admin)
+    )
+    assert same_admin.status_code == 409  # four-eyes: requester cannot approve
+
+    done = await client.post(
+        f"/api/v1/admin/approvals/{approval_id}/approve", headers=_auth(second)
+    )
+    assert done.json()["data"]["status"] == "APPROVED"
 
     async with SessionLocal() as db:
         report = await db.get(FraudReport, uuid.UUID(report_id))
         entity = await db.get(PaymentEntity, uuid.UUID(entity_id))
+        dispute_row = await db.get(OwnerDispute, uuid.UUID(dispute_id))
         reporter_user = await db.scalar(
             select(User).where(User.email == "dis-reporter@trustpay.dev")
         )
         chain_ok = await audit.verify_chain(db)
     assert report.status == ReportStatus.REMOVED_BY_DISPUTE
+    assert dispute_row.status == "APPROVED_REMOVED"
     assert entity.is_under_dispute is False
     assert reporter_user.status == UserStatus.WARNED
     assert chain_ok is True
@@ -230,7 +256,9 @@ async def test_settlement_marks_report(client: httpx.AsyncClient) -> None:
     reporter = await _signup(client, "set-reporter@trustpay.dev")
     owner = await _signup(client, "set-owner@trustpay.dev")
     admin = await _signup(client, "set-admin@trustpay.dev")
+    second = await _signup(client, "set-admin2@trustpay.dev")
     await _make_admin("set-admin@trustpay.dev")
+    await _make_admin("set-admin2@trustpay.dev")
     entity_id, report_id = await _entity_for(client, reporter, "8500000006")
 
     await client.post(
@@ -249,6 +277,12 @@ async def test_settlement_marks_report(client: httpx.AsyncClient) -> None:
         json={"decision": "SETTLEMENT"},
         headers=_auth(admin),
     )
+    # ADR-021: settlement is trust-altering → queued for a second admin
+    approval_id = await _latest_pending_approval(client, admin)
+    done = await client.post(
+        f"/api/v1/admin/approvals/{approval_id}/approve", headers=_auth(second)
+    )
+    assert done.json()["data"]["status"] == "APPROVED"
     async with SessionLocal() as db:
         report = await db.get(FraudReport, uuid.UUID(report_id))
     assert report.status == ReportStatus.RESOLVED_BY_SETTLEMENT

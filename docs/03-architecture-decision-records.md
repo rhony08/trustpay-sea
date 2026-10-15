@@ -447,5 +447,61 @@ ADR-012 fixed mock-first AI (no key required for dev). Real Gemini access is now
 
 ---
 
+## ADR-020: Session Hardening — HttpOnly Cookie Sessions + CSRF, WebAuthn MFA for Admins
+
+**Status**: Accepted (2026-10-14 — handoff gap #3 closed; implemented 2026-10-15)
+
+### Context
+Doc 02 §9.2 requires HttpOnly/Secure/SameSite cookies, CSRF protection, and **phishing-resistant MFA (WebAuthn) mandatory for ANALYST/SENIOR_ANALYST/SUPERADMIN**. The current implementation deviates: login returns bearer tokens, the PWA stores them in `localStorage` (XSS-stealable), and no admin MFA exists. The admin portal, dispute adjudication and four-eyes approvals all sit behind this auth.
+
+### Options Considered
+1. **Keep localStorage bearer** — rejected: violates §9.2, trivially exfiltrated by any XSS.
+2. **HttpOnly cookie for the access+refresh pair, CSRF via double-submit** (Selected): browser client stops touching tokens entirely; mutations require a non-HttpOnly CSRF token echoed in a custom header. API-key partners (`X-API-Key`, Phase 9) are unaffected — they never used cookies.
+3. **BFF sidecar proxy** — cleaner long-term, but a second deployable; overkill before Phase 7 prod.
+
+### Decision
+- **Login/signup/refresh set two cookies**: `tp_access` (HttpOnly, Secure in prod, `SameSite=Lax`, 15 min) and `tp_refresh` (HttpOnly, `SameSite=Strict`, path-scoped to `/api/v1/auth`, 7 d). Rotation/reuse-detection semantics from Phase 0 are unchanged — the family store still lives in Redis.
+- **CSRF**: server issues a readable `tp_csrf` cookie (`SameSite=Lax`, not HttpOnly); every state-changing request must echo it in `X-CSRF-Token` or it gets `403`. Enforced as a dependency on the router, not per-handler.
+- **Bearer mode stays** for non-browser clients (tests, curl, scripts) — `Authorization: Bearer` continues to work; CSRF applies only when the request authenticates via cookie.
+- **WebAuthn (passkeys) mandatory for admin roles**: `py_webauthn` library; new tables `webauthn_credentials` (credential_id, public_key, sign_count, transports) + challenge stored in Redis (60 s TTL, single-use). Login flow for ANALYST+: password check → **MFA step** (`POST /auth/mfa/webauthn/options` → browser ceremony → `POST /auth/mfa/webauthn/verify`) → only then are session cookies set. A fresh admin account with no enrolled credential **cannot elevate** — enrollment requires an existing authenticated admin session (bootstrap admin enrolls via `SUPERNADMIN_BOOTSTRAP` env one-time flow or seeded credentials in `seed_demo`).
+- **Step-up**: sensitive admin mutations (dual-control approvals, gov sync) re-require a WebAuthn assertion younger than 5 min (`mfa_at` claim checked in the guard).
+
+### Consequences
+- **+**: XSS can no longer steal admin sessions; admin actions are phishing-resistant; partner API unaffected.
+- **+**: closes handoff gap #3 and is a prerequisite for the deferred 7.5 security review.
+- **−**: PWA auth code changes (cookie-based fetch, CSRF header plumbing, WebAuthn ceremony UI); e2e tests need a WebAuthn virtual authenticator (Playwright `WebAuthn` protocol support).
+- **−**: dev convenience drops (no more copy-pasting bearer tokens from Swagger for admin routes) — mitigated: Swagger "Authorize" works with cookies via browser, and `Authorization: Bearer` still accepted for USER-level routes.
+
+---
+
+## ADR-021: Dual-Control Coverage Expansion (Four-Eyes for All Trust-Altering Actions)
+
+**Status**: Accepted (2026-10-14 — handoff gap #6 closed; implemented 2026-10-15)
+
+### Context
+The four-eyes `AdminApproval` queue exists (Phase 6.5) but only gates `gov_override` and `ban_user`. Doc 02 §9.3 requires dual-control for **report removal, account ban, gov-override flip, bulk ops**. Today a single analyst can hide a report via flag resolution, and dispute-driven `APPROVED_REMOVED` removes a review with one admin.
+
+### Decision
+Extend the approval queue to cover every action that alters published content or trust:
+
+| Action | Trigger it replaces | Executor on approval |
+|--------|--------------------|----------------------|
+| `gov_override` (exists) | admin request | set/clear `is_gov_blacklisted`, force score |
+| `ban_user` (exists) | admin request | status → BANNED |
+| `hide_report` (new) | flag-resolve `UPHELD` | `status=HIDDEN`, exclude from score, notify reporter |
+| `remove_report` (new) | dispute `APPROVED_REMOVED` | `status=REMOVED_BY_DISPUTE`, penalize bad-faith reporter |
+| `settlement` (new) | dispute `SETTLEMENT` | `status=RESOLVED_BY_SETTLEMENT` |
+
+- Flag resolution `DISMISSED` and vote removal stay single-step (not trust-altering — a dismissed flag changes nothing public).
+- The requesting analyst creates the approval (`requested_by`); execution happens only via `POST /admin/approvals/{id}/approve` by a **different** admin (existing four-eyes rule, unchanged). Approvals expire after 72 h (new `expires_at`) so stale destructive requests can't be cashed in later.
+- All transitions keep writing hash-chained `audit_logs` entries; the approval row is linked via `note`/`payload` for the audit chain.
+- UI: admin portal approvals queue gains "Approve / Reject" buttons; flag & dispute queues gain a "Request removal (dual-control)" action instead of direct execute for UPHELD/removed paths.
+
+### Consequences
+- **+**: no single admin can destroy published content or flip sovereign risk signals; matches §9.3 exactly; defensible under review.
+- **−**: moderation gets slower (two admins) — accepted for destructive ops; low-risk actions (dismiss flag, annotate) remain fast-path.
+- Dispute flow gains a pending-approval state — dispute state machine gets `UNDER_REVIEW → AWAITING_DUAL_CONTROL` bookkeeping via the approval table rather than a new dispute status (no schema churn on the state enum).
+
+---
 
 *Next: [04 — Implementation Plan](04-implementation-plan.md)*
