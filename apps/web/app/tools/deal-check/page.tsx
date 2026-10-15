@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useState } from "react";
 import { checkDeal, type DealCheckResult } from "@/lib/api";
 
@@ -10,12 +9,9 @@ export default function DealCheckPage() {
   const [busy, setBusy] = useState(false);
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-xl flex-col gap-4 px-6 py-12">
-      <Link href="/" className="text-sm text-slate-400 hover:text-slate-200">
-        ← TrustPay SEA
-      </Link>
-      <h1 className="text-2xl font-bold">Too good to be true?</h1>
-      <p className="text-sm text-slate-400">
+    <main className="mx-auto flex max-w-xl flex-1 flex-col gap-4 px-6 py-12">
+      <h1 className="text-2xl font-bold text-slate-900">Too good to be true?</h1>
+      <p className="text-sm text-slate-500">
         Paste a deal, offer, or message and we&apos;ll flag common scam tactics.
       </p>
       <form
@@ -31,7 +27,7 @@ export default function DealCheckPage() {
         }}
       >
         <textarea
-          className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-slate-100 outline-none focus:border-emerald-400"
+          className="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-slate-800 outline-none focus:border-blue-600 focus:bg-white focus:ring-2 focus:ring-blue-100"
           rows={4}
           placeholder="e.g. Guaranteed profit, deposit today and double your money!"
           value={text}
@@ -40,7 +36,7 @@ export default function DealCheckPage() {
         />
         <button
           disabled={busy}
-          className="rounded-lg bg-emerald-500 px-4 py-2 font-semibold text-slate-950 disabled:opacity-50"
+          className="rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white shadow-xs hover:bg-blue-700 disabled:opacity-50"
         >
           {busy ? "Checking…" : "Check the deal"}
         </button>
@@ -50,8 +46,8 @@ export default function DealCheckPage() {
         <div
           className={`rounded-xl border p-5 ${
             result.suspicious
-              ? "border-rose-500/40 bg-rose-500/10 text-rose-100"
-              : "border-emerald-500/40 bg-emerald-500/10 text-emerald-100"
+              ? "border-rose-200 bg-rose-50 text-rose-800"
+              : "border-emerald-200 bg-emerald-50 text-emerald-800"
           }`}
         >
           <p className="font-semibold">

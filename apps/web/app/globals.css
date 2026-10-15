@@ -1,3 +1,37 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:root {
+  --tp-canvas: #f8fafc;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background-color: var(--tp-canvas);
+}
+
+/* Asymmetric PII redaction standard (Doc 12 §3): victim fields get a
+   fail-closed blur in public views. */
+.censored-blur {
+  filter: blur(5px);
+  user-select: none;
+}
+
+@media print {
+  body {
+    background: #ffffff !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .print-box {
+    border: 1.5px solid #000 !important;
+    box-shadow: none !important;
+  }
+}

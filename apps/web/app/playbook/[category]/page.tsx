@@ -19,28 +19,28 @@ export default function PlaybookDetail() {
   }, [category]);
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-2xl flex-col gap-4 px-6 py-12">
-      <Link href="/playbook" className="text-sm text-slate-400 hover:text-slate-200">
+    <main className="mx-auto flex max-w-2xl flex-1 flex-col gap-4 px-6 py-12">
+      <Link href="/playbook" className="text-xs font-medium text-slate-500 hover:text-blue-600">
         ← Scam Playbooks
       </Link>
-      {notFound && <p className="text-rose-300">Unknown category.</p>}
+      {notFound && <p className="text-rose-600">Unknown category.</p>}
       {entry && (
         <>
-          <h1 className="text-2xl font-bold">{entry.title}</h1>
-          <p className="text-slate-300">{entry.summary}</p>
+          <h1 className="text-2xl font-bold text-slate-900">{entry.title}</h1>
+          <p className="text-slate-600">{entry.summary}</p>
 
-          <div className="rounded-xl border border-rose-500/40 bg-rose-500/10 p-4">
-            <p className="text-sm font-semibold text-rose-200">Red flags</p>
-            <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-rose-100">
+          <div className="rounded-xl border border-rose-200 bg-rose-50 p-4">
+            <p className="text-sm font-semibold text-rose-800">Red flags</p>
+            <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-rose-700">
               {entry.red_flags.map((f) => (
                 <li key={f}>{f}</li>
               ))}
             </ul>
           </div>
 
-          <div className="rounded-xl border border-emerald-500/40 bg-emerald-500/10 p-4">
-            <p className="text-sm font-semibold text-emerald-200">Before you pay</p>
-            <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-emerald-100">
+          <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
+            <p className="text-sm font-semibold text-emerald-800">Before you pay</p>
+            <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-emerald-700">
               {entry.checklist.map((c) => (
                 <li key={c}>{c}</li>
               ))}
@@ -49,7 +49,7 @@ export default function PlaybookDetail() {
 
           <Link
             href="/check"
-            className="rounded-lg bg-emerald-500 px-4 py-2 text-center font-semibold text-slate-950"
+            className="rounded-lg bg-blue-600 px-4 py-2 text-center font-semibold text-white shadow-xs hover:bg-blue-700"
           >
             Check an account now
           </Link>

@@ -1,47 +1,36 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   ApiError,
   BANKS,
   COUNTRIES,
   FLAG_REASONS,
   addWatch,
-  castVote,
   decodeQrImage,
   flagReport,
   getToken,
   screenAccount,
   screenQr,
   searchPhone,
-  type GovCheck,
   type PhoneSearchResult,
+  type ReportView,
   type ScreenResult,
 } from "@/lib/api";
+import { riskBand } from "@/lib/risk";
+import { isNameMismatch, NameMatcherBanner } from "@/components/NameMatcherBanner";
+import { RiskGauge } from "@/components/RiskGauge";
+import { CoolingOffTimer } from "@/components/CoolingOffTimer";
+import { RedactedSlipViewer } from "@/components/RedactedSlipViewer";
+import { ReportCard } from "@/components/ReportCard";
 
 type Tab = "account" | "phone" | "qr";
 
-const TABS: { key: Tab; label: string }[] = [
-  { key: "account", label: "Bank account" },
-  { key: "phone", label: "E-wallet (by phone)" },
-  { key: "qr", label: "Scan / paste QR" },
-];
+const REPORTS_PER_PAGE = 10;
 
-const BADGE_STYLES: Record<string, string> = {
-  GREEN: "bg-emerald-500/15 text-emerald-300 border-emerald-500/40",
-  AMBER: "bg-amber-500/15 text-amber-300 border-amber-500/40",
-  RED: "bg-rose-500/15 text-rose-300 border-rose-500/40",
-};
-
-const LEVEL_LABELS: Record<string, string> = {
-  LOW_RISK: "Low risk",
-  CAUTION: "Caution",
-  HIGH_RISK: "High risk",
-  CRITICAL_FRAUD: "Critical fraud",
-};
-
-const AMOUNT_THRESHOLD_IDR = 5_000_000;
+const inputCls =
+  "w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-800 outline-none focus:border-blue-600 focus:bg-white focus:ring-2 focus:ring-blue-100";
 
 function hasFreshReports(result: ScreenResult): boolean {
   if (result.status !== "success") return false;
@@ -56,31 +45,30 @@ export default function CheckPage() {
   const [country, setCountry] = useState("ID");
   const [bank, setBank] = useState("014");
   const [account, setAccount] = useState("");
+  const [nameClaim, setNameClaim] = useState("");
   const [phone, setPhone] = useState("");
   const [payload, setPayload] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<ScreenResult | null>(null);
   const [phoneResult, setPhoneResult] = useState<PhoneSearchResult | null>(null);
-  const [acknowledged, setAcknowledged] = useState(true);
+  const [flagged, setFlagged] = useState<ReportView | null>(null);
 
-  async function run(fn: () => Promise<ScreenResult>) {
+  const run = useCallback(async (fn: () => Promise<ScreenResult>) => {
     setBusy(true);
     setError(null);
     setResult(null);
     setPhoneResult(null);
     try {
-      const next = await fn();
-      setResult(next);
-      setAcknowledged(!hasFreshReports(next));
+      setResult(await fn());
     } catch (e) {
       setError(e instanceof ApiError ? e.message : "Request failed");
     } finally {
       setBusy(false);
     }
-  }
+  }, []);
 
-  async function runPhone() {
+  const runPhone = useCallback(async () => {
     setBusy(true);
     setError(null);
     setResult(null);
@@ -88,232 +76,288 @@ export default function CheckPage() {
     try {
       const next = await searchPhone(country, phone);
       setPhoneResult(next.data);
-      setAcknowledged(true);
     } catch (e) {
       setError(e instanceof ApiError ? e.message : "Request failed");
     } finally {
       setBusy(false);
     }
-  }
+  }, [country, phone]);
 
-  // Share-to-Check: a shared QR lands here as ?qr=<payload>.
+  // Deep-link hydration: home search + shared QR both land here.
   useEffect(() => {
-    const shared = new URLSearchParams(window.location.search).get("qr");
-    if (!shared) return;
-    setTab("qr");
-    setPayload(shared);
-    void run(() => screenQr(shared));
+    const sp = new URLSearchParams(window.location.search);
+    const qr = sp.get("qr");
+    if (qr) {
+      setTab("qr");
+      setPayload(qr);
+      void run(() => screenQr(qr));
+      return;
+    }
+    const nextTab = (sp.get("tab") as Tab | null) ?? "account";
+    setTab(nextTab);
+    const c = sp.get("country");
+    const b = sp.get("bank");
+    const a = sp.get("account");
+    const claim = sp.get("nameClaim");
+    const p = sp.get("phone");
+    const pl = sp.get("payload");
+    if (c) setCountry(c);
+    if (b) setBank(b);
+    if (claim) setNameClaim(claim);
+    if (p) setPhone(p);
+    if (pl) setPayload(pl);
+    if (nextTab === "account" && a && c && b) {
+      setAccount(a);
+      void run(() => screenAccount({ country: c, bank: b, account: a }));
+    } else if (nextTab === "phone" && p && c) {
+      void searchPhone(c, p)
+        .then((r) => setPhoneResult(r.data))
+        .catch(() => undefined);
+    } else if (nextTab === "qr" && pl) {
+      void run(() => screenQr(pl));
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const input =
-    "w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-slate-100 outline-none focus:border-emerald-400";
-
   return (
-    <main className="mx-auto flex min-h-screen max-w-xl flex-col gap-4 px-6 py-12">
-      <Link href="/" className="text-sm text-slate-400 hover:text-slate-200">
-        ← TrustPay SEA
-      </Link>
-      <h1 className="text-2xl font-bold">Check before you pay</h1>
+    <main className="flex-1 py-8 sm:py-10">
+      <div className="mx-auto max-w-4xl px-4 sm:px-6">
+        <div className="mb-6">
+          <Link href="/" className="mb-1 inline-flex items-center gap-1 text-xs font-medium text-slate-500 hover:text-blue-600">
+            &larr; Back to search
+          </Link>
+          <h1 className="text-2xl font-bold text-slate-900">Payment verification dossier</h1>
+        </div>
 
-      <div className="flex gap-2">
-        {TABS.map((t) => (
-          <button
-            key={t.key}
-            onClick={() => setTab(t.key)}
-            className={`flex-1 rounded-lg px-3 py-2 text-xs font-medium sm:text-sm ${
-              tab === t.key ? "bg-emerald-500 text-slate-950" : "bg-slate-800 text-slate-300"
-            }`}
-          >
-            {t.label}
-          </button>
-        ))}
+        {/* Search form */}
+        <div className="mb-6 rounded-xl border border-slate-200 bg-white p-4 shadow-xs">
+          <div className="mb-3 flex gap-2 text-xs font-semibold">
+            {(["account", "phone", "qr"] as Tab[]).map((t) => (
+              <button
+                key={t}
+                onClick={() => setTab(t)}
+                className={`rounded-lg px-3 py-1.5 ${
+                  tab === t ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                }`}
+              >
+                {t === "account" ? "Bank account" : t === "phone" ? "E-wallet phone" : "QR / QRIS"}
+              </button>
+            ))}
+          </div>
+
+          {tab === "account" && (
+            <form
+              className="grid grid-cols-1 items-end gap-3 sm:grid-cols-4"
+              onSubmit={(e) => {
+                e.preventDefault();
+                void run(() => screenAccount({ country, bank, account }));
+              }}
+            >
+              <div>
+                <MiniLabel>Country</MiniLabel>
+                <select
+                  className={inputCls}
+                  value={country}
+                  onChange={(e) => {
+                    setCountry(e.target.value);
+                    setBank(BANKS[e.target.value]?.[0]?.code ?? bank);
+                  }}
+                >
+                  {COUNTRIES.map((c) => (
+                    <option key={c.code} value={c.code}>
+                      {c.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <MiniLabel>Institution</MiniLabel>
+                <select className={inputCls} value={bank} onChange={(e) => setBank(e.target.value)}>
+                  {(BANKS[country] ?? []).map((b) => (
+                    <option key={b.code} value={b.code}>
+                      {b.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <MiniLabel>Account number</MiniLabel>
+                <input
+                  required
+                  inputMode="numeric"
+                  className={`${inputCls} font-mono`}
+                  value={account}
+                  onChange={(e) => setAccount(e.target.value)}
+                  placeholder="8831924831"
+                />
+              </div>
+              <div>
+                <MiniLabel>Seller claimed name (optional)</MiniLabel>
+                <input
+                  className={`${inputCls} border-blue-200 bg-blue-50/50`}
+                  value={nameClaim}
+                  onChange={(e) => setNameClaim(e.target.value)}
+                  placeholder="e.g. Siti Aminah"
+                />
+              </div>
+              <div className="sm:col-span-4">
+                <button
+                  type="submit"
+                  disabled={busy || !account}
+                  className="w-full rounded-lg bg-blue-600 py-2 text-sm font-bold text-white shadow-xs hover:bg-blue-700 disabled:opacity-50"
+                >
+                  {busy ? "Checking…" : "Re-verify account"}
+                </button>
+              </div>
+            </form>
+          )}
+
+          {tab === "phone" && (
+            <form
+              className="flex flex-col gap-3 sm:flex-row sm:items-end"
+              onSubmit={(e) => {
+                e.preventDefault();
+                void runPhone();
+              }}
+            >
+              <div className="sm:w-40">
+                <MiniLabel>Country</MiniLabel>
+                <select className={inputCls} value={country} onChange={(e) => setCountry(e.target.value)}>
+                  {COUNTRIES.map((c) => (
+                    <option key={c.code} value={c.code}>
+                      {c.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex-1">
+                <MiniLabel>Phone number</MiniLabel>
+                <input
+                  required
+                  inputMode="tel"
+                  className={`${inputCls} font-mono`}
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="0812…"
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={busy || !phone}
+                className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-bold text-white hover:bg-blue-700 disabled:opacity-50"
+              >
+                {busy ? "Checking…" : "Check e-wallets"}
+              </button>
+            </form>
+          )}
+
+          {tab === "qr" && (
+            <form
+              className="flex flex-col gap-3"
+              onSubmit={(e) => {
+                e.preventDefault();
+                void run(() => screenQr(payload));
+              }}
+            >
+              <textarea
+                rows={2}
+                className={`${inputCls} font-mono text-xs`}
+                placeholder="Paste EMVCo QR payload"
+                value={payload}
+                onChange={(e) => setPayload(e.target.value)}
+              />
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <label className="flex-1 cursor-pointer rounded-lg border border-dashed border-slate-300 px-4 py-2 text-center text-sm text-slate-500 hover:border-blue-500 hover:text-slate-700">
+                  Upload QR image
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      setBusy(true);
+                      setError(null);
+                      setResult(null);
+                      try {
+                        const decoded = await decodeQrImage(file);
+                        setPayload(decoded);
+                        setResult(await screenQr(decoded));
+                      } catch (err) {
+                        setError(err instanceof ApiError ? err.message : "Decode failed");
+                      } finally {
+                        setBusy(false);
+                      }
+                    }}
+                  />
+                </label>
+                <button
+                  type="submit"
+                  disabled={busy || !payload}
+                  className="rounded-lg bg-blue-600 px-6 py-2 text-sm font-bold text-white hover:bg-blue-700 disabled:opacity-50"
+                >
+                  {busy ? "Screening…" : "Screen QR"}
+                </button>
+              </div>
+            </form>
+          )}
+        </div>
+
+        {error && (
+          <div className="mb-4 rounded-lg border border-rose-300 bg-rose-50 px-4 py-3 text-sm text-rose-800">
+            {error}
+          </div>
+        )}
+
+        {result && <ResultView result={result} nameClaim={nameClaim} onFlag={setFlagged} />}
+        {phoneResult && <PhoneResultCard data={phoneResult} />}
       </div>
 
-      {tab === "account" ? (
-        <form
-          className="flex flex-col gap-3"
-          onSubmit={(e) => {
-            e.preventDefault();
-            void run(() => screenAccount({ country, bank, account }));
-          }}
-        >
-          <div className="grid grid-cols-2 gap-3">
-            <select className={input} value={country} onChange={(e) => {
-              setCountry(e.target.value);
-              setBank(BANKS[e.target.value][0].code);
-            }}>
-              {COUNTRIES.map((c) => (
-                <option key={c.code} value={c.code}>
-                  {c.label}
-                </option>
-              ))}
-            </select>
-            <select className={input} value={bank} onChange={(e) => setBank(e.target.value)}>
-              {BANKS[country].map((b) => (
-                <option key={b.code} value={b.code}>
-                  {b.name}
-                </option>
-              ))}
-            </select>
-          </div>
-          <input
-            className={input}
-            placeholder="Full account number (we never store it in clear)"
-            value={account}
-            onChange={(e) => setAccount(e.target.value)}
-            inputMode="numeric"
-            required
-          />
-          <button
-            type="submit"
-            disabled={busy || !account}
-            className="rounded-lg bg-emerald-500 px-4 py-2 font-semibold text-slate-950 disabled:opacity-50"
-          >
-            {busy ? "Checking…" : "Check account"}
-          </button>
-        </form>
-      ) : tab === "phone" ? (
-        <form
-          className="flex flex-col gap-3"
-          onSubmit={(e) => {
-            e.preventDefault();
-            void runPhone();
-          }}
-        >
-          <div className="grid grid-cols-2 gap-3">
-            <select
-              className={input}
-              value={country}
-              onChange={(e) => setCountry(e.target.value)}
-            >
-              {COUNTRIES.map((c) => (
-                <option key={c.code} value={c.code}>
-                  {c.label}
-                </option>
-              ))}
-            </select>
-            <input
-              className={input}
-              placeholder="Phone number (e.g. 0812…)"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              inputMode="tel"
-              required
-            />
-          </div>
-          <p className="text-xs text-slate-400">
-            Checks <b>all e-wallets</b> for this phone number at once — no need to pick a wallet.
-          </p>
-          <button
-            type="submit"
-            disabled={busy || !phone}
-            className="rounded-lg bg-emerald-500 px-4 py-2 font-semibold text-slate-950 disabled:opacity-50"
-          >
-            {busy ? "Checking…" : "Check e-wallets"}
-          </button>
-        </form>
-      ) : (
-        <form
-          className="flex flex-col gap-3"
-          onSubmit={(e) => {
-            e.preventDefault();
-            void run(() => screenQr(payload));
-          }}
-        >
-          <textarea
-            className={input}
-            rows={3}
-            placeholder="Paste EMVCo QR payload (from camera scan elsewhere)"
-            value={payload}
-            onChange={(e) => setPayload(e.target.value)}
-          />
-          <label className="rounded-lg border border-dashed border-slate-700 px-4 py-4 text-center text-sm text-slate-400 hover:border-emerald-400 hover:text-slate-200">
-            or upload QR image
-            <input
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={async (e) => {
-                const file = e.target.files?.[0];
-                if (!file) return;
-                setBusy(true);
-                setError(null);
-                setResult(null);
-                try {
-                  const decoded = await decodeQrImage(file);
-                  setResult(await screenQr(decoded));
-                } catch (err) {
-                  setError(err instanceof ApiError ? err.message : "Decode failed");
-                } finally {
-                  setBusy(false);
-                }
-              }}
-            />
-          </label>
-          <button
-            type="submit"
-            disabled={busy || !payload}
-            className="rounded-lg bg-emerald-500 px-4 py-2 font-semibold text-slate-950 disabled:opacity-50"
-          >
-            {busy ? "Screening…" : "Screen QR"}
-          </button>
-        </form>
-      )}
-
-      {error && (
-        <div className="rounded-lg border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-300">
-          {error}
-        </div>
-      )}
-
-      {result && !acknowledged && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-6">
-          <div className="max-w-md rounded-xl border border-rose-500/50 bg-slate-900 p-6">
-            <p className="text-lg font-bold text-rose-200">Recent fraud reports</p>
-            <p className="mt-2 text-sm text-slate-300">
-              This identifier has new fraud reports in the last 72 hours. Pause before you pay.
-            </p>
-            <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-slate-300">
-              <li>Verify the recipient independently (call a known number).</li>
-              <li>Are you being rushed or pressured?</li>
-              <li>Understand you may not recover a fraudulent transfer.</li>
-            </ul>
-            <button
-              className="mt-4 w-full rounded-lg bg-rose-500 px-4 py-2 font-semibold text-slate-950"
-              onClick={() => setAcknowledged(true)}
-            >
-              I understand — show the details
-            </button>
-          </div>
-        </div>
-      )}
-
-      {result && acknowledged && <ResultCard result={result} />}
-      {phoneResult && <PhoneResultCard data={phoneResult} />}
+      {flagged && <FlagModal report={flagged} onClose={() => setFlagged(null)} />}
     </main>
   );
 }
 
-function ResultCard({ result }: { result: ScreenResult }) {
+function MiniLabel({ children }: { children: React.ReactNode }) {
+  return <label className="mb-0.5 block text-[11px] font-bold text-slate-500">{children}</label>;
+}
+
+function ResultView({
+  result,
+  nameClaim,
+  onFlag,
+}: {
+  result: ScreenResult;
+  nameClaim: string;
+  onFlag: (r: ReportView) => void;
+}) {
   if (result.status === "not_found") {
     const meta = result.data.qr_metadata;
     return (
-      <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-5">
-        <p className="font-semibold text-amber-300">Not yet reviewed</p>
-        <p className="mt-1 text-sm text-slate-300">{result.data.message}</p>
-        {meta && (
-          <dl className="mt-3 space-y-1 text-sm text-slate-300">
-            <Row k="Merchant" v={meta.merchant_name} />
-            <Row k="City" v={meta.merchant_city} />
-            <Row k="Scheme" v={meta.scheme} />
-            <Row k="NMID" v={meta.national_merchant_id} />
-            {meta.homoglyph_warning && (
-              <p className="text-amber-300">⚠ Lookalike characters detected in merchant name</p>
-            )}
-          </dl>
-        )}
-        <GovCheckBanner check={result.data.gov_check} />
+      <div className="space-y-4">
+        <div className="rounded-2xl border border-slate-300 bg-white p-6 shadow-xs">
+          <span className="inline-block rounded-lg border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-extrabold uppercase tracking-wide text-amber-800">
+            Unreviewed account
+          </span>
+          <h2 className="mt-2 text-lg font-bold text-slate-900">Not yet in our registry</h2>
+          <p className="mt-1 text-sm text-slate-600">{result.data.message}</p>
+          <p className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+            ⚠ An unreviewed status does <b>not</b> guarantee safety. Verify the seller
+            independently before transferring.
+          </p>
+          {meta && (
+            <dl className="mt-3 space-y-1 text-sm text-slate-600">
+              <Row k="Merchant" v={meta.merchant_name} />
+              <Row k="City" v={meta.merchant_city} />
+              <Row k="Scheme" v={meta.scheme} />
+              <Row k="NMID" v={meta.national_merchant_id} />
+              {meta.homoglyph_warning && (
+                <p className="text-amber-600">⚠ Lookalike characters detected in merchant name</p>
+              )}
+            </dl>
+          )}
+          <GovCheckBanner check={result.data.gov_check} />
+        </div>
       </div>
     );
   }
@@ -329,212 +373,368 @@ function ResultCard({ result }: { result: ScreenResult }) {
     gov_check,
   } = result.data;
   const reports = result.data.reports ?? [];
+  const band = riskBand(risk.risk_score);
+  const mismatch = isNameMismatch(nameClaim, entity.holder?.name);
+
   return (
-    <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-5">
-      <div className="flex items-center justify-between">
-        <p className="font-mono text-lg">{entity.account_masked}</p>
-        <span
-          className={`rounded-full border px-3 py-1 text-xs font-semibold ${
-            BADGE_STYLES[risk.badge.color] ?? BADGE_STYLES.AMBER
-          }`}
-        >
-          {risk.badge.label}
-        </span>
-      </div>
-      <p className="mt-1 text-sm text-slate-400">
-        {entity.institution ?? entity.scheme} · {entity.country}
-        {entity.merchant_city ? ` · ${entity.merchant_city}` : ""}
-      </p>
-
-      {entity.holder && (
-        <div
-          className={`mt-3 rounded-lg border px-3 py-2 text-sm ${
-            entity.holder.confidence === "VERIFIED"
-              ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-200"
-              : "border-amber-500/40 bg-amber-500/10 text-amber-200"
-          }`}
-        >
-          <span className="font-semibold">{entity.holder.name}</span>
-          <span className="mt-0.5 block text-xs opacity-90">{entity.holder.label}</span>
-        </div>
+    <div className="space-y-6">
+      {mismatch && entity.holder && (
+        <NameMatcherBanner claimedName={nameClaim} actualName={entity.holder.name} />
       )}
 
-      <div className="mt-3 flex flex-wrap items-center gap-2">
-        <WatchButton entityId={entity.id} />
-        <Link
-          href="/receipt"
-          className="rounded-full border border-slate-600 px-3 py-1 text-xs text-slate-300 hover:border-emerald-400"
-        >
-          Diligence receipt
-        </Link>
-        <Link
-          href={`/claim?entity=${entity.id}`}
-          className="rounded-full border border-slate-600 px-3 py-1 text-xs text-slate-300 hover:border-emerald-400"
-        >
-          Own this account?
-        </Link>
-      </div>
-
-      {risk.is_under_dispute && (
-        <p className="mt-3 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs text-amber-200">
-          ⚖ Ownership dispute active — the reported owner is contesting this record.
-        </p>
+      {(hasFreshReports(result) || risk.risk_level === "HIGH_RISK" || risk.risk_level === "CRITICAL_FRAUD") && (
+        <CoolingOffTimer />
       )}
 
-      {entity.owner_response && (
-        <div className="mt-3 rounded-lg border border-sky-500/40 bg-sky-500/10 px-3 py-2 text-sm text-sky-100">
-          <p className="text-xs font-semibold uppercase tracking-wide text-sky-300">
-            Owner response (verified)
-          </p>
-          <p className="mt-1">{entity.owner_response}</p>
-        </div>
-      )}
-
-      {(risk.risk_level === "HIGH_RISK" || risk.risk_level === "CRITICAL_FRAUD") && (
-        <CoolingOff level={risk.risk_level} />
-      )}
-
-      <AmountFriction />
-
-      <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
-        <div className="rounded-lg bg-slate-800/60 p-3">
-          <p className="text-xs text-slate-400">Risk score</p>
-          <p className="text-xl font-bold">
-            {risk.risk_score}
-            <span className="ml-2 text-sm font-medium text-slate-300">
-              {LEVEL_LABELS[risk.risk_level] ?? risk.risk_level}
-            </span>
-          </p>
-          <p className="text-[11px] text-slate-500">higher = riskier</p>
-        </div>
-        <div className="rounded-lg bg-slate-800/60 p-3">
-          <p className="text-xs text-slate-400">Reports</p>
-          <p className="text-xl font-bold">{community.total_reports}</p>
-        </div>
-      </div>
-
-      {risk.anomaly_spike_detected && (
-        <p className="mt-3 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs text-amber-200">
-          ⚠ Unusual reporting spike detected — signals dampened pending review.
-        </p>
-      )}
-
-      <GovCheckBanner check={gov_check} />
-
-      {risk.factors && risk.factors.length > 0 && (
-        <div className="mt-3 rounded-lg border border-slate-700 bg-slate-800/50 p-3">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-            Score breakdown
-          </p>
-          <ul className="mt-1 space-y-0.5 text-xs text-slate-300">
-            {risk.factors.map((f) => (
-              <li key={f.label} className="flex justify-between">
-                <span>
-                  {f.label.replaceAll("_", " ")}
-                  {f.dampened ? " (dampened)" : ""}
+      <div className="space-y-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-xs sm:p-8">
+        <div className="flex flex-wrap items-start justify-between gap-4 border-b border-slate-100 pb-6">
+          <div>
+            <div className="mb-1 flex items-center gap-2">
+              <span className="text-xs font-bold uppercase tracking-wide text-slate-500">
+                {entity.institution ?? entity.scheme ?? entity.entity_type} · {entity.country}
+              </span>
+              <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700">
+                Exact match
+              </span>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="font-mono text-3xl font-bold tracking-wider text-slate-900">
+                {entity.account_masked}
+              </span>
+            </div>
+            {entity.holder ? (
+              <div className="mt-2.5 flex items-center gap-2">
+                <span className="text-xs font-medium text-slate-500">Account holder:</span>
+                <span className="text-sm font-bold text-slate-900">{entity.holder.name}</span>
+                <span className="rounded border border-slate-200 bg-slate-100 px-2 py-0.5 text-[11px] text-slate-600">
+                  {entity.holder.label}
                 </span>
-                <span>{f.weight > 0 ? `+${f.weight}` : f.weight}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      {(search_intelligence?.total_searches_display || ai_summary?.text) && (
-        <div className="mt-3 space-y-2">
-          {search_intelligence?.total_searches_display && (
-            <p className="text-xs text-slate-400">
-              Searched {search_intelligence.total_searches_display} times
-              {search_intelligence.searches_7d > 0
-                ? ` · ${search_intelligence.searches_7d} this week`
-                : ""}
-            </p>
-          )}
-          {ai_summary?.text && (
-            <div className="rounded-lg border border-slate-700 bg-slate-800/50 p-3">
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-                AI summary
-              </p>
-              <p className="mt-1 text-sm text-slate-200">{ai_summary.text}</p>
-            </div>
-          )}
-          {related_fact_checks && related_fact_checks.length > 0 && (
-            <div className="rounded-lg border border-slate-700 bg-slate-800/50 p-3">
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-                Related fact-checks
-              </p>
-              <ul className="mt-1 space-y-1 text-sm text-slate-200">
-                {related_fact_checks.map((fc, i) => (
-                  <li key={i}>
-                    <a
-                      href={fc.url ?? "#"}
-                      className="underline"
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      {fc.text} {fc.rating ? `— ${fc.rating}` : ""}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </div>
-      )}
-
-      {(entity.merchant_name || meta?.merchant_name) && (
-        <dl className="mt-3 space-y-1 text-sm text-slate-300">
-          <Row k="Merchant" v={entity.merchant_name ?? meta?.merchant_name ?? null} />
-          {entity.nmid && <Row k="NMID" v={entity.nmid} />}
-          {entity.mcc && <Row k="MCC" v={entity.mcc} />}
-        </dl>
-      )}
-
-      {meta?.homoglyph_warning && (
-        <p className="mt-3 text-sm text-amber-300">
-          ⚠ Lookalike characters detected in merchant name — verify carefully
-        </p>
-      )}
-
-      {meta?.qr_changed_since_last_seen && (
-        <p className="mt-3 text-sm text-rose-300">
-          ⚠ This QR payload differs from the one previously reported for this merchant — verify
-          carefully.
-        </p>
-      )}
-
-      {reports.length > 0 && (
-        <div className="mt-4 space-y-2">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-            Published reports ({reports.length})
-          </p>
-          {reports.map((r) => (
-            <div key={r.id} className="rounded-lg border border-slate-700 bg-slate-800/50 p-3">
-              <div className="flex items-center justify-between text-xs text-slate-400">
-                <span>{r.category.replaceAll("_", " ")}</span>
-                <span>severity {r.severity}</span>
               </div>
-              {r.description && <p className="mt-1 text-sm text-slate-200">{r.description}</p>}
-              {r.ai_tampering_detected && (
-                <p className="mt-1 text-xs text-rose-300">⚠ AI flagged possible tampering</p>
-              )}
-              {r.evidence?.[0]?.media_url && (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={r.evidence[0].media_url}
-                  alt="Redacted evidence"
-                  className="mt-2 max-h-48 rounded border border-slate-700"
-                />
-              )}
-              <ReportActions
-                reportId={r.id}
-                initialUp={r.upvotes}
-                initialDown={r.downvotes}
-              />
+            ) : (
+              <p className="mt-2 text-xs text-slate-500">
+                Holder name undisclosed (exact-match protection, ADR-016).
+              </p>
+            )}
+          </div>
+
+          <div className="space-y-2 text-right">
+            <span
+              className={`inline-block rounded-lg border px-3.5 py-1.5 text-xs font-extrabold uppercase tracking-wide ${band.badge}`}
+            >
+              {risk.badge.label}
+            </span>
+            {risk.anomaly_spike_detected && (
+              <p className="text-[11px] text-amber-600">⚠ Reporting spike — signals dampened</p>
+            )}
+            <div className="flex flex-wrap justify-end gap-2">
+              <WatchButton entityId={entity.id} />
+              <Link
+                href={`/claim?entity=${entity.id}`}
+                className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-bold text-blue-700 hover:bg-blue-100"
+              >
+                🛡️ Are you the owner?
+              </Link>
             </div>
-          ))}
+          </div>
+        </div>
+
+        <RiskGauge score={risk.risk_score} factors={risk.factors} />
+
+        {risk.is_under_dispute && (
+          <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+            ⚖ Ownership dispute active — safe-harbor freeze applied (score rise capped at ≤45).
+          </p>
+        )}
+
+        {entity.owner_response && (
+          <div className="rounded-xl border border-blue-200 bg-blue-50/70 p-4">
+            <p className="text-xs font-bold text-blue-900">
+              🛡️ Official pinned business clarification · verified legal owner
+            </p>
+            <p className="mt-1 text-xs leading-relaxed text-slate-700">{entity.owner_response}</p>
+          </div>
+        )}
+
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <Metric label="Times searched" value={search_intelligence?.total_searches_display ?? "—"} sub="Total lookups" />
+          <Metric
+            label="Searches (7 days)"
+            value={String(search_intelligence?.searches_7d ?? 0)}
+            sub={search_intelligence && search_intelligence.searches_7d > 0 ? "↑ Velocity spike" : "—"}
+            accent="rose"
+          />
+          <Metric label="Community reports" value={`${community.total_reports} total`} sub={`${community.admin_verified_reports} admin-verified`} />
+          <Metric label="Last queried" value={search_intelligence?.last_searched_at ? new Date(search_intelligence.last_searched_at).toLocaleDateString() : "—"} sub="Active threat" />
+        </div>
+
+        {ai_summary?.text && (
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+            <div className="mb-1.5 flex items-center gap-2">
+              <span className="text-xs font-bold uppercase tracking-wide text-blue-900">
+                AI neutral entity summary
+              </span>
+              <span className="rounded bg-blue-100 px-2 py-0.5 text-[10px] font-bold text-blue-800">
+                {ai_summary.grounded ? "Strictly grounded" : "Ungrounded"}
+              </span>
+            </div>
+            <p className="text-xs leading-relaxed text-slate-700 sm:text-sm">{ai_summary.text}</p>
+          </div>
+        )}
+
+        {related_fact_checks && related_fact_checks.length > 0 && (
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+            <p className="text-xs font-bold uppercase tracking-wide text-slate-500">Related fact-checks</p>
+            <ul className="mt-1 space-y-1 text-sm text-slate-700">
+              {related_fact_checks.map((fc, i) => (
+                <li key={i}>
+                  <a href={fc.url ?? "#"} className="underline" target="_blank" rel="noreferrer">
+                    {fc.text} {fc.rating ? `— ${fc.rating}` : ""}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        <GovCheckBanner check={gov_check} />
+
+        {(entity.merchant_name || meta?.merchant_name || entity.nmid) && (
+          <dl className="space-y-1 text-sm text-slate-600">
+            <Row k="Merchant" v={entity.merchant_name ?? meta?.merchant_name ?? null} />
+            {entity.nmid && <Row k="NMID" v={entity.nmid} />}
+            {entity.mcc && <Row k="MCC" v={entity.mcc} />}
+          </dl>
+        )}
+
+        {meta?.homoglyph_warning && (
+          <p className="text-sm text-amber-600">
+            ⚠ Lookalike characters detected in merchant name — verify carefully
+          </p>
+        )}
+        {meta?.qr_changed_since_last_seen && (
+          <p className="text-sm text-rose-600">
+            ⚠ This QR payload differs from the one previously recorded for this merchant — verify
+            carefully.
+          </p>
+        )}
+
+        <RedactedSlipViewer
+          fields={{
+            accountNumber: undefined,
+            holderName: entity.holder?.name ?? "Not disclosed",
+          }}
+          allowAnalystView={false}
+        />
+
+        {reports.length > 0 && <ReportsFeed reports={reports} onFlag={onFlag} />}
+
+        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-4 text-xs">
+          <div className="flex items-center gap-2">
+            <Link
+              href={`/receipt?country=${entity.country}&bank=${entity.institution ?? ""}&account=`}
+              className="rounded-lg border border-slate-300 bg-slate-50 px-3.5 py-2 font-bold text-slate-700 hover:bg-slate-100"
+            >
+              🧾 Export diligence receipt slip
+            </Link>
+            <Link
+              href={`/claim?entity=${entity.id}`}
+              className="rounded-lg border border-slate-300 bg-slate-50 px-3.5 py-2 font-bold text-blue-700 hover:bg-slate-100"
+            >
+              🛡️ Misjudged? File name clearance
+            </Link>
+          </div>
+          <Link href="/recovery" className="font-bold text-rose-700 hover:underline">
+            Already paid this account? Take action &rarr;
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ReportsFeed({
+  reports,
+  onFlag,
+}: {
+  reports: ReportView[];
+  onFlag: (r: ReportView) => void;
+}) {
+  const [page, setPage] = useState(1);
+  const totalPages = Math.max(1, Math.ceil(reports.length / REPORTS_PER_PAGE));
+  const start = (page - 1) * REPORTS_PER_PAGE;
+  const slice = reports.slice(start, start + REPORTS_PER_PAGE);
+
+  return (
+    <div className="space-y-4 border-t border-slate-100 pt-4">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <h3 className="text-sm font-bold uppercase tracking-wide text-slate-900">
+            Community fraud reports ({reports.length} total)
+          </h3>
+          <p className="text-xs text-slate-500">
+            Showing reports {start + 1} to {Math.min(start + REPORTS_PER_PAGE, reports.length)} of{" "}
+            {reports.length} (Page {page} of {totalPages})
+          </p>
+        </div>
+        <Link
+          href="/report"
+          className="rounded-lg bg-rose-600 px-3 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-rose-700"
+        >
+          + Add report
+        </Link>
+      </div>
+
+      <div className="space-y-3">
+        {slice.map((r) => (
+          <ReportCard key={r.id} report={r} onFlag={() => onFlag(r)} />
+        ))}
+      </div>
+
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between border-t border-slate-200 pt-4 text-xs">
+          <button
+            disabled={page === 1}
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 font-semibold text-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            &larr; Previous page
+          </button>
+          <div className="flex items-center gap-1 font-semibold text-slate-700">
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
+              <button
+                key={n}
+                onClick={() => setPage(n)}
+                className={`h-7 w-7 rounded-lg ${
+                  n === page
+                    ? "bg-blue-600 font-bold text-white"
+                    : "border border-slate-200 bg-white font-semibold text-slate-700 hover:bg-slate-50"
+                }`}
+              >
+                {n}
+              </button>
+            ))}
+          </div>
+          <button
+            disabled={page === totalPages}
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 font-semibold text-slate-800 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Next page &rarr;
+          </button>
         </div>
       )}
+    </div>
+  );
+}
+
+function FlagModal({ report, onClose }: { report: ReportView; onClose: () => void }) {
+  const token = getToken();
+  const [reason, setReason] = useState(FLAG_REASONS[0].value);
+  const [details, setDetails] = useState("");
+  const [status, setStatus] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  async function submit() {
+    if (!token) {
+      setError("Sign in to submit a flag.");
+      return;
+    }
+    try {
+      const flag = await flagReport(token, report.id, reason, details || undefined);
+      setStatus(flag.status);
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : "Flag failed");
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
+      <div className="w-full max-w-md space-y-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-xl">
+        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+          <div>
+            <h3 className="text-base font-bold text-slate-900">Flag this review as false</h3>
+            <p className="font-mono text-[11px] text-slate-500">Report {report.id.slice(0, 8)}</p>
+          </div>
+          <button onClick={onClose} className="text-lg text-slate-400 hover:text-slate-600">
+            ✕
+          </button>
+        </div>
+
+        {status ? (
+          <p className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
+            Flag submitted — status: {status}. Our analysts will triage under ADR-021 dual-control.
+          </p>
+        ) : (
+          <>
+            <p className="text-xs leading-relaxed text-slate-600">
+              TrustPay protects innocent citizens and legitimate merchants from malicious smear
+              attacks. All flags are audited under ADR-021 dual-control.
+            </p>
+            <div>
+              <label className="mb-1 block text-xs font-bold text-slate-700">
+                Why should this report be taken down?
+              </label>
+              <select
+                className={inputCls}
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
+              >
+                {FLAG_REASONS.map((r) => (
+                  <option key={r.value} value={r.value}>
+                    {r.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <textarea
+              rows={3}
+              className={inputCls}
+              placeholder="Explain why this review is inaccurate…"
+              value={details}
+              onChange={(e) => setDetails(e.target.value)}
+            />
+            {error && <p className="text-xs text-rose-600">{error}</p>}
+          </>
+        )}
+
+        <div className="flex gap-2 pt-2">
+          <button onClick={onClose} className="flex-1 rounded-lg bg-slate-100 py-2 text-xs font-bold text-slate-700">
+            Close
+          </button>
+          {!status && (
+            <button
+              onClick={() => void submit()}
+              className="flex-1 rounded-lg bg-blue-600 py-2 text-xs font-bold text-white shadow-xs hover:bg-blue-700"
+            >
+              Submit flag for triage
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Metric({
+  label,
+  value,
+  sub,
+  accent,
+}: {
+  label: string;
+  value: string;
+  sub: string;
+  accent?: "rose";
+}) {
+  return (
+    <div className="rounded-xl border border-slate-200 bg-white p-3.5">
+      <span className="text-[11px] font-bold uppercase text-slate-500">{label}</span>
+      <p className={`mt-0.5 text-xl font-extrabold ${accent === "rose" ? "text-rose-600" : "text-slate-900"}`}>
+        {value}
+      </p>
+      <span className={`text-[10px] ${accent === "rose" ? "font-semibold text-rose-600" : "text-slate-400"}`}>
+        {sub}
+      </span>
     </div>
   );
 }
@@ -543,8 +743,8 @@ function Row({ k, v }: { k: string; v: string | null }) {
   if (!v) return null;
   return (
     <div className="flex justify-between gap-4">
-      <dt className="text-slate-400">{k}</dt>
-      <dd className="text-right font-medium">{v}</dd>
+      <dt className="text-slate-500">{k}</dt>
+      <dd className="text-right font-medium text-slate-800">{v}</dd>
     </div>
   );
 }
@@ -556,7 +756,7 @@ function WatchButton({ entityId }: { entityId: string }) {
     return (
       <Link
         href="/profile"
-        className="rounded-full border border-slate-600 px-3 py-1 text-xs text-slate-300 hover:border-emerald-400"
+        className="rounded-lg border border-slate-300 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-100"
       >
         Watch (sign in)
       </Link>
@@ -564,7 +764,6 @@ function WatchButton({ entityId }: { entityId: string }) {
   }
   return (
     <button
-      className="rounded-full border border-slate-600 px-3 py-1 text-xs text-slate-300 hover:border-emerald-400 disabled:opacity-60"
       disabled={state !== "idle"}
       onClick={async () => {
         setState("saving");
@@ -575,154 +774,19 @@ function WatchButton({ entityId }: { entityId: string }) {
           setState("idle");
         }
       }}
+      className="rounded-lg border border-slate-300 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-100 disabled:opacity-60"
     >
       {state === "done" ? "Watching ✓" : "Watch account"}
     </button>
   );
 }
 
-function CoolingOff({ level }: { level: string }) {
-  const [remaining, setRemaining] = useState(10);
-  const [ack, setAck] = useState(false);
-
-  useEffect(() => {
-    if (ack || remaining <= 0) return;
-    const timer = setTimeout(() => setRemaining((r) => r - 1), 1000);
-    return () => clearTimeout(timer);
-  }, [remaining, ack]);
-
-  return (
-    <div className="mt-3 rounded-lg border border-rose-500/40 bg-rose-500/10 p-3 text-sm text-rose-200">
-      <p className="font-semibold">Cooling-off — {level.replaceAll("_", " ").toLowerCase()}</p>
-      <ul className="mt-1 list-disc pl-5 text-xs">
-        <li>Have you verified the recipient independently?</li>
-        <li>Are you being rushed or pressured?</li>
-        <li>Is the deal too good to be true?</li>
-      </ul>
-      {!ack && remaining > 0 ? (
-        <p className="mt-2 text-xs">You can acknowledge in {remaining}s…</p>
-      ) : ack ? (
-        <p className="mt-2 text-xs">Acknowledged — proceed only if you have verified the recipient.</p>
-      ) : (
-        <button
-          className="mt-2 rounded bg-rose-500/20 px-3 py-1 text-xs"
-          onClick={() => setAck(true)}
-        >
-          I understand the risk
-        </button>
-      )}
-    </div>
-  );
-}
-
-function ReportActions({
-  reportId,
-  initialUp,
-  initialDown,
-}: {
-  reportId: string;
-  initialUp: number;
-  initialDown: number;
-}) {
-  const [up, setUp] = useState(initialUp);
-  const [down, setDown] = useState(initialDown);
-  const [flagStatus, setFlagStatus] = useState<string | null>(null);
-  const [reason, setReason] = useState(FLAG_REASONS[0].value);
-  const [showFlag, setShowFlag] = useState(false);
-  const token = getToken();
-
-  async function vote(value: 1 | -1) {
-    if (!token) return;
-    const result = await castVote(token, reportId, value);
-    setUp(result.upvotes);
-    setDown(result.downvotes);
-  }
-
-  return (
-    <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
-      <button
-        disabled={!token}
-        onClick={() => void vote(1)}
-        className="rounded border border-slate-600 px-2 py-0.5 disabled:opacity-40"
-      >
-        ▲ {up}
-      </button>
-      <button
-        disabled={!token}
-        onClick={() => void vote(-1)}
-        className="rounded border border-slate-600 px-2 py-0.5 disabled:opacity-40"
-      >
-        ▼ {down}
-      </button>
-      {!token ? (
-        <span className="text-slate-500">Sign in to vote or flag</span>
-      ) : flagStatus ? (
-        <span className="text-amber-300">Flag submitted ({flagStatus})</span>
-      ) : showFlag ? (
-        <>
-          <select
-            value={reason}
-            onChange={(e) => setReason(e.target.value)}
-            className="rounded border border-slate-600 bg-slate-900 px-1 py-0.5"
-          >
-            {FLAG_REASONS.map((fr) => (
-              <option key={fr.value} value={fr.value}>
-                {fr.label}
-              </option>
-            ))}
-          </select>
-          <button
-            className="rounded border border-rose-500/50 px-2 py-0.5 text-rose-300"
-            onClick={async () => {
-              const flag = await flagReport(token, reportId, reason);
-              setFlagStatus(flag.status);
-            }}
-          >
-            Submit
-          </button>
-        </>
-      ) : (
-        <button
-          onClick={() => setShowFlag(true)}
-          className="rounded border border-slate-600 px-2 py-0.5"
-        >
-          Report this review
-        </button>
-      )}
-    </div>
-  );
-}
-
-function AmountFriction() {
-  const [amount, setAmount] = useState("");
-  const large = Number(amount || 0) >= AMOUNT_THRESHOLD_IDR;
-  return (
-    <div className="mt-3 rounded-lg border border-slate-700 bg-slate-800/50 p-3 text-sm">
-      <p className="text-xs text-slate-400">Large-transfer check (3-2-1)</p>
-      <input
-        className="mt-1 w-full rounded border border-slate-700 bg-slate-900 px-2 py-1 text-slate-100"
-        inputMode="numeric"
-        placeholder="Amount you're about to send (IDR)"
-        value={amount}
-        onChange={(e) => setAmount(e.target.value.replace(/[^\d]/g, ""))}
-      />
-      {large && (
-        <ul className="mt-2 list-disc space-y-1 pl-5 text-xs text-amber-200">
-          <li>3 people: verify with two others before paying.</li>
-          <li>2 checks: confirm the recipient on TrustPay and by phone.</li>
-          <li>1 rule: never pay under pressure or secrecy.</li>
-        </ul>
-      )}
-    </div>
-  );
-}
-
-function GovCheckBanner({ check }: { check?: GovCheck | null }) {
+function GovCheckBanner({ check }: { check?: { source: string; available: boolean; found: boolean; report_count: number; category?: string } | null }) {
   if (!check || !check.available) return null;
   const kind = check.category === "phone" ? "phone number" : "bank account";
   if (check.found) {
     return (
-      <div className="mt-3 rounded-lg border border-rose-500/40 bg-rose-500/10 px-3 py-2 text-xs text-rose-200">
+      <div className="rounded-lg border border-rose-300 bg-rose-50 px-3 py-2 text-xs text-rose-800">
         <p className="font-semibold">🏛 Match on {check.source}</p>
         <p className="mt-0.5">
           This {kind} appears in the national mule registry ({check.report_count} report
@@ -732,7 +796,7 @@ function GovCheckBanner({ check }: { check?: GovCheck | null }) {
     );
   }
   return (
-    <div className="mt-3 rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-200">
+    <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-800">
       No match on the {check.source} national registry.
     </div>
   );
@@ -740,21 +804,17 @@ function GovCheckBanner({ check }: { check?: GovCheck | null }) {
 
 function PhoneResultCard({ data }: { data: PhoneSearchResult }) {
   const found = data.wallet_count > 0;
+  const band = riskBand(data.totals.max_risk_score);
   return (
-    <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-5">
+    <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-xs">
       <div className="flex items-center justify-between">
-        <p className="font-mono text-lg">{data.phone_masked}</p>
-        <span
-          className={`rounded-full border px-3 py-1 text-xs font-semibold ${
-            found ? BADGE_STYLES.RED : BADGE_STYLES.GREEN
-          }`}
-        >
+        <p className="font-mono text-lg font-bold text-slate-900">{data.phone_masked}</p>
+        <span className={`rounded-full border px-3 py-1 text-xs font-semibold ${band.badge}`}>
           {data.wallet_count} wallet{data.wallet_count === 1 ? "" : "s"}
         </span>
       </div>
-      <p className="mt-1 text-sm text-slate-400">
-        {data.country} · max risk {data.totals.max_risk_score} ·{" "}
-        {LEVEL_LABELS[data.risk_level] ?? data.risk_level}
+      <p className="mt-1 text-sm text-slate-500">
+        {data.country} · max risk {data.totals.max_risk_score} · {band.label}
         {found ? "" : " · no reports"}
       </p>
 
@@ -765,29 +825,28 @@ function PhoneResultCard({ data }: { data: PhoneSearchResult }) {
           {data.wallets.map((w) => (
             <li
               key={`${w.institution}-${w.account_masked}`}
-              className="rounded-lg border border-slate-700 bg-slate-800/60 p-3 text-sm"
+              className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm"
             >
               <div className="flex items-center justify-between">
-                <span className="font-semibold">{w.institution_name ?? w.institution}</span>
-                <span className="text-xs text-slate-400">
+                <span className="font-semibold text-slate-800">
+                  {w.institution_name ?? w.institution}
+                </span>
+                <span className="text-xs text-slate-500">
                   risk {w.risk_score} · {w.total_reports} report
                   {typeof w.total_reports === "number" && w.total_reports === 1 ? "" : "s"}
                 </span>
               </div>
-              <p className="mt-0.5 font-mono text-xs text-slate-400">{w.account_masked}</p>
+              <p className="mt-0.5 font-mono text-xs text-slate-500">{w.account_masked}</p>
               {w.is_gov_blacklisted && (
-                <p className="mt-1 text-xs text-rose-300">🏛 Government blacklist</p>
+                <p className="mt-1 text-xs text-rose-600">🏛 Government blacklist</p>
               )}
-              {w.is_under_dispute && <p className="mt-1 text-xs text-amber-300">⚖ Dispute active</p>}
+              {w.is_under_dispute && <p className="mt-1 text-xs text-amber-600">⚖ Dispute active</p>}
             </li>
           ))}
         </ul>
       ) : (
-        <p className="mt-3 text-sm text-slate-400">
-          No e-wallet reports found for this phone number.
-        </p>
+        <p className="mt-3 text-sm text-slate-500">No e-wallet reports found for this phone number.</p>
       )}
-      <p className="mt-3 text-[11px] text-slate-500">higher risk score = riskier</p>
     </div>
   );
 }
