@@ -70,6 +70,17 @@ class Settings(BaseSettings):
     account_hmac_key: str = "dev-only-insecure-key-change-me"
     account_hash_version: int = 1
 
+    # Auth hardening (ADR-020)
+    webauthn_rp_id: str = "localhost"
+    webauthn_rp_name: str = "TrustPay SEA"
+    webauthn_origin: str = "http://localhost:3000"
+    # Prod MUST set true — admins then cannot log in without a passkey.
+    mfa_required_for_admins: bool = False
+    mfa_step_up_seconds: int = 300
+    cookie_secure: bool = False  # prod: true (Secure on tp_* cookies)
+    csrf_header: str = "X-CSRF-Token"
+    csrf_cookie: str = "tp_csrf"
+
     # Evidence storage (Phase 2.2). Dev default is a local-disk shim; R2/S3
     # presigned uploads land behind the same Storage interface in Phase 7.
     evidence_storage_backend: str = "local"  # local | s3

@@ -16,9 +16,12 @@ os.environ.setdefault("REDIS_URL", "redis://localhost:6379/1")
 os.environ.setdefault("SCHEDULER_ENABLED", "false")
 os.environ.setdefault("RATE_LIMIT_ENABLED", "true")
 
+import app.models  # noqa: F401,E402 — register ALL tables on Base.metadata so
 from app.config import get_settings  # noqa: E402
 from app.core.security import JWTService  # noqa: E402
 from app.db import Base, engine  # noqa: E402
+
+# prepare_db's drop_all works even when the collected tests don't import models
 
 
 @pytest.fixture(scope="session", autouse=True)

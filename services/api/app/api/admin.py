@@ -10,16 +10,19 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db import get_db
-from app.deps import require_role
+from app.deps import require_recent_mfa, require_role
 from app.enums import Role
 from app.models import AdminApproval, User
 from app.services import admin_service as svc
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
+# ADR-021: every trust-altering action runs through the four-eyes queue
+_DUAL_CONTROL_ACTIONS = "gov_override|ban_user|hide_report|remove_report|settlement"
+
 
 class ApprovalRequest(BaseModel):
-    action: str = Field(pattern="^(gov_override|ban_user)$")
+    action: str = Field(pattern=f"^({_DUAL_CONTROL_ACTIONS})$")
     subject_type: str = Field(min_length=1, max_length=30)
     subject_id: uuid.UUID
     payload: dict | None = None
@@ -40,6 +43,7 @@ def _approval_view(a: AdminApproval) -> dict:
         "requested_by": str(a.requested_by),
         "approved_by": str(a.approved_by) if a.approved_by else None,
         "created_at": a.created_at.isoformat() if a.created_at else None,
+        "expires_at": a.expires_at.isoformat() if a.expires_at else None,
     }
 
 
@@ -88,6 +92,7 @@ async def list_approvals(
 async def create_approval(
     body: ApprovalRequest,
     admin: User = Depends(require_role(Role.ANALYST)),
+    _mfa: dict = Depends(require_recent_mfa),  # ADR-020 step-up on destructive ops
     db: AsyncSession = Depends(get_db),
 ):
     try:
@@ -108,6 +113,7 @@ async def create_approval(
 async def approve(
     approval_id: uuid.UUID,
     admin: User = Depends(require_role(Role.ANALYST)),
+    _mfa: dict = Depends(require_recent_mfa),  # ADR-020 step-up on destructive ops
     db: AsyncSession = Depends(get_db),
 ):
     approval = await db.get(AdminApproval, approval_id)
@@ -118,6 +124,22 @@ async def approve(
     except svc.AdminError as exc:
         raise HTTPException(status.HTTP_409_CONFLICT, str(exc)) from exc
     return {"status": "success", "data": _approval_view(resolved)}
+
+
+@router.post("/approvals/{approval_id}/cancel")
+async def cancel(
+    approval_id: uuid.UUID,
+    admin: User = Depends(require_role(Role.ANALYST)),
+    db: AsyncSession = Depends(get_db),
+):
+    approval = await db.get(AdminApproval, approval_id)
+    if approval is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "approval not found")
+    try:
+        cancelled = await svc.cancel_approval(db, approval=approval, admin=admin)
+    except svc.AdminError as exc:
+        raise HTTPException(status.HTTP_409_CONFLICT, str(exc)) from exc
+    return {"status": "success", "data": _approval_view(cancelled)}
 
 
 @router.post("/gov/sync")

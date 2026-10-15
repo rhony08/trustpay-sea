@@ -64,6 +64,7 @@ class JWTService:
         token_type: str,
         ttl_seconds: int,
         family: str | None = None,
+        mfa_at: int | None = None,
     ) -> str:
         now = int(time.time())
         jti = uuid.uuid4().hex
@@ -80,6 +81,8 @@ class JWTService:
         }
         if family:
             payload["fam"] = family
+        if mfa_at is not None:
+            payload["mfa_at"] = mfa_at  # ADR-020: step-up freshness claim
         return jwt.encode(payload, self._private_key, algorithm=self._settings.jwt_algorithm)
 
     def decode(self, token: str, *, expected_type: str) -> dict:
@@ -99,7 +102,12 @@ class JWTService:
         return payload
 
     def issue_token_pair(
-        self, *, user_id: str, role: Role | str, family: str | None = None
+        self,
+        *,
+        user_id: str,
+        role: Role | str,
+        family: str | None = None,
+        mfa_at: int | None = None,
     ) -> tuple[TokenPair, str, str]:
         """Returns (pair, access_jti, refresh_jti). Family id created if None."""
         fam = family or uuid.uuid4().hex
@@ -108,6 +116,7 @@ class JWTService:
             role=str(role),
             token_type="access",
             ttl_seconds=self._settings.access_token_ttl_seconds,
+            mfa_at=mfa_at,
         )
         refresh = self._issue(
             sub=user_id,
@@ -126,6 +135,15 @@ class JWTService:
             ),
             access_jti,
             refresh_jti,
+        )
+
+    def issue_mfa_token(self, *, user_id: str, role: Role | str) -> str:
+        """Short-lived token bridging password check → WebAuthn assertion (ADR-020)."""
+        return self._issue(
+            sub=user_id,
+            role=str(role),
+            token_type="mfa",
+            ttl_seconds=600,
         )
 
 
