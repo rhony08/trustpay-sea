@@ -1,0 +1,26 @@
+# TrustPay SEA — Caddy reverse proxy for the single-VM GCP deploy.
+#
+# Set DOMAIN to your hostname (e.g. trustpay.example.com) for automatic HTTPS,
+# or to ":80" to serve plain HTTP on the VM's IP (no TLS).
+#
+# Routing:
+#   /api/*, /media/*, /healthz, /docs*, /openapi.json  -> FastAPI  (api:8000)
+#   everything else                                     -> Next.js  (web:3000)
+
+{$DOMAIN} {
+	encode gzip
+	header {
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "SAMEORIGIN"
+		Referrer-Policy "strict-origin-when-cross-origin"
+	}
+
+	@api path /api/* /media/* /healthz /docs /docs/* /openapi.json
+	handle @api {
+		reverse_proxy api:8000
+	}
+
+	handle {
+		reverse_proxy web:3000
+	}
+}

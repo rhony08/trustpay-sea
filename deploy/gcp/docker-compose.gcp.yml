@@ -1,0 +1,123 @@
+# TrustPay SEA — self-contained GCE/GCP deployment (single VM).
+#
+# Unlike the root docker-compose.yml (which reuses host datastores + an external
+# docker network), this file is fully standalone: it runs Postgres, Redis, the
+# FastAPI API, the Next.js web app, and Caddy (auto-TLS reverse proxy) on one
+# Compute Engine VM. See docs/13-gcp-deployment.md.
+#
+# Usage (from repo root, on the VM):
+#   cp deploy/gcp/.env.gcp.example deploy/gcp/.env.gcp   # edit values
+#   docker compose -f deploy/gcp/docker-compose.gcp.yml --env-file deploy/gcp/.env.gcp up -d --build
+
+name: trustpay-sea-gcp
+
+volumes:
+  pgdata:
+  redisdata:
+  trustpay_secrets:
+  trustpay_evidence:
+  caddy_data:
+  caddy_config:
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-trustpay}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env.gcp}
+      POSTGRES_DB: ${POSTGRES_DB:-trustpay}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-trustpay} -d ${POSTGRES_DB:-trustpay}"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--save", "60", "1"]
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 6
+    restart: unless-stopped
+
+  api:
+    build:
+      context: ../../services/api
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-trustpay}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-trustpay}
+      REDIS_URL: redis://redis:6379/2
+      ENVIRONMENT: ${ENVIRONMENT:-prod}
+      SCHEDULER_ENABLED: "true"
+      RATE_LIMIT_ENABLED: "true"
+      # --- AI (Vertex AI via the VM service account / ADC) ---
+      AI_PROVIDER: ${AI_PROVIDER:-mock}
+      GCP_PROJECT: ${GCP_PROJECT:-}
+      GCP_LOCATION: ${GCP_LOCATION:-asia-southeast1}
+      GCP_VISION_MODEL: ${GCP_VISION_MODEL:-gemini-2.0-flash}
+      GCP_TEXT_MODEL: ${GCP_TEXT_MODEL:-gemini-2.0-flash}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      # --- public surface ---
+      CORS_ALLOW_ORIGINS: ${PUBLIC_URL}
+      EVIDENCE_LOCAL_DIR: /data/evidence
+      EVIDENCE_PUBLIC_BASE_URL: ${PUBLIC_URL}/media
+      WEBAUTHN_RP_ID: ${DOMAIN:-localhost}
+      WEBAUTHN_ORIGIN: ${PUBLIC_URL}
+      # --- optional integrations ---
+      SEMAKMULE_API_KEY: ${SEMAKMULE_API_KEY:-}
+      MFA_REQUIRED_FOR_ADMINS: ${MFA_REQUIRED_FOR_ADMINS:-true}
+    volumes:
+      - trustpay_secrets:/run/secrets
+      - trustpay_evidence:/data/evidence
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/healthz', timeout=3).status==200 else 1)"
+      interval: 15s
+      timeout: 5s
+      retries: 6
+      start_period: 40s
+    restart: unless-stopped
+
+  web:
+    build:
+      context: ../../apps/web
+      args:
+        # Baked into the client bundle at build time; must be the public origin.
+        NEXT_PUBLIC_API_URL: ${PUBLIC_URL}
+    environment:
+      NEXT_PUBLIC_API_URL: ${PUBLIC_URL}
+      HOSTNAME: "0.0.0.0"
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+
+  caddy:
+    image: caddy:2-alpine
+    environment:
+      DOMAIN: ${DOMAIN:-:80}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - web
+      - api
+    restart: unless-stopped
