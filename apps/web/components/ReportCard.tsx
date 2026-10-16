@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { castVote, flagReport, FLAG_REASONS, getToken, type ReportView } from "@/lib/api";
 import { categoryKey } from "@/lib/risk";
+import { AiForensics } from "./AiForensics";
 import { useI18n } from "./LocaleProvider";
 
 function relativeTime(createdAt: string | null, t: (k: string, v?: Record<string, string | number>) => string): string {
@@ -59,6 +60,8 @@ export function ReportCard({
       {report.ai_tampering_detected && (
         <p className="text-xs font-semibold text-rose-600">{t("report.tamper")}</p>
       )}
+
+      {report.forensics && <AiForensics forensics={report.forensics} compact />}
 
       <div className="flex items-center justify-between border-t border-slate-100 pt-2 text-xs">
         <div className="flex items-center gap-2">

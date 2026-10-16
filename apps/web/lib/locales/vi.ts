@@ -638,6 +638,47 @@ const vi: Record<string, string> = {
   "hotline.VN.2": "Cục An ninh mạng và Phòng chống tội phạm công nghệ cao",
   "hotline.PH.1": "Ứng phó lừa đảo 24/7 của Cảnh sát Quốc gia Philippines",
   "hotline.PH.2": "Trung tâm Điều tra và Phối hợp Tội phạm mạng",
+
+  // ---- AI forensics panel ----
+  "ai.title": "Pháp chứng AI",
+  "ai.engineMock": "Suy luận",
+  "ai.engineModel": "Mô hình AI",
+  "ai.typology": "Danh mục dự đoán",
+  "ai.confidence": "Độ tin cậy",
+  "ai.matches": "Khớp với báo cáo",
+  "ai.mismatch": "Khác với báo cáo",
+  "ai.tamper": "Phát hiện chỉnh sửa",
+  "ai.tamperDetected": "Phát hiện khả năng bị chỉnh sửa",
+  "ai.noTamper": "Không có dấu hiệu chỉnh sửa",
+  "ai.ocr": "OCR biên lai (đích)",
+  "ai.recipient": "Người nhận",
+  "ai.amount": "Số tiền",
+  "ai.ref": "Tham chiếu",
+  "ai.ner": "Chỉ dấu mồi được trích xuất",
+  "ai.phoneHints": "Gợi ý số điện thoại",
+  "ai.urlHosts": "Máy chủ URL",
+  "ai.handles": "Tên người dùng",
+  "ai.injection": "⚠ Phát hiện nỗ lực prompt-injection trong văn bản",
+  "ai.duplicate": "⚠ Bằng chứng này trùng lặp với một báo cáo hiện có",
+
+  // ---- scam message analyzer ----
+  "nav.scamMessage": "Trình phân tích tin nhắn lừa đảo",
+  "tools.message.title": "Phân tích tin nhắn đáng ngờ",
+  "tools.message.subtitle":
+    "Dán SMS, DM hoặc nhật ký trò chuyện. Chúng tôi gắn cờ các thủ đoạn thao túng tâm lý và trích xuất chi tiết thanh toán.",
+  "tools.message.placeholder":
+    "ví dụ 'KHẨN CẤP! Bạn đã trúng thưởng. Chuyển Rp 500,000 đến BCA 8831924831 (Admin Siti) chỉ hôm nay!'",
+  "tools.message.analyze": "Phân tích tin nhắn",
+  "tools.message.analyzing": "Đang phân tích…",
+  "tools.message.signals": "Tín hiệu phát hiện",
+  "tools.message.extracted": "Chi tiết thanh toán được đề cập",
+  "tools.message.account": "Tài khoản",
+  "tools.message.phone": "Điện thoại",
+  "tools.message.identity": "Danh tính được xưng",
+  "tools.message.suggestedCategory": "Danh mục gợi ý",
+  "tools.message.tips": "Việc cần làm",
+  "tools.message.disclaimer":
+    "Sàng lọc có hỗ trợ AI. Hãy coi đây là hướng dẫn, không phải bằng chứng — luôn xác minh qua các kênh chính thức.",
 };
 
 export default vi;

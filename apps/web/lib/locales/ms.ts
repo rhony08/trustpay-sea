@@ -646,6 +646,47 @@ const ms: Record<string, string> = {
   "hotline.VN.2": "Jabatan Keselamatan Siber & Pencegahan Jenayah Teknologi Tinggi",
   "hotline.PH.1": "Tindak balas penipuan 24/7 Pasukan Polis Kebangsaan Filipina",
   "hotline.PH.2": "Pusat Penyiasatan dan Penyelarasan Jenayah Siber",
+
+  // ---- AI forensics panel ----
+  "ai.title": "Forensik AI",
+  "ai.engineMock": "Heuristik",
+  "ai.engineModel": "Model AI",
+  "ai.typology": "Kategori yang diramalkan",
+  "ai.confidence": "Keyakinan",
+  "ai.matches": "Sejajar dengan laporan",
+  "ai.mismatch": "Berbeza daripada laporan",
+  "ai.tamper": "Pengesanan gangguan",
+  "ai.tamperDetected": "Kemungkinan penyuntingan dikesan",
+  "ai.noTamper": "Tiada isyarat gangguan",
+  "ai.ocr": "OCR slip (tujuan)",
+  "ai.recipient": "Penerima",
+  "ai.amount": "Jumlah",
+  "ai.ref": "Rujukan",
+  "ai.ner": "Penunjuk umpan yang diekstrak",
+  "ai.phoneHints": "Petunjuk telefon",
+  "ai.urlHosts": "Hos URL",
+  "ai.handles": "Nama pengguna",
+  "ai.injection": "⚠ Percubaan prompt-injection dikesan dalam teks",
+  "ai.duplicate": "⚠ Bukti ini menduplikasi laporan sedia ada",
+
+  // ---- scam message analyzer ----
+  "nav.scamMessage": "Penganalisis Mesej Penipuan",
+  "tools.message.title": "Analisis mesej yang mencurigakan",
+  "tools.message.subtitle":
+    "Tampal SMS, DM, atau log sembang. Kami menandakan taktik kejuruteraan sosial dan mengekstrak butiran pembayaran.",
+  "tools.message.placeholder":
+    "cth. 'SEGERA! Anda menang hadiah. Pindahkan Rp 500,000 ke BCA 8831924831 (Admin Siti) hari ini sahaja!'",
+  "tools.message.analyze": "Analisis mesej",
+  "tools.message.analyzing": "Menganalisis…",
+  "tools.message.signals": "Isyarat dikesan",
+  "tools.message.extracted": "Butiran pembayaran yang disebut",
+  "tools.message.account": "Akaun",
+  "tools.message.phone": "Telefon",
+  "tools.message.identity": "Identiti yang didakwa",
+  "tools.message.suggestedCategory": "Kategori yang dicadangkan",
+  "tools.message.tips": "Apa yang perlu dilakukan",
+  "tools.message.disclaimer":
+    "Penyaringan berbantukan AI. Anggap ini sebagai panduan, bukan bukti — sentiasa sahkan melalui saluran rasmi.",
 };
 
 export default ms;

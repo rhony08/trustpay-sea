@@ -6,6 +6,8 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.ai.providers import get_ai_provider
+from app.ai.providers.mock import MockProvider
 from app.config import get_settings
 from app.db import get_db
 from app.enums import EntityType, RiskLevel, Scheme
@@ -22,9 +24,33 @@ class DealCheckRequest(BaseModel):
     text: str = Field(min_length=1, max_length=2000)
 
 
+class MessageAnalyzeRequest(BaseModel):
+    text: str = Field(min_length=1, max_length=4000)
+
+
 @router.post("/tools/too-good-to-be-true")
 async def too_good_to_be_true(body: DealCheckRequest):
-    return {"status": "success", "data": check_too_good_to_be_true(body.text)}
+    """Explainable scam-tactics check. Uses the configured AI provider when set;
+    falls back to the local heuristic so the tool never fails closed on the user."""
+    provider = get_ai_provider()
+    try:
+        data = await provider.judge_deal(body.text)
+    except Exception:  # noqa: BLE001 — degrade to heuristic, never 500
+        data = check_too_good_to_be_true(body.text)
+    return {"status": "success", "data": data}
+
+
+@router.post("/tools/analyze-message")
+async def analyze_message(body: MessageAnalyzeRequest):
+    """Analyze a suspicious message/chat log for social-engineering signals and
+    extract payment coordinates (the artifact-first replacement for generic
+    fact-check lookup). Falls back to the local heuristic on provider error."""
+    provider = get_ai_provider()
+    try:
+        data = await provider.analyze_message(body.text)
+    except Exception:  # noqa: BLE001 — degrade to heuristic, never 500
+        data = await MockProvider().analyze_message(body.text)
+    return {"status": "success", "data": data}
 
 
 @router.get("/hotlines")

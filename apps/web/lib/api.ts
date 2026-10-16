@@ -81,6 +81,24 @@ export interface ReportEvidence {
   ai_tampering_detected: boolean;
 }
 
+export interface ReportForensics {
+  provider: string | null;
+  tampering_detected: boolean;
+  tamper_signals: string[];
+  template_mismatch?: boolean | null;
+  typology: { predicted: string; confidence: number; matches_submitted: boolean } | null;
+  duplicate_evidence_of: string[];
+  ner: {
+    phone_hints: string[];
+    url_hosts: string[];
+    amount_hints: string[];
+    dates: string[];
+    handles: string[];
+    injection_suspected: boolean;
+  } | null;
+  ocr: { recipient: string | null; amount: string | null; ref_id: string | null } | null;
+}
+
 export interface ReportView {
   id: string;
   payment_entity_id: string;
@@ -98,6 +116,7 @@ export interface ReportView {
   flags: number;
   ai_risk_score: number | null;
   ai_tampering_detected: boolean;
+  forensics?: ReportForensics | null;
   evidence: ReportEvidence[];
   created_at: string | null;
 }
@@ -843,6 +862,30 @@ export interface RecoveryPlan {
 
 export async function checkDeal(text: string): Promise<DealCheckResult> {
   const body = await request<{ data: DealCheckResult }>("/api/v1/tools/too-good-to-be-true", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ text }),
+  });
+  return body.data;
+}
+
+export interface MessageAnalysis {
+  risk_level: string;
+  signals: { code: string; label: string }[];
+  extracted: {
+    account: string | null;
+    phone: string | null;
+    claimed_identity: string | null;
+  };
+  suggested_category: string;
+  summary: string;
+  tips: string[];
+  engine: string;
+}
+
+/** Artifact-first scam-message analyzer (AI; heuristic fallback server-side). */
+export async function analyzeMessage(text: string): Promise<MessageAnalysis> {
+  const body = await request<{ data: MessageAnalysis }>("/api/v1/tools/analyze-message", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ text }),

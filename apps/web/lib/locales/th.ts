@@ -637,6 +637,47 @@ const th: Record<string, string> = {
   "hotline.VN.2": "กรมความมั่นคงไซเบอร์และการป้องกันอาชญากรรมเทคโนโลยีสูง",
   "hotline.PH.1": "การตอบสนองการหลอกลวงตลอด 24 ชั่วโมงของตำรวจแห่งชาติฟิลิปปินส์",
   "hotline.PH.2": "ศูนย์สืบสวนและประสานงานอาชญากรรมไซเบอร์",
+
+  // ---- AI forensics panel ----
+  "ai.title": "นิติวิทยาศาสตร์ AI",
+  "ai.engineMock": "ฮิวริสติก",
+  "ai.engineModel": "โมเดล AI",
+  "ai.typology": "หมวดหมู่ที่คาดการณ์",
+  "ai.confidence": "ความมั่นใจ",
+  "ai.matches": "ตรงกับที่แจ้ง",
+  "ai.mismatch": "แตกต่างจากที่แจ้ง",
+  "ai.tamper": "การตรวจจับการแก้ไข",
+  "ai.tamperDetected": "ตรวจพบการแก้ไขที่อาจเกิดขึ้น",
+  "ai.noTamper": "ไม่พบสัญญาณการแก้ไข",
+  "ai.ocr": "OCR สลิป (ปลายทาง)",
+  "ai.recipient": "ผู้รับ",
+  "ai.amount": "จำนวนเงิน",
+  "ai.ref": "อ้างอิง",
+  "ai.ner": "ตัวบ่งชี้เหยื่อล่อที่สกัดได้",
+  "ai.phoneHints": "เบาะแสเบอร์โทรศัพท์",
+  "ai.urlHosts": "โฮสต์ URL",
+  "ai.handles": "ชื่อผู้ใช้",
+  "ai.injection": "⚠ ตรวจพบความพยายาม prompt-injection ในข้อความ",
+  "ai.duplicate": "⚠ หลักฐานนี้ซ้ำกับรายงานที่มีอยู่แล้ว",
+
+  // ---- scam message analyzer ----
+  "nav.scamMessage": "เครื่องวิเคราะห์ข้อความหลอกลวง",
+  "tools.message.title": "วิเคราะห์ข้อความที่น่าสงสัย",
+  "tools.message.subtitle":
+    "วาง SMS, DM หรือประวัติแชท เราจะตั้งค่าสถานะกลยุทธ์วิศวกรรมสังคมและสกัดรายละเอียดการชำระเงิน",
+  "tools.message.placeholder":
+    "เช่น 'ด่วน! คุณได้รับรางวัล โอน Rp 500,000 ไปยัง BCA 8831924831 (Admin Siti) วันนี้เท่านั้น!'",
+  "tools.message.analyze": "วิเคราะห์ข้อความ",
+  "tools.message.analyzing": "กำลังวิเคราะห์…",
+  "tools.message.signals": "ตรวจพบสัญญาณ",
+  "tools.message.extracted": "รายละเอียดการชำระเงินที่กล่าวถึง",
+  "tools.message.account": "บัญชี",
+  "tools.message.phone": "โทรศัพท์",
+  "tools.message.identity": "ตัวตนที่อ้าง",
+  "tools.message.suggestedCategory": "หมวดหมู่ที่แนะนำ",
+  "tools.message.tips": "สิ่งที่ควรทำ",
+  "tools.message.disclaimer":
+    "การคัดกรองโดยความช่วยเหลือของ AI ถือเป็นคำแนะนำ ไม่ใช่หลักฐาน — ตรวจสอบผ่านช่องทางราชการเสมอ",
 };
 
 export default th;

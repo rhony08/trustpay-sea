@@ -565,6 +565,47 @@ const en: Record<string, string> = {
   "hotline.PH.1": "Philippine National Police 24/7 scam response",
   "hotline.PH.2": "Cybercrime Investigation and Coordinating Center",
 
+  // ---- AI forensics panel ----
+  "ai.title": "AI forensics",
+  "ai.engineMock": "Heuristic",
+  "ai.engineModel": "AI model",
+  "ai.typology": "Predicted category",
+  "ai.confidence": "Confidence",
+  "ai.matches": "Matches submission",
+  "ai.mismatch": "Differs from submission",
+  "ai.tamper": "Tamper detection",
+  "ai.tamperDetected": "Possible editing detected",
+  "ai.noTamper": "No tampering signals",
+  "ai.ocr": "Slip OCR (destination)",
+  "ai.recipient": "Recipient",
+  "ai.amount": "Amount",
+  "ai.ref": "Reference",
+  "ai.ner": "Extracted bait indicators",
+  "ai.phoneHints": "Phone hints",
+  "ai.urlHosts": "URL hosts",
+  "ai.handles": "Handles",
+  "ai.injection": "⚠ Prompt-injection attempt detected in text",
+  "ai.duplicate": "⚠ This evidence duplicates an existing report",
+
+  // ---- scam message analyzer ----
+  "nav.scamMessage": "Scam Message Analyzer",
+  "tools.message.title": "Analyze a suspicious message",
+  "tools.message.subtitle":
+    "Paste an SMS, DM, or chat log. We flag social-engineering tactics and extract the payment details.",
+  "tools.message.placeholder":
+    "e.g. 'URGENT! You won a prize. Transfer Rp 500,000 to BCA 8831924831 (Admin Siti) today only!'",
+  "tools.message.analyze": "Analyze message",
+  "tools.message.analyzing": "Analyzing…",
+  "tools.message.signals": "Signals detected",
+  "tools.message.extracted": "Payment details mentioned",
+  "tools.message.account": "Account",
+  "tools.message.phone": "Phone",
+  "tools.message.identity": "Claimed identity",
+  "tools.message.suggestedCategory": "Suggested category",
+  "tools.message.tips": "What to do",
+  "tools.message.disclaimer":
+    "AI-assisted screening. Treat this as guidance, not proof — always verify through official channels.",
+
   // ---- name matcher banner ----
   "matcher.title": "Critical alert: recipient name mismatch (money mule suspect)",
   "matcher.highDanger": "High danger",

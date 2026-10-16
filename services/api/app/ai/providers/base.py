@@ -13,6 +13,8 @@ from typing import Any, Protocol, runtime_checkable
 from app.ai import nlp
 from app.ai.errors import RedactionError
 from app.ai.prompts import (
+    DEAL_JUDGE_PROMPT,
+    MESSAGE_ANALYZE_PROMPT,
     NER_PROMPT,
     OCR_PROMPT,
     PII_REGION_PROMPT,
@@ -21,6 +23,8 @@ from app.ai.prompts import (
     draw_redaction,
     extract_json,
     mask_ner,
+    normalize_deal,
+    normalize_message,
     valid_category,
 )
 
@@ -34,6 +38,8 @@ class AIProvider(Protocol):
     async def detect_tampering(self, data: bytes) -> tuple[bool, dict]: ...
     async def classify_typology(self, text: str) -> tuple[str, float]: ...
     async def extract_entities(self, text: str) -> dict: ...
+    async def judge_deal(self, text: str) -> dict: ...
+    async def analyze_message(self, text: str) -> dict: ...
 
 
 class StructuredAIProvider:
@@ -77,6 +83,16 @@ class StructuredAIProvider:
     async def extract_entities(self, text: str) -> dict:
         obj = await self._text_json(NER_PROMPT + text)
         return mask_ner(obj, injection_suspected=nlp.looks_like_injection(text))
+
+    async def judge_deal(self, text: str) -> dict:
+        obj = await self._text_json(DEAL_JUDGE_PROMPT + text)
+        return normalize_deal(obj)
+
+    async def analyze_message(self, text: str) -> dict:
+        obj = await self._text_json(MESSAGE_ANALYZE_PROMPT + text)
+        result = normalize_message(obj)
+        result["engine"] = self.name
+        return result
 
 
 __all__ = ["AIProvider", "StructuredAIProvider", "extract_json"]

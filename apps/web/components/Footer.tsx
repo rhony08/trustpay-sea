@@ -10,6 +10,7 @@ const SERVICES = [
   { href: "/claim", key: "nav.claim" },
   { href: "/recovery", key: "nav.recovery" },
   { href: "/receipt", key: "nav.receipt" },
+  { href: "/tools/scam-message", key: "nav.scamMessage" },
 ];
 
 export function Footer() {

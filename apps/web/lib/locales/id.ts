@@ -648,6 +648,47 @@ const id: Record<string, string> = {
   "hotline.VN.2": "Departemen Keamanan Siber & Pencegahan Kejahatan Teknologi Tinggi",
   "hotline.PH.1": "Respons penipuan 24/7 Philippine National Police",
   "hotline.PH.2": "Pusat Investigasi dan Koordinasi Kejahatan Siber",
+
+  // ---- AI forensics panel ----
+  "ai.title": "Forensik AI",
+  "ai.engineMock": "Heuristik",
+  "ai.engineModel": "Model AI",
+  "ai.typology": "Kategori yang diprediksi",
+  "ai.confidence": "Tingkat keyakinan",
+  "ai.matches": "Sesuai dengan laporan",
+  "ai.mismatch": "Berbeda dari laporan",
+  "ai.tamper": "Deteksi manipulasi",
+  "ai.tamperDetected": "Terdeteksi kemungkinan penyuntingan",
+  "ai.noTamper": "Tidak ada sinyal manipulasi",
+  "ai.ocr": "OCR slip (tujuan)",
+  "ai.recipient": "Penerima",
+  "ai.amount": "Jumlah",
+  "ai.ref": "Referensi",
+  "ai.ner": "Indikator umpan yang diekstrak",
+  "ai.phoneHints": "Petunjuk telepon",
+  "ai.urlHosts": "Host URL",
+  "ai.handles": "Nama pengguna",
+  "ai.injection": "⚠ Terdeteksi upaya prompt-injection dalam teks",
+  "ai.duplicate": "⚠ Bukti ini menduplikasi laporan yang sudah ada",
+
+  // ---- scam message analyzer ----
+  "nav.scamMessage": "Analisis Pesan Penipuan",
+  "tools.message.title": "Analisis pesan yang mencurigakan",
+  "tools.message.subtitle":
+    "Tempelkan SMS, DM, atau log obrolan. Kami menandai taktik rekayasa sosial dan mengekstrak detail pembayaran.",
+  "tools.message.placeholder":
+    "mis. 'DARURAT! Anda menang hadiah. Transfer Rp 500,000 ke BCA 8831924831 (Admin Siti) hanya hari ini!'",
+  "tools.message.analyze": "Analisis pesan",
+  "tools.message.analyzing": "Menganalisis…",
+  "tools.message.signals": "Sinyal terdeteksi",
+  "tools.message.extracted": "Detail pembayaran yang disebutkan",
+  "tools.message.account": "Rekening",
+  "tools.message.phone": "Telepon",
+  "tools.message.identity": "Identitas yang diklaim",
+  "tools.message.suggestedCategory": "Kategori yang disarankan",
+  "tools.message.tips": "Yang harus dilakukan",
+  "tools.message.disclaimer":
+    "Penyaringan berbantuan AI. Anggap ini sebagai panduan, bukan bukti — selalu verifikasi melalui saluran resmi.",
 };
 
 export default id;

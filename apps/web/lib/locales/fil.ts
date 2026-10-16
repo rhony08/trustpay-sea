@@ -646,6 +646,47 @@ const fil: Record<string, string> = {
   "hotline.VN.2": "Department of Cybersecurity & High-Tech Crime Prevention",
   "hotline.PH.1": "24/7 scam response ng Philippine National Police",
   "hotline.PH.2": "Cybercrime Investigation and Coordinating Center",
+
+  // ---- AI forensics panel ----
+  "ai.title": "AI forensics",
+  "ai.engineMock": "Heuristic",
+  "ai.engineModel": "Modelo ng AI",
+  "ai.typology": "Hinulang kategorya",
+  "ai.confidence": "Kumpiyansa",
+  "ai.matches": "Tugma sa isinumite",
+  "ai.mismatch": "Naiiba sa isinumite",
+  "ai.tamper": "Pagtukoy ng pagbabago",
+  "ai.tamperDetected": "Posibleng pag-edit na natukoy",
+  "ai.noTamper": "Walang senyales ng pagbabago",
+  "ai.ocr": "OCR ng slip (destinasyon)",
+  "ai.recipient": "Tatanggap",
+  "ai.amount": "Halaga",
+  "ai.ref": "Sanggunian",
+  "ai.ner": "Mga nakuha na palatandaan ng pain",
+  "ai.phoneHints": "Mga hint ng telepono",
+  "ai.urlHosts": "Mga host ng URL",
+  "ai.handles": "Mga handle",
+  "ai.injection": "⚠ May natukoy na pagtatangkang prompt-injection sa teksto",
+  "ai.duplicate": "⚠ Kinokopya ng ebidensyang ito ang isang umiiral na ulat",
+
+  // ---- scam message analyzer ----
+  "nav.scamMessage": "Tagasuri ng Scam na Mensahe",
+  "tools.message.title": "Suriin ang kahina-hinalang mensahe",
+  "tools.message.subtitle":
+    "I-paste ang SMS, DM, o chat log. Minamarkahan namin ang mga taktikang social-engineering at kinukuha ang mga detalye ng bayad.",
+  "tools.message.placeholder":
+    "hal. 'URGENT! Nananalo ka ng premyo. Magpadala ng Rp 500,000 sa BCA 8831924831 (Admin Siti) ngayong araw lang!'",
+  "tools.message.analyze": "Suriin ang mensahe",
+  "tools.message.analyzing": "Sinusuri…",
+  "tools.message.signals": "Mga natukoy na senyales",
+  "tools.message.extracted": "Mga nabanggit na detalye ng bayad",
+  "tools.message.account": "Account",
+  "tools.message.phone": "Telepono",
+  "tools.message.identity": "Inaangking pagkakakilanlan",
+  "tools.message.suggestedCategory": "Iminungkahing kategorya",
+  "tools.message.tips": "Ano ang dapat gawin",
+  "tools.message.disclaimer":
+    "Pagsusuri na tinutulungan ng AI. Ituring itong gabay, hindi patunay — palaging i-verify sa mga opisyal na channel.",
 };
 
 export default fil;

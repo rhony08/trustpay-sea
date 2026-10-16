@@ -16,8 +16,10 @@ import {
   signup,
   uploadEvidence,
   type Bank,
+  type ReportForensics,
 } from "@/lib/api";
 import { RedactedSlipViewer } from "@/components/RedactedSlipViewer";
+import { AiForensics } from "@/components/AiForensics";
 import { useI18n } from "@/components/LocaleProvider";
 
 const inputCls =
@@ -73,6 +75,7 @@ export default function ReportPage() {
   const [reportId, setReportId] = useState<string | null>(null);
   const [reportStatus, setReportStatus] = useState<string | null>(null);
   const [evidenceUrl, setEvidenceUrl] = useState<string | null>(null);
+  const [forensics, setForensics] = useState<ReportForensics | null>(null);
 
   useEffect(() => setTokenState(getToken()), []);
 
@@ -113,6 +116,7 @@ export default function ReportPage() {
       const view = await getReport(id);
       setReportStatus(view.processing_status);
       setEvidenceUrl(view.evidence?.[0]?.media_url ?? null);
+      setForensics(view.forensics ?? null);
       if (view.processing_status !== "PROCESSING") return;
     }
   }
@@ -123,6 +127,7 @@ export default function ReportPage() {
     setError(null);
     setReportStatus(null);
     setEvidenceUrl(null);
+    setForensics(null);
     try {
       const created = await createReport(token, {
         target: { kind: "ACCOUNT", country, bank, account },
@@ -217,7 +222,12 @@ export default function ReportPage() {
 
         <div className="space-y-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-xs sm:p-8">
           {reportStatus ? (
-            <SuccessPanel status={reportStatus} reportId={reportId} evidenceUrl={evidenceUrl} />
+            <SuccessPanel
+              status={reportStatus}
+              reportId={reportId}
+              evidenceUrl={evidenceUrl}
+              forensics={forensics}
+            />
           ) : step === 1 ? (
             <>
               <h2 className="text-base font-bold text-slate-900">{t("report.s1Title")}</h2>
@@ -442,10 +452,12 @@ function SuccessPanel({
   status,
   reportId,
   evidenceUrl,
+  forensics,
 }: {
   status: string;
   reportId: string | null;
   evidenceUrl: string | null;
+  forensics: ReportForensics | null;
 }) {
   const { t } = useI18n();
   return (
@@ -473,6 +485,7 @@ function SuccessPanel({
       <span className={`inline-block rounded-full border px-3 py-1 text-xs font-semibold ${STATUS_STYLES[status] ?? STATUS_STYLES.PROCESSING}`}>
         {status}
       </span>
+      {status === "PUBLISHED" && <AiForensics forensics={forensics} />}
       {status === "PUBLISHED" && evidenceUrl && (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={evidenceUrl} alt={t("report.evidenceAlt")} className="mx-auto mt-3 max-h-64 rounded-lg border border-slate-200" />

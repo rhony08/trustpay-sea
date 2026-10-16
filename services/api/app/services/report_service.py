@@ -269,6 +269,37 @@ def serialize_evidence(evidence: ReportEvidence, public_url: str, *, published: 
     }
 
 
+def serialize_forensics(notes: dict | None) -> dict | None:
+    """Public-safe subset of `ai_forensic_notes` (Doc 12 asymmetric redaction).
+
+    Never exposes reporter-side OCR (sender/balance/raw text) — only the
+    destination-side fields needed to verify the recipient, plus already-masked
+    NER hints.
+    """
+    if not notes:
+        return None
+    ocr = notes.get("ocr") if isinstance(notes.get("ocr"), dict) else {}
+    ocr_public = (
+        {
+            "recipient": ocr.get("recipient"),
+            "amount": ocr.get("amount"),
+            "ref_id": ocr.get("ref_id"),
+        }
+        if ocr
+        else None
+    )
+    return {
+        "provider": notes.get("provider"),
+        "tampering_detected": bool(notes.get("tampering_detected")),
+        "tamper_signals": (notes.get("tampering") or {}).get("signals") or [],
+        "template_mismatch": (notes.get("tampering") or {}).get("template_mismatch"),
+        "typology": notes.get("typology") or None,
+        "duplicate_evidence_of": notes.get("duplicate_evidence_of") or [],
+        "ner": notes.get("ner") or None,
+        "ocr": ocr_public,
+    }
+
+
 def serialize_report(
     report: FraudReport,
     evidence: list[ReportEvidence] | None = None,
@@ -296,6 +327,7 @@ def serialize_report(
         "ai_tampering_detected": bool(
             report.ai_forensic_notes and report.ai_forensic_notes.get("tampering_detected")
         ),
+        "forensics": serialize_forensics(report.ai_forensic_notes) if published else None,
         "evidence": [
             serialize_evidence(e, public_urls.get(e.id, ""), published=published)
             for e in (evidence or [])
