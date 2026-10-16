@@ -2,7 +2,14 @@
 
 from functools import lru_cache
 
+from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+# Dev-only placeholders that must never reach production. Enforced below.
+_INSECURE_DEFAULTS = {
+    "account_hmac_key": "dev-only-insecure-key-change-me",
+    "receipt_signing_key": "dev-only-insecure-receipt-key",
+}
 
 
 class Settings(BaseSettings):
@@ -129,6 +136,23 @@ class Settings(BaseSettings):
 
     # AI fail-closed test hook (Phase 2.3): force PII redaction to fail.
     ai_redaction_always_fail: bool = False
+
+    @model_validator(mode="after")
+    def _reject_insecure_prod_secrets(self) -> "Settings":
+        """Fail fast in prod if dev-only placeholder secrets are still in use."""
+        if self.environment == "prod":
+            bad = [
+                name
+                for name, default in _INSECURE_DEFAULTS.items()
+                if getattr(self, name) == default
+            ]
+            if bad:
+                raise ValueError(
+                    "refusing to start in prod with default secrets: "
+                    + ", ".join(bad)
+                    + " — set them via env or Secret Manager"
+                )
+        return self
 
 
 @lru_cache
