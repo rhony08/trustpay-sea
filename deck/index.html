@@ -96,7 +96,48 @@
     </div>
   </section>
 
-  <!-- ===================== 3. OPPORTUNITIES ===================== -->
+  <!-- ===================== 3. WHAT WE BUILT (GOOGLE STACK & GEMINI) ===================== -->
+  <section class="slide fade relative flex-col justify-center px-6 py-10 sm:px-16 bg-gradient-to-br from-slate-950 via-slate-900 to-violet-950/40 grid-lines">
+    <div class="glow h-80 w-80 bg-violet-600/40 top-10 right-16"></div>
+    <div class="relative z-10 mx-auto w-full max-w-6xl">
+      <p class="text-xs font-bold uppercase tracking-widest text-blue-400">Brief · what we built</p>
+      <h2 class="mt-2 text-3xl font-extrabold text-white sm:text-4xl">Built on Google Cloud, powered by Gemini.</h2>
+      <p class="mt-4 max-w-3xl text-sm text-slate-300">
+        A production-grade web app: a Next.js PWA + FastAPI modular monolith, PostgreSQL + Redis, an
+        AI forensics pipeline, and a public screening API — deployed on Google Cloud with Gemini as
+        the reasoning layer.
+      </p>
+      <div class="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <div class="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur">
+          <p class="text-sm font-bold text-blue-300">Google Cloud stack</p>
+          <ul class="mt-2 space-y-1 text-sm text-slate-300">
+            <li>• <b class="text-slate-100">Compute Engine</b> — one region-pinned VM (Jakarta) runs the full stack via Docker Compose (API · web · Postgres · Redis · proxy) for SEA data residency</li>
+            <li>• <b class="text-slate-100">Vertex AI</b> — Gemini 2.5 Flash for all model calls (ADC via the VM service account)</li>
+            <li>• <b class="text-slate-100">Cloudflare</b> edge — DNS · TLS · WAF (cookieless media path)</li>
+            <li>• <b class="text-slate-100">Artifact Registry / Secret Manager</b> — image + secret management (hardening path)</li>
+          </ul>
+        </div>
+        <div class="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur">
+          <p class="text-sm font-bold text-emerald-300">Gemini in the product</p>
+          <ul class="mt-2 space-y-1 text-sm text-slate-300">
+            <li>• <b class="text-slate-100">Slip forensics</b> — OCR (recipient/amount/ref), tamper detection, PII-region detection → local fail-closed redaction</li>
+            <li>• <b class="text-slate-100">Classification</b> — fraud typology + entity extraction (NER)</li>
+            <li>• <b class="text-slate-100">Grounded summaries</b> — server-side, prompt-injection-proof</li>
+            <li>• <b class="text-slate-100">Scam-message analyzer</b> + deal judge</li>
+            <li>• Pluggable provider (<code class="text-blue-300">mock | Vertex | OpenRouter</code>) — runs with zero keys, fails closed</li>
+          </ul>
+        </div>
+      </div>
+      <p class="mt-4 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-xs text-slate-400 backdrop-blur">
+        <b class="text-slate-200">Firestore / Cloud Run:</b> evaluated but not used — the backend is relational
+        (SQLAlchemy + Alembic, KMS-HMAC index, hash-chained audit), so Firestore would need a data-layer rewrite;
+        a single GCE VM keeps SEA residency and cost low (~$27/mo vs ~$85–100/mo). Cloud Run + Cloud SQL is the
+        documented scaling path.
+      </p>
+    </div>
+  </section>
+
+  <!-- ===================== 4. OPPORTUNITIES ===================== -->
   <section class="slide fade relative flex-col justify-center px-6 py-12 sm:px-16 bg-gradient-to-br from-slate-950 via-indigo-950/50 to-slate-900 grid-lines">
     <div class="glow h-80 w-80 bg-indigo-600/40 bottom-10 left-10"></div>
     <div class="relative z-10 mx-auto w-full max-w-5xl">
