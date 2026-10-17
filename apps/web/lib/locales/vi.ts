@@ -688,6 +688,14 @@ const vi: Record<string, string> = {
   "report.reporterHelp":
     "Không cần tài khoản. Nếu email của bạn đã được đăng ký, chúng tôi sẽ dùng tài khoản đó; nếu chưa, chúng tôi sẽ tạo một tài khoản để bạn có thể đính kèm bằng chứng và theo dõi báo cáo của mình.",
   "report.reporterRequired": "Vui lòng nhập tên và email của bạn trước khi gửi.",
+
+  // ---- inline report (from the dossier) ----
+  "check.reportThis": "Báo cáo tài khoản này",
+  "check.reportModalTitle": "Báo cáo tài khoản này",
+  "check.reportModalDesc":
+    "Không cần tài khoản. Hãy cho chúng tôi biết chuyện gì đã xảy ra và chúng tôi sẽ đối chiếu chéo rồi công bố một báo cáo đã được che thông tin để bảo vệ những người trả tiền khác.",
+  "check.reportConsentRequired": "Vui lòng đánh dấu vào bản tuyên bố trước khi gửi.",
+  "check.reportSuccess": "Đã gửi báo cáo — cảm ơn bạn. Báo cáo sẽ xuất hiện trên tài khoản này sau khi được xác minh.",
 };
 
 export default vi;

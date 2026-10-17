@@ -696,6 +696,14 @@ const ms: Record<string, string> = {
   "report.reporterHelp":
     "Tiada akaun diperlukan. Jika e-mel anda sudah berdaftar, kami akan menggunakan akaun itu; jika tidak, kami akan mencipta satu supaya anda boleh melampirkan bukti dan menjejak laporan anda.",
   "report.reporterRequired": "Sila masukkan nama dan e-mel anda sebelum menghantar.",
+
+  // ---- inline report (from the dossier) ----
+  "check.reportThis": "Laporkan akaun ini",
+  "check.reportModalTitle": "Laporkan akaun ini",
+  "check.reportModalDesc":
+    "Tiada akaun diperlukan. Beritahu kami apa yang berlaku dan kami akan menyemak silang serta menerbitkan laporan yang disunting untuk melindungi pembayar lain.",
+  "check.reportConsentRequired": "Sila tandakan perakuan sebelum menghantar.",
+  "check.reportSuccess": "Laporan dihantar — terima kasih. Ia akan muncul pada akaun ini setelah disahkan.",
 };
 
 export default ms;

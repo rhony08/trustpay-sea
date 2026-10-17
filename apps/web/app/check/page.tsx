@@ -7,13 +7,17 @@ import {
   BANKS,
   COUNTRIES,
   FLAG_REASONS,
+  REPORT_CATEGORIES,
   addWatch,
+  createAnonymousReport,
+  createReport,
   decodeQrImage,
   flagReport,
   getToken,
   screenAccount,
   screenQr,
   searchPhone,
+  setToken,
   type PhoneSearchResult,
   type ReportView,
   type ScreenResult,
@@ -55,6 +59,7 @@ export default function CheckPage() {
   const [result, setResult] = useState<ScreenResult | null>(null);
   const [phoneResult, setPhoneResult] = useState<PhoneSearchResult | null>(null);
   const [flagged, setFlagged] = useState<ReportView | null>(null);
+  const [reportOpen, setReportOpen] = useState(false);
 
   const run = useCallback(
     async (fn: () => Promise<ScreenResult>) => {
@@ -323,6 +328,7 @@ export default function CheckPage() {
             result={result}
             nameClaim={nameClaim}
             onFlag={setFlagged}
+            onReport={() => setReportOpen(true)}
             reportHref={`/report?country=${encodeURIComponent(country)}&bank=${encodeURIComponent(
               bank,
             )}&account=${encodeURIComponent(account)}`}
@@ -332,6 +338,14 @@ export default function CheckPage() {
       </div>
 
       {flagged && <FlagModal report={flagged} onClose={() => setFlagged(null)} />}
+      {reportOpen && (
+        <ReportModal
+          country={country}
+          bank={bank}
+          account={account}
+          onClose={() => setReportOpen(false)}
+        />
+      )}
     </main>
   );
 }
@@ -346,11 +360,13 @@ function ResultView({
   result,
   nameClaim,
   onFlag,
+  onReport,
   reportHref,
 }: {
   result: ScreenResult;
   nameClaim: string;
   onFlag: (r: ReportView) => void;
+  onReport: () => void;
   reportHref: string;
 }) {
   const { t } = useI18n();
@@ -379,6 +395,12 @@ function ResultView({
             </dl>
           )}
           <GovCheckBanner check={result.data.gov_check} />
+          <button
+            onClick={onReport}
+            className="mt-4 w-full rounded-lg bg-rose-600 px-3.5 py-2 text-sm font-bold text-white shadow-xs hover:bg-rose-700"
+          >
+            {t("check.reportThis")}
+          </button>
         </div>
       </div>
     );
@@ -449,6 +471,12 @@ function ResultView({
               <p className="text-[11px] text-amber-600">{t("check.anomaly")}</p>
             )}
             <div className="flex flex-wrap justify-end gap-2">
+              <button
+                onClick={onReport}
+                className="rounded-lg bg-rose-600 px-3 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-rose-700"
+              >
+                {t("check.reportThis")}
+              </button>
               <WatchButton entityId={entity.id} />
               <Link
                 href={`/claim?entity=${entity.id}`}
@@ -567,6 +595,12 @@ function ResultView({
 
         <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-4 text-xs">
           <div className="flex items-center gap-2">
+            <button
+              onClick={onReport}
+              className="rounded-lg bg-rose-600 px-3.5 py-2 font-bold text-white shadow-xs hover:bg-rose-700"
+            >
+              {t("check.reportThis")}
+            </button>
             <Link
               href={`/receipt?country=${entity.country}&bank=${entity.institution ?? ""}&account=`}
               className="rounded-lg border border-slate-300 bg-slate-50 px-3.5 py-2 font-bold text-slate-700 hover:bg-slate-100"
@@ -668,6 +702,190 @@ function ReportsFeed({
           </button>
         </div>
       )}
+    </div>
+  );
+}
+
+function ReportModal({
+  country,
+  bank,
+  account,
+  onClose,
+}: {
+  country: string;
+  bank: string;
+  account: string;
+  onClose: () => void;
+}) {
+  const { t } = useI18n();
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [category, setCategory] = useState(REPORT_CATEGORIES[0].value);
+  const [severity, setSeverity] = useState(3);
+  const [description, setDescription] = useState("");
+  const [amount, setAmount] = useState("");
+  const [consent, setConsent] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [doneId, setDoneId] = useState<string | null>(null);
+  const token = getToken();
+
+  async function submit() {
+    if (!consent) {
+      setError(t("check.reportConsentRequired"));
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    const payload = {
+      target: { kind: "ACCOUNT" as const, country, bank, account },
+      category,
+      severity,
+      description,
+      currency: "IDR",
+      loss_amount: amount ? Number(amount) : null,
+      consent,
+    };
+    try {
+      if (token) {
+        const created = await createReport(token, payload);
+        setDoneId(created.report_id);
+      } else {
+        if (!name.trim() || !email.trim()) {
+          setError(t("report.reporterRequired"));
+          setBusy(false);
+          return;
+        }
+        const created = await createAnonymousReport({
+          ...payload,
+          reporter_name: name.trim(),
+          reporter_email: email.trim(),
+        });
+        if (created.access_token) setToken(created.access_token);
+        setDoneId(created.report_id);
+      }
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : t("report.submitError"));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
+      <div className="max-h-[90vh] w-full max-w-lg space-y-4 overflow-y-auto rounded-2xl border border-slate-200 bg-white p-6 shadow-xl">
+        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+          <div>
+            <h3 className="text-base font-bold text-slate-900">{t("check.reportModalTitle")}</h3>
+            <p className="font-mono text-[11px] text-slate-500">
+              {country} · {bank} · {account || "—"}
+            </p>
+          </div>
+          <button onClick={onClose} className="text-lg text-slate-400 hover:text-slate-600">
+            ✕
+          </button>
+        </div>
+
+        {doneId ? (
+          <div className="space-y-3 text-center">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full border border-emerald-200 bg-emerald-100 text-xl font-bold text-emerald-700">
+              ✓
+            </div>
+            <p className="text-sm font-semibold text-slate-800">{t("check.reportSuccess")}</p>
+            <p className="text-xs text-slate-500">
+              {t("report.reference")} <span className="font-mono font-bold text-slate-800">{doneId}</span>
+            </p>
+            <button
+              onClick={onClose}
+              className="rounded-lg bg-blue-600 px-4 py-2 text-xs font-bold text-white hover:bg-blue-700"
+            >
+              {t("common.close")}
+            </button>
+          </div>
+        ) : (
+          <>
+            <p className="text-xs leading-relaxed text-slate-600">{t("check.reportModalDesc")}</p>
+
+            {!token && (
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div>
+                  <MiniLabel>{t("report.reporterName")}</MiniLabel>
+                  <input className={inputCls} value={name} onChange={(e) => setName(e.target.value)} placeholder={t("report.reporterNamePlaceholder")} />
+                </div>
+                <div>
+                  <MiniLabel>{t("report.reporterEmail")}</MiniLabel>
+                  <input className={inputCls} type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t("common.email")} />
+                </div>
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div>
+                <MiniLabel>{t("report.category")}</MiniLabel>
+                <select className={inputCls} value={category} onChange={(e) => setCategory(e.target.value)}>
+                  {REPORT_CATEGORIES.map((c) => (
+                    <option key={c.value} value={c.value}>
+                      {t(`cat.${c.value}`)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <MiniLabel>{t("report.severity")}</MiniLabel>
+                <select className={inputCls} value={severity} onChange={(e) => setSeverity(Number(e.target.value))}>
+                  {[1, 2, 3, 4, 5].map((s) => (
+                    <option key={s} value={s}>
+                      {t("report.severityOption", { n: s })}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <MiniLabel>{t("report.lossAmount")} ({t("common.optional")})</MiniLabel>
+              <input
+                className={`${inputCls} font-mono`}
+                inputMode="numeric"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value.replace(/[^\d]/g, ""))}
+                placeholder="1500000"
+              />
+            </div>
+
+            <div>
+              <MiniLabel>{t("report.narrative")}</MiniLabel>
+              <textarea
+                className={inputCls}
+                rows={3}
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder={t("report.narrativePlaceholder")}
+              />
+            </div>
+
+            <label className="flex cursor-pointer items-start gap-2 text-[11px] text-slate-600">
+              <input type="checkbox" className="mt-0.5 h-4 w-4 shrink-0 accent-blue-600" checked={consent} onChange={(e) => setConsent(e.target.checked)} />
+              <span>{t("report.declaration")}</span>
+            </label>
+
+            {error && <p className="text-xs text-rose-600">{error}</p>}
+
+            <div className="flex gap-2 pt-1">
+              <button onClick={onClose} className="flex-1 rounded-lg bg-slate-100 py-2 text-xs font-bold text-slate-700">
+                {t("common.cancel")}
+              </button>
+              <button
+                onClick={() => void submit()}
+                disabled={busy || description.length < 20}
+                className="flex-1 rounded-lg bg-rose-600 py-2 text-xs font-bold text-white shadow-xs hover:bg-rose-700 disabled:opacity-50"
+              >
+                {busy ? t("report.submitting") : t("report.submit")}
+              </button>
+            </div>
+          </>
+        )}
+      </div>
     </div>
   );
 }

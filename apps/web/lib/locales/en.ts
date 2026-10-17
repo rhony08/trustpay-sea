@@ -226,6 +226,14 @@ const en: Record<string, string> = {
   "check.kindPhone": "phone number",
   "check.kindAccount": "bank account",
 
+  // ---- inline report (from the dossier) ----
+  "check.reportThis": "Report this account",
+  "check.reportModalTitle": "Report this account",
+  "check.reportModalDesc":
+    "No account needed. Tell us what happened and we'll cross-check and publish a redacted report that protects other payers.",
+  "check.reportConsentRequired": "Please tick the declaration before submitting.",
+  "check.reportSuccess": "Report submitted — thank you. It will appear on this account once verified.",
+
   // ---- report ----
   "report.signInTitle": "Report a scam",
   "report.signupPrompt": "Create an account to submit a fraud report.",

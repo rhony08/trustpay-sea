@@ -696,6 +696,14 @@ const fil: Record<string, string> = {
   "report.reporterHelp":
     "Hindi kailangan ng account. Kung nakarehistro na ang email mo, gagamitin namin ang account na iyon; kung wala pa, gagawa kami ng isa para makapag-attach ka ng ebidensya at ma-track ang ulat mo.",
   "report.reporterRequired": "Pakilagay ang pangalan at email mo bago magsumite.",
+
+  // ---- inline report (from the dossier) ----
+  "check.reportThis": "Iulat ang account na ito",
+  "check.reportModalTitle": "Iulat ang account na ito",
+  "check.reportModalDesc":
+    "Hindi kailangan ng account. Sabihin sa amin ang nangyari at i-cross-check namin at maglalathala ng redacted na ulat na protektado ang ibang nagbabayad.",
+  "check.reportConsentRequired": "Mangyaring lagyan ng tsek ang deklarasyon bago magsumite.",
+  "check.reportSuccess": "Naisumite ang ulat — salamat. Lalabas ito sa account na ito kapag na-verify.",
 };
 
 export default fil;

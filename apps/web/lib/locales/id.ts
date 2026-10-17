@@ -698,6 +698,14 @@ const id: Record<string, string> = {
   "report.reporterHelp":
     "Tidak perlu akun. Jika email Anda sudah terdaftar, kami akan menggunakan akun itu; jika belum, kami akan membuatkannya agar Anda dapat melampirkan bukti dan memantau laporan Anda.",
   "report.reporterRequired": "Harap masukkan nama dan email Anda sebelum mengirim.",
+
+  // ---- inline report (from the dossier) ----
+  "check.reportThis": "Laporkan rekening ini",
+  "check.reportModalTitle": "Laporkan rekening ini",
+  "check.reportModalDesc":
+    "Tidak perlu akun. Beri tahu kami apa yang terjadi dan kami akan memeriksa silang serta menerbitkan laporan yang disunting untuk melindungi pembayar lain.",
+  "check.reportConsentRequired": "Harap centang pernyataan sebelum mengirim.",
+  "check.reportSuccess": "Laporan terkirim — terima kasih. Laporan akan muncul di rekening ini setelah diverifikasi.",
 };
 
 export default id;
