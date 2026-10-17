@@ -11,323 +11,258 @@
   .slide { display: none; }
   .slide.active { display: flex; height: 100vh; overflow-y: auto; }
   .fade { animation: fade .28s ease; }
-  @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
-  .censored-blur { filter: blur(5px); user-select: none; }
+  @keyframes fade { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  .glow { position: absolute; border-radius: 9999px; filter: blur(90px); opacity: .5; pointer-events: none; }
+  .grid-lines {
+    background-image: linear-gradient(rgba(255,255,255,.04) 1px, transparent 1px),
+                      linear-gradient(90deg, rgba(255,255,255,.04) 1px, transparent 1px);
+    background-size: 44px 44px;
+  }
   @media print {
     .no-print { display: none !important; }
     .slide { display: flex !important; page-break-after: always; height: 100vh; }
   }
 </style>
 </head>
-<body class="bg-slate-50 text-slate-800 antialiased">
+<body class="bg-slate-950 text-slate-100 antialiased">
 
-<!-- progress -->
-<div class="no-print fixed top-0 left-0 right-0 h-1 z-50 bg-slate-200">
-  <div id="progress" class="h-1 bg-blue-600 transition-all" style="width:8%"></div>
+<div class="no-print fixed top-0 left-0 right-0 h-1 z-50 bg-slate-800">
+  <div id="progress" class="h-1 bg-gradient-to-r from-blue-500 via-indigo-500 to-rose-500 transition-all" style="width:8%"></div>
 </div>
 
 <div id="deck" class="relative w-full h-screen overflow-hidden">
 
   <!-- ===================== 1. TITLE ===================== -->
-  <section class="slide active fade flex-col items-center justify-center px-6 text-center bg-white">
-    <div class="flex items-center gap-3 mb-8">
-      <span class="flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-md">
-        <svg class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
-      </span>
-      <span class="flex items-center gap-2">
-        <span class="text-4xl font-black tracking-tight text-slate-900">TrustPay</span>
-        <span class="rounded border border-blue-200 bg-blue-100 px-2 py-0.5 text-sm font-bold text-blue-800">SEA</span>
-      </span>
+  <section class="slide active fade relative flex-col items-center justify-center px-6 text-center bg-slate-950 grid-lines">
+    <div class="glow h-96 w-96 bg-blue-600/60 -top-24 -left-20"></div>
+    <div class="glow h-96 w-96 bg-indigo-600/50 -bottom-24 -right-20"></div>
+    <div class="relative z-10 flex flex-col items-center">
+      <div class="mb-8 flex items-center gap-3">
+        <span class="flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-600 shadow-[0_0_40px_-6px_rgba(37,99,235,.9)]">
+          <svg class="h-9 w-9" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+        </span>
+        <span class="flex items-center gap-2">
+          <span class="text-5xl font-black tracking-tight text-white">TrustPay</span>
+          <span class="rounded border border-blue-400/40 bg-blue-500/20 px-2 py-0.5 text-sm font-bold text-blue-300">SEA</span>
+        </span>
+      </div>
+      <h1 class="max-w-4xl text-4xl font-black leading-tight text-white sm:text-6xl">
+        Know who you are paying <span class="bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">before sending money.</span>
+      </h1>
+      <p class="mt-6 max-w-2xl text-lg text-slate-300">
+        The Truecaller &amp; Google Reviews for Southeast Asian digital payments —
+        a community payment-risk and reputation registry.
+      </p>
+      <div class="mt-10 flex flex-wrap items-center justify-center gap-2 text-xs font-semibold text-slate-300">
+        <span class="rounded-full border border-white/10 bg-white/5 px-3 py-1">🇮🇩 ID</span>
+        <span class="rounded-full border border-white/10 bg-white/5 px-3 py-1">🇲🇾 MY</span>
+        <span class="rounded-full border border-white/10 bg-white/5 px-3 py-1">🇸🇬 SG</span>
+        <span class="rounded-full border border-white/10 bg-white/5 px-3 py-1">🇹🇭 TH</span>
+        <span class="rounded-full border border-white/10 bg-white/5 px-3 py-1">🇻🇳 VN</span>
+        <span class="rounded-full border border-white/10 bg-white/5 px-3 py-1">🇵🇭 PH</span>
+      </div>
     </div>
-    <h1 class="max-w-3xl text-4xl sm:text-5xl font-black leading-tight text-slate-900">
-      Know who you are paying <span class="text-blue-600">before sending money.</span>
-    </h1>
-    <p class="mt-5 max-w-2xl text-lg text-slate-600">
-      The Truecaller &amp; Google Reviews for Southeast Asian digital payments —
-      a community payment-risk and reputation registry.
-    </p>
-    <div class="mt-8 flex flex-wrap items-center justify-center gap-2 text-xs font-semibold text-slate-500">
-      <span class="rounded-full border border-slate-200 bg-slate-50 px-3 py-1">🇮🇩 ID</span>
-      <span class="rounded-full border border-slate-200 bg-slate-50 px-3 py-1">🇲🇾 MY</span>
-      <span class="rounded-full border border-slate-200 bg-slate-50 px-3 py-1">🇸🇬 SG</span>
-      <span class="rounded-full border border-slate-200 bg-slate-50 px-3 py-1">🇹🇭 TH</span>
-      <span class="rounded-full border border-slate-200 bg-slate-50 px-3 py-1">🇻🇳 VN</span>
-      <span class="rounded-full border border-slate-200 bg-slate-50 px-3 py-1">🇵🇭 PH</span>
-    </div>
-    <p class="mt-10 text-xs text-slate-400">Use ← → arrow keys or click to navigate</p>
   </section>
 
   <!-- ===================== 2. PROBLEM ===================== -->
-  <section class="slide fade flex-col justify-center px-6 sm:px-16 py-12 bg-slate-50">
-    <div class="mx-auto w-full max-w-5xl">
-      <p class="text-xs font-bold uppercase tracking-widest text-rose-600">The problem</p>
-      <h2 class="mt-2 text-3xl sm:text-4xl font-extrabold text-slate-900">Instant payments are irreversible. Scammers exploit the gap.</h2>
-      <div class="mt-8 grid grid-cols-1 gap-5 md:grid-cols-3">
-        <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs">
+  <section class="slide fade relative flex-col justify-center px-6 py-12 sm:px-16 bg-gradient-to-br from-slate-950 via-slate-900 to-rose-950/40 grid-lines">
+    <div class="glow h-80 w-80 bg-rose-600/40 top-10 right-0"></div>
+    <div class="relative z-10 mx-auto w-full max-w-5xl">
+      <p class="text-xs font-bold uppercase tracking-widest text-rose-400">The problem</p>
+      <h2 class="mt-2 text-3xl font-extrabold text-white sm:text-4xl">Instant payments are irreversible. Scammers exploit the gap.</h2>
+      <div class="mt-10 grid grid-cols-1 gap-5 md:grid-cols-3">
+        <div class="rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur">
           <p class="text-2xl">⚡</p>
-          <h3 class="mt-3 text-base font-bold text-slate-900">No chargeback</h3>
-          <p class="mt-2 text-sm text-slate-600">QRIS, DuitNow, PromptPay, PayNow and bank transfers settle instantly — once sent, funds are gone. There is no card-style dispute to fall back on.</p>
+          <h3 class="mt-3 text-base font-bold text-white">No chargeback</h3>
+          <p class="mt-2 text-sm text-slate-300">QRIS, DuitNow, PromptPay, PayNow and bank transfers settle instantly — once sent, funds are gone. No card-style dispute to fall back on.</p>
         </div>
-        <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs">
+        <div class="rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur">
           <p class="text-2xl">🎭</p>
-          <h3 class="mt-3 text-base font-bold text-slate-900">Money-mule accounts</h3>
-          <p class="mt-2 text-sm text-slate-600">Scammers say "pay Admin Siti" — but the account belongs to a rented mule, "Bambang". Victims only discover the mismatch after the money is gone.</p>
+          <h3 class="mt-3 text-base font-bold text-white">Money-mule accounts</h3>
+          <p class="mt-2 text-sm text-slate-300">Scammers say "pay Admin Siti" — but the account belongs to a rented mule, "Bambang". Victims discover the mismatch too late.</p>
         </div>
-        <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs">
+        <div class="rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur">
           <p class="text-2xl">🔍</p>
-          <h3 class="mt-3 text-base font-bold text-slate-900">No way to check</h3>
-          <p class="mt-2 text-sm text-slate-600">Before paying, there is no consumer tool to verify an account or QR code. Government blacklists exist, but coverage is partial and not real-time.</p>
+          <h3 class="mt-3 text-base font-bold text-white">No way to check</h3>
+          <p class="mt-2 text-sm text-slate-300">Before paying, there's no consumer tool to verify an account or QR. Government blacklists exist but coverage is partial.</p>
         </div>
       </div>
-      <p class="mt-6 text-xs text-slate-400">Reported scam losses across Southeast Asia run into the billions of dollars annually, concentrated in e-commerce, fake jobs, and investment fraud.</p>
+      <p class="mt-8 text-sm text-slate-400">Reported scam losses across Southeast Asia run into the billions of dollars annually — concentrated in e-commerce, fake jobs, and investment fraud.</p>
     </div>
   </section>
 
   <!-- ===================== 3. INSIGHT ===================== -->
-  <section class="slide fade flex-col justify-center px-6 sm:px-16 py-12 bg-white">
-    <div class="mx-auto w-full max-w-5xl">
-      <p class="text-xs font-bold uppercase tracking-widest text-blue-600">The insight</p>
-      <h2 class="mt-2 text-3xl sm:text-4xl font-extrabold text-slate-900">Payment safety is a two-sided reputation problem.</h2>
-      <div class="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <div class="rounded-2xl border border-slate-200 bg-slate-50 p-6">
-          <h3 class="text-lg font-bold text-slate-900">Victims need to warn others</h3>
-          <p class="mt-2 text-sm text-slate-600">Like Google Reviews — but for the exact destination account, not a business listing. Each report hardens the registry for everyone.</p>
+  <section class="slide fade relative flex-col justify-center px-6 py-12 sm:px-16 bg-gradient-to-br from-slate-950 via-indigo-950/60 to-slate-900 grid-lines">
+    <div class="glow h-80 w-80 bg-indigo-600/40 bottom-0 left-10"></div>
+    <div class="relative z-10 mx-auto w-full max-w-5xl">
+      <p class="text-xs font-bold uppercase tracking-widest text-blue-400">The insight</p>
+      <h2 class="mt-2 text-3xl font-extrabold text-white sm:text-4xl">Payment safety is a two-sided reputation problem.</h2>
+      <div class="mt-10 grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <div class="rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur">
+          <h3 class="text-lg font-bold text-white">Victims need to warn others</h3>
+          <p class="mt-2 text-sm text-slate-300">Like Google Reviews — but for the exact destination account, not a business listing. Every report hardens the registry for everyone.</p>
         </div>
-        <div class="rounded-2xl border border-slate-200 bg-slate-50 p-6">
-          <h3 class="text-lg font-bold text-slate-900">Payers need a caller-ID</h3>
-          <p class="mt-2 text-sm text-slate-600">Like Truecaller — enter the account/QR and instantly see the registered holder name, risk score, and history <em>before</em> transferring.</p>
+        <div class="rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur">
+          <h3 class="text-lg font-bold text-white">Payers need a caller-ID</h3>
+          <p class="mt-2 text-sm text-slate-300">Like Truecaller — enter the account/QR and instantly see the registered holder name, risk score, and history <em>before</em> transferring.</p>
         </div>
       </div>
-      <div class="mt-8 rounded-2xl border-2 border-blue-200 bg-blue-50 p-6">
-        <p class="text-sm font-bold uppercase tracking-wide text-blue-900">The core mechanic: Recipient Name Matcher</p>
-        <p class="mt-2 text-sm text-slate-700">You enter the name the seller told you ("Siti"). We check it against the bank-registered holder ("Bambang S.") and flash a <b>mule alert</b> on mismatch. This single check stops the most common scam before money moves.</p>
+      <div class="mt-8 rounded-2xl border border-blue-400/30 bg-blue-500/10 p-6 backdrop-blur">
+        <p class="text-sm font-bold uppercase tracking-wide text-blue-300">The core mechanic: Recipient Name Matcher</p>
+        <p class="mt-2 text-sm text-slate-200">You enter the name the seller told you ("Siti"). We check it against the bank-registered holder ("Bambang S.") and flash a <b>mule alert</b> on mismatch. One check stops the most common scam before money moves.</p>
       </div>
     </div>
   </section>
 
   <!-- ===================== 4. PRODUCT ===================== -->
-  <section class="slide fade flex-col justify-center px-6 sm:px-16 py-12 bg-slate-50">
-    <div class="mx-auto w-full max-w-6xl">
-      <p class="text-xs font-bold uppercase tracking-widest text-blue-600">The product</p>
-      <h2 class="mt-2 text-3xl sm:text-4xl font-extrabold text-slate-900">One registry, the whole payment journey.</h2>
-      <div class="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs">
-          <p class="text-sm font-bold text-blue-700">① Check</p>
-          <p class="mt-1 text-sm text-slate-600">Account / phone / QR screening with a 4-band risk gauge and search intelligence.</p>
-        </div>
-        <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs">
-          <p class="text-sm font-bold text-rose-700">② Report</p>
-          <p class="mt-1 text-sm text-slate-600">4-step wizard with transfer-slip evidence and automatic PII redaction.</p>
-        </div>
-        <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs">
-          <p class="text-sm font-bold text-emerald-700">③ Review</p>
-          <p class="mt-1 text-sm text-slate-600">Community upvotes, flags, and a public reports feed with pagination.</p>
-        </div>
-        <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs">
-          <p class="text-sm font-bold text-blue-700">④ Dispute</p>
-          <p class="mt-1 text-sm text-slate-600">Owners prove KYC, pin a clarification, and trigger a safe-harbor score freeze.</p>
-        </div>
-        <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs">
-          <p class="text-sm font-bold text-slate-700">⑤ Recover</p>
-          <p class="mt-1 text-sm text-slate-600">Emergency hub with national hotlines and bank-freeze procedures.</p>
-        </div>
-        <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs">
-          <p class="text-sm font-bold text-slate-700">⑥ Certify</p>
-          <p class="mt-1 text-sm text-slate-600">Timestamped diligence receipt + tamper-proof warning card.</p>
-        </div>
+  <section class="slide fade relative flex-col justify-center px-6 py-12 sm:px-16 bg-gradient-to-br from-slate-950 via-slate-900 to-blue-950/50 grid-lines">
+    <div class="glow h-80 w-80 bg-blue-600/40 top-0 right-20"></div>
+    <div class="relative z-10 mx-auto w-full max-w-6xl">
+      <p class="text-xs font-bold uppercase tracking-widest text-blue-400">The product</p>
+      <h2 class="mt-2 text-3xl font-extrabold text-white sm:text-4xl">One registry, the whole payment journey.</h2>
+      <div class="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div class="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur"><p class="text-sm font-bold text-blue-300">① Check</p><p class="mt-1 text-sm text-slate-300">Account / phone / QR screening with a 4-band risk gauge and search intelligence.</p></div>
+        <div class="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur"><p class="text-sm font-bold text-rose-300">② Report</p><p class="mt-1 text-sm text-slate-300">4-step wizard with transfer-slip evidence and automatic PII redaction.</p></div>
+        <div class="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur"><p class="text-sm font-bold text-emerald-300">③ Review</p><p class="mt-1 text-sm text-slate-300">Community upvotes, flags, and a public reports feed with pagination.</p></div>
+        <div class="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur"><p class="text-sm font-bold text-blue-300">④ Dispute</p><p class="mt-1 text-sm text-slate-300">Owners prove KYC, pin a clarification, and trigger a safe-harbor score freeze.</p></div>
+        <div class="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur"><p class="text-sm font-bold text-slate-200">⑤ Recover</p><p class="mt-1 text-sm text-slate-300">Emergency hub with national hotlines and bank-freeze procedures.</p></div>
+        <div class="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur"><p class="text-sm font-bold text-slate-200">⑥ Certify</p><p class="mt-1 text-sm text-slate-300">Timestamped diligence receipt + tamper-proof warning card.</p></div>
       </div>
-      <p class="mt-6 text-xs text-slate-400">Plus: scam playbooks, scam simulator, "too good to be true?" checker, and a scam-message analyzer.</p>
+      <p class="mt-6 text-sm text-slate-400">Plus: scam playbooks, scam simulator, "too good to be true?" checker, and a scam-message analyzer.</p>
     </div>
   </section>
 
   <!-- ===================== 5. HOW IT WORKS ===================== -->
-  <section class="slide fade flex-col justify-center px-6 sm:px-16 py-12 bg-white">
-    <div class="mx-auto w-full max-w-5xl">
-      <p class="text-xs font-bold uppercase tracking-widest text-blue-600">How it works</p>
-      <h2 class="mt-2 text-3xl sm:text-4xl font-extrabold text-slate-900">From a single lookup to a hardened registry.</h2>
-      <div class="mt-8 space-y-3">
-        <div class="flex items-start gap-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
-          <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-100 font-bold text-blue-700">1</span>
-          <p class="text-sm text-slate-700"><b>Lookup.</b> The browser decodes the QR for instant preview; the server re-decodes, validates the EMVCo CRC, and canonicalizes the entity.</p>
-        </div>
-        <div class="flex items-start gap-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
-          <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-100 font-bold text-blue-700">2</span>
-          <p class="text-sm text-slate-700"><b>Score.</b> An explainable weighted risk model returns a 0–100 score, band, and factor breakdown — no black box.</p>
-        </div>
-        <div class="flex items-start gap-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
-          <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-100 font-bold text-blue-700">3</span>
-          <p class="text-sm text-slate-700"><b>Report.</b> A submission enters an async pipeline: fail-closed PII redaction → OCR + tamper + duplicate checks → typology + NER.</p>
-        </div>
-        <div class="flex items-start gap-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
-          <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-100 font-bold text-blue-700">4</span>
-          <p class="text-sm text-slate-700"><b>Adjudicate.</b> Analysts review under four-eyes dual control; every trust-altering action is written to a hash-chained audit log.</p>
-        </div>
+  <section class="slide fade relative flex-col justify-center px-6 py-12 sm:px-16 bg-gradient-to-br from-slate-950 via-slate-900 to-emerald-950/30 grid-lines">
+    <div class="glow h-80 w-80 bg-emerald-600/30 bottom-10 right-10"></div>
+    <div class="relative z-10 mx-auto w-full max-w-5xl">
+      <p class="text-xs font-bold uppercase tracking-widest text-blue-400">How it works</p>
+      <h2 class="mt-2 text-3xl font-extrabold text-white sm:text-4xl">From a single lookup to a hardened registry.</h2>
+      <div class="mt-10 space-y-3">
+        <div class="flex items-start gap-4 rounded-xl border border-white/10 bg-white/5 p-4 backdrop-blur"><span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-500/20 font-bold text-blue-300">1</span><p class="text-sm text-slate-200"><b class="text-white">Lookup.</b> The browser decodes the QR for instant preview; the server re-decodes, validates the EMVCo CRC, and canonicalizes the entity.</p></div>
+        <div class="flex items-start gap-4 rounded-xl border border-white/10 bg-white/5 p-4 backdrop-blur"><span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-500/20 font-bold text-blue-300">2</span><p class="text-sm text-slate-200"><b class="text-white">Score.</b> An explainable weighted risk model returns a 0–100 score, band, and factor breakdown — no black box.</p></div>
+        <div class="flex items-start gap-4 rounded-xl border border-white/10 bg-white/5 p-4 backdrop-blur"><span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-500/20 font-bold text-blue-300">3</span><p class="text-sm text-slate-200"><b class="text-white">Report.</b> A submission enters an async pipeline: fail-closed PII redaction → OCR + tamper + duplicate checks → typology + NER.</p></div>
+        <div class="flex items-start gap-4 rounded-xl border border-white/10 bg-white/5 p-4 backdrop-blur"><span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-500/20 font-bold text-blue-300">4</span><p class="text-sm text-slate-200"><b class="text-white">Adjudicate.</b> Analysts review under four-eyes dual control; every trust-altering action is written to a hash-chained audit log.</p></div>
       </div>
     </div>
   </section>
 
   <!-- ===================== 6. AI ===================== -->
-  <section class="slide fade flex-col justify-center px-6 sm:px-16 py-12 bg-slate-900 text-slate-100">
-    <div class="mx-auto w-full max-w-5xl">
+  <section class="slide fade relative flex-col justify-center px-6 py-12 sm:px-16 bg-gradient-to-br from-slate-950 via-slate-900 to-violet-950/50 grid-lines">
+    <div class="glow h-96 w-96 bg-violet-600/40 top-0 left-1/3"></div>
+    <div class="relative z-10 mx-auto w-full max-w-5xl">
       <p class="text-xs font-bold uppercase tracking-widest text-blue-400">AI</p>
-      <h2 class="mt-2 text-3xl sm:text-4xl font-extrabold text-white">Multimodal, grounded, and fail-closed.</h2>
-      <div class="mt-8 grid grid-cols-1 gap-5 md:grid-cols-2">
-        <div class="rounded-2xl border border-slate-700 bg-slate-800/60 p-6">
-          <h3 class="text-base font-bold text-white">Slip forensics</h3>
-          <p class="mt-2 text-sm text-slate-300">A vision model extracts recipient/amount/ref, detects PII regions, and flags tampering — in one call. Redaction is drawn locally and is <b>fail-closed</b>: a failure never publishes unredacted evidence.</p>
-        </div>
-        <div class="rounded-2xl border border-slate-700 bg-slate-800/60 p-6">
-          <h3 class="text-base font-bold text-white">Grounded reasoning</h3>
-          <p class="mt-2 text-sm text-slate-300">Report/OCR text is treated as <b>untrusted data, never instructions</b>. Output is JSON-schema validated against one canonical taxonomy, and entity summaries are grounded to traceable facts.</p>
-        </div>
-        <div class="rounded-2xl border border-slate-700 bg-slate-800/60 p-6">
-          <h3 class="text-base font-bold text-white">Scam-message analyzer</h3>
-          <p class="mt-2 text-sm text-slate-300">Paste a chat and get social-engineering signals plus extracted payment coordinates — analyzing the <b>artifact</b>, not a global fact-check database (which has poor local coverage).</p>
-        </div>
-        <div class="rounded-2xl border border-slate-700 bg-slate-800/60 p-6">
-          <h3 class="text-base font-bold text-white">Provider-agnostic</h3>
-          <p class="mt-2 text-sm text-slate-300"><code class="text-blue-300">AI_PROVIDER=mock|gcp|openrouter</code>. Runs with zero keys via local heuristics and lights up live Gemini when configured — never blocking a demo.</p>
-        </div>
+      <h2 class="mt-2 text-3xl font-extrabold text-white sm:text-4xl">Multimodal, grounded, and fail-closed.</h2>
+      <div class="mt-10 grid grid-cols-1 gap-5 md:grid-cols-2">
+        <div class="rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur"><h3 class="text-base font-bold text-white">Slip forensics</h3><p class="mt-2 text-sm text-slate-300">A vision model extracts recipient/amount/ref, detects PII regions, and flags tampering — in one call. Redaction is drawn locally and is <b class="text-white">fail-closed</b>: a failure never publishes unredacted evidence.</p></div>
+        <div class="rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur"><h3 class="text-base font-bold text-white">Grounded reasoning</h3><p class="mt-2 text-sm text-slate-300">Report/OCR text is treated as <b class="text-white">untrusted data, never instructions</b>. Output is JSON-schema validated against one canonical taxonomy, and entity summaries are grounded to traceable facts.</p></div>
+        <div class="rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur"><h3 class="text-base font-bold text-white">Scam-message analyzer</h3><p class="mt-2 text-sm text-slate-300">Paste a chat and get social-engineering signals plus extracted payment coordinates — analyzing the <b class="text-white">artifact</b>, not a global fact-check database (which has poor local coverage).</p></div>
+        <div class="rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur"><h3 class="text-base font-bold text-white">Provider-agnostic</h3><p class="mt-2 text-sm text-slate-300"><code class="text-blue-300">AI_PROVIDER=mock|gcp|openrouter</code>. Runs with zero keys via local heuristics and lights up live Gemini when configured — never blocking a demo.</p></div>
       </div>
     </div>
   </section>
 
   <!-- ===================== 7. TRUST & COMPLIANCE ===================== -->
-  <section class="slide fade flex-col justify-center px-6 sm:px-16 py-12 bg-white">
-    <div class="mx-auto w-full max-w-5xl">
-      <p class="text-xs font-bold uppercase tracking-widest text-emerald-600">Trust &amp; compliance</p>
-      <h2 class="mt-2 text-3xl sm:text-4xl font-extrabold text-slate-900">Built to survive legal and privacy scrutiny.</h2>
-      <div class="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div class="rounded-xl border border-slate-200 bg-slate-50 p-5">
-          <p class="font-bold text-slate-900">No cleartext account storage</p>
-          <p class="mt-1 text-sm text-slate-600">Accounts are indexed only as KMS-keyed HMAC; public surfaces are masked by default.</p>
-        </div>
-        <div class="rounded-xl border border-slate-200 bg-slate-50 p-5">
-          <p class="font-bold text-slate-900">Asymmetric PII redaction</p>
-          <p class="mt-1 text-sm text-slate-600">Victim identity is protected; the scammer's destination stays clear so payers can verify it.</p>
-        </div>
-        <div class="rounded-xl border border-slate-200 bg-slate-50 p-5">
-          <p class="font-bold text-slate-900">Exact-match disclosure only</p>
-          <p class="mt-1 text-sm text-slate-600">Holder names are revealed only on a full exact lookup — never in bulk listings (ADR-016).</p>
-        </div>
-        <div class="rounded-xl border border-slate-200 bg-slate-50 p-5">
-          <p class="font-bold text-slate-900">Human-in-the-loop</p>
-          <p class="mt-1 text-sm text-slate-600">Four-eyes dual control + WebAuthn MFA + hash-chained audit for destructive actions.</p>
-        </div>
+  <section class="slide fade relative flex-col justify-center px-6 py-12 sm:px-16 bg-gradient-to-br from-slate-950 via-slate-900 to-emerald-950/40 grid-lines">
+    <div class="glow h-80 w-80 bg-emerald-600/30 top-10 left-10"></div>
+    <div class="relative z-10 mx-auto w-full max-w-5xl">
+      <p class="text-xs font-bold uppercase tracking-widest text-emerald-400">Trust &amp; compliance</p>
+      <h2 class="mt-2 text-3xl font-extrabold text-white sm:text-4xl">Built to survive legal and privacy scrutiny.</h2>
+      <div class="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div class="rounded-xl border border-white/10 bg-white/5 p-5 backdrop-blur"><p class="font-bold text-white">No cleartext account storage</p><p class="mt-1 text-sm text-slate-300">Accounts are indexed only as KMS-keyed HMAC; public surfaces are masked by default.</p></div>
+        <div class="rounded-xl border border-white/10 bg-white/5 p-5 backdrop-blur"><p class="font-bold text-white">Asymmetric PII redaction</p><p class="mt-1 text-sm text-slate-300">Victim identity is protected; the scammer's destination stays clear so payers can verify it.</p></div>
+        <div class="rounded-xl border border-white/10 bg-white/5 p-5 backdrop-blur"><p class="font-bold text-white">Exact-match disclosure only</p><p class="mt-1 text-sm text-slate-300">Holder names are revealed only on a full exact lookup — never in bulk listings (ADR-016).</p></div>
+        <div class="rounded-xl border border-white/10 bg-white/5 p-5 backdrop-blur"><p class="font-bold text-white">Human-in-the-loop</p><p class="mt-1 text-sm text-slate-300">Four-eyes dual control + WebAuthn MFA + hash-chained audit for destructive actions.</p></div>
       </div>
-      <p class="mt-6 text-xs text-slate-400">Region-pinned to Southeast Asia · designed for UU PDP / PDPA compliance · statutory non-custodial disclaimers in the UI.</p>
+      <p class="mt-8 text-sm text-slate-400">Region-pinned to Southeast Asia · designed for UU PDP / PDPA compliance · statutory non-custodial disclaimers in the UI.</p>
     </div>
   </section>
 
   <!-- ===================== 8. MARKET ===================== -->
-  <section class="slide fade flex-col justify-center px-6 sm:px-16 py-12 bg-slate-50">
-    <div class="mx-auto w-full max-w-5xl">
-      <p class="text-xs font-bold uppercase tracking-widest text-blue-600">Market</p>
-      <h2 class="mt-2 text-3xl sm:text-4xl font-extrabold text-slate-900">Six countries. One shared instant-payment rail problem.</h2>
-      <div class="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
-        <div class="rounded-xl border border-slate-200 bg-white p-4 text-center"><p class="text-2xl">🇮🇩</p><p class="mt-2 text-sm font-bold text-slate-900">Indonesia</p><p class="text-[11px] text-slate-500">QRIS</p></div>
-        <div class="rounded-xl border border-slate-200 bg-white p-4 text-center"><p class="text-2xl">🇲🇾</p><p class="mt-2 text-sm font-bold text-slate-900">Malaysia</p><p class="text-[11px] text-slate-500">DuitNow</p></div>
-        <div class="rounded-xl border border-slate-200 bg-white p-4 text-center"><p class="text-2xl">🇸🇬</p><p class="mt-2 text-sm font-bold text-slate-900">Singapore</p><p class="text-[11px] text-slate-500">PayNow</p></div>
-        <div class="rounded-xl border border-slate-200 bg-white p-4 text-center"><p class="text-2xl">🇹🇭</p><p class="mt-2 text-sm font-bold text-slate-900">Thailand</p><p class="text-[11px] text-slate-500">PromptPay</p></div>
-        <div class="rounded-xl border border-slate-200 bg-white p-4 text-center"><p class="text-2xl">🇻🇳</p><p class="mt-2 text-sm font-bold text-slate-900">Vietnam</p><p class="text-[11px] text-slate-500">VietQR</p></div>
-        <div class="rounded-xl border border-slate-200 bg-white p-4 text-center"><p class="text-2xl">🇵🇭</p><p class="mt-2 text-sm font-bold text-slate-900">Philippines</p><p class="text-[11px] text-slate-500">QR Ph</p></div>
+  <section class="slide fade relative flex-col justify-center px-6 py-12 sm:px-16 bg-gradient-to-br from-slate-950 via-blue-950/50 to-slate-900 grid-lines">
+    <div class="glow h-80 w-80 bg-blue-600/40 bottom-0 right-1/4"></div>
+    <div class="relative z-10 mx-auto w-full max-w-5xl">
+      <p class="text-xs font-bold uppercase tracking-widest text-blue-400">Market</p>
+      <h2 class="mt-2 text-3xl font-extrabold text-white sm:text-4xl">Six countries. One shared instant-payment rail problem.</h2>
+      <div class="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+        <div class="rounded-xl border border-white/10 bg-white/5 p-4 text-center backdrop-blur"><p class="text-2xl">🇮🇩</p><p class="mt-2 text-sm font-bold text-white">Indonesia</p><p class="text-[11px] text-slate-400">QRIS</p></div>
+        <div class="rounded-xl border border-white/10 bg-white/5 p-4 text-center backdrop-blur"><p class="text-2xl">🇲🇾</p><p class="mt-2 text-sm font-bold text-white">Malaysia</p><p class="text-[11px] text-slate-400">DuitNow</p></div>
+        <div class="rounded-xl border border-white/10 bg-white/5 p-4 text-center backdrop-blur"><p class="text-2xl">🇸🇬</p><p class="mt-2 text-sm font-bold text-white">Singapore</p><p class="text-[11px] text-slate-400">PayNow</p></div>
+        <div class="rounded-xl border border-white/10 bg-white/5 p-4 text-center backdrop-blur"><p class="text-2xl">🇹🇭</p><p class="mt-2 text-sm font-bold text-white">Thailand</p><p class="text-[11px] text-slate-400">PromptPay</p></div>
+        <div class="rounded-xl border border-white/10 bg-white/5 p-4 text-center backdrop-blur"><p class="text-2xl">🇻🇳</p><p class="mt-2 text-sm font-bold text-white">Vietnam</p><p class="text-[11px] text-slate-400">VietQR</p></div>
+        <div class="rounded-xl border border-white/10 bg-white/5 p-4 text-center backdrop-blur"><p class="text-2xl">🇵🇭</p><p class="mt-2 text-sm font-bold text-white">Philippines</p><p class="text-[11px] text-slate-400">QR Ph</p></div>
       </div>
-      <p class="mt-6 text-sm text-slate-600">393 financial institutions seeded across the region. QR rails are interoperable within each country — the registry is cross-bank by design.</p>
+      <p class="mt-8 text-sm text-slate-300">393+ financial institutions seeded across the region. QR rails are interoperable within each country — the registry is cross-bank by design.</p>
     </div>
   </section>
 
   <!-- ===================== 9. BUSINESS MODEL ===================== -->
-  <section class="slide fade flex-col justify-center px-6 sm:px-16 py-12 bg-white">
-    <div class="mx-auto w-full max-w-5xl">
-      <p class="text-xs font-bold uppercase tracking-widest text-blue-600">Business model</p>
-      <h2 class="mt-2 text-3xl sm:text-4xl font-extrabold text-slate-900">Free for consumers. Paid where risk lives.</h2>
-      <div class="mt-8 grid grid-cols-1 gap-5 md:grid-cols-3">
-        <div class="rounded-2xl border border-slate-200 bg-slate-50 p-6">
-          <p class="text-xs font-bold uppercase tracking-wide text-slate-500">B2C · Free</p>
-          <h3 class="mt-2 text-lg font-bold text-slate-900">Community registry</h3>
-          <p class="mt-2 text-sm text-slate-600">Free checks, reporting, and alerts. Growth is viral and contribution-driven — every report makes the product better.</p>
-        </div>
-        <div class="rounded-2xl border-2 border-blue-300 bg-blue-50 p-6">
-          <p class="text-xs font-bold uppercase tracking-wide text-blue-700">B2B · Screen API</p>
-          <h3 class="mt-2 text-lg font-bold text-slate-900">Pre-transfer screening</h3>
-          <p class="mt-2 text-sm text-slate-600">Tiered API keys for banks, e-wallets, and marketplaces: sub-50ms screening, quotas, and anti-probing. Privacy-safe (no holder names on public endpoints).</p>
-        </div>
-        <div class="rounded-2xl border border-slate-200 bg-slate-50 p-6">
-          <p class="text-xs font-bold uppercase tracking-wide text-slate-500">B2G · Connectors</p>
-          <h3 class="mt-2 text-lg font-bold text-slate-900">Government sync</h3>
-          <p class="mt-2 text-sm text-slate-600">Adapter-based connectors to national registries (e.g. PDRM Semak Mule), with the open API first and MoU-gated integrations later.</p>
-        </div>
+  <section class="slide fade relative flex-col justify-center px-6 py-12 sm:px-16 bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950/50 grid-lines">
+    <div class="glow h-80 w-80 bg-indigo-600/40 top-10 right-10"></div>
+    <div class="relative z-10 mx-auto w-full max-w-5xl">
+      <p class="text-xs font-bold uppercase tracking-widest text-blue-400">Business model</p>
+      <h2 class="mt-2 text-3xl font-extrabold text-white sm:text-4xl">Free for consumers. Paid where risk lives.</h2>
+      <div class="mt-10 grid grid-cols-1 gap-5 md:grid-cols-3">
+        <div class="rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur"><p class="text-xs font-bold uppercase tracking-wide text-slate-400">B2C · Free</p><h3 class="mt-2 text-lg font-bold text-white">Community registry</h3><p class="mt-2 text-sm text-slate-300">Free checks, reporting, and alerts. Growth is viral and contribution-driven — every report makes the product better.</p></div>
+        <div class="rounded-2xl border border-blue-400/40 bg-blue-500/10 p-6 backdrop-blur"><p class="text-xs font-bold uppercase tracking-wide text-blue-300">B2B · Screen API</p><h3 class="mt-2 text-lg font-bold text-white">Pre-transfer screening</h3><p class="mt-2 text-sm text-slate-300">Tiered API keys for banks, e-wallets, and marketplaces: sub-50ms screening, quotas, and anti-probing. Privacy-safe (no holder names on public endpoints).</p></div>
+        <div class="rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur"><p class="text-xs font-bold uppercase tracking-wide text-slate-400">B2G · Connectors</p><h3 class="mt-2 text-lg font-bold text-white">Government sync</h3><p class="mt-2 text-sm text-slate-300">Adapter-based connectors to national registries (e.g. PDRM Semak Mule), with the open API first and MoU-gated integrations later.</p></div>
       </div>
     </div>
   </section>
 
   <!-- ===================== 10. MOAT ===================== -->
-  <section class="slide fade flex-col justify-center px-6 sm:px-16 py-12 bg-slate-50">
-    <div class="mx-auto w-full max-w-5xl">
-      <p class="text-xs font-bold uppercase tracking-widest text-blue-600">Why it wins</p>
-      <h2 class="mt-2 text-3xl sm:text-4xl font-extrabold text-slate-900">A data flywheel with a legal moat.</h2>
-      <div class="mt-8 grid grid-cols-1 gap-5 md:grid-cols-3">
-        <div class="rounded-2xl border border-slate-200 bg-white p-6">
-          <h3 class="text-base font-bold text-slate-900">Network effects</h3>
-          <p class="mt-2 text-sm text-slate-600">More lookups → more reports → better coverage → more lookups. The registry gets stronger with every user.</p>
-        </div>
-        <div class="rounded-2xl border border-slate-200 bg-white p-6">
-          <h3 class="text-base font-bold text-slate-900">Asymmetric data, defensibly</h3>
-          <p class="mt-2 text-sm text-slate-600">Exact-match disclosure + asymmetric redaction make the registry useful without becoming a defamation or doxxing liability.</p>
-        </div>
-        <div class="rounded-2xl border border-slate-200 bg-white p-6">
-          <h3 class="text-base font-bold text-slate-900">Trust infrastructure</h3>
-          <p class="mt-2 text-sm text-slate-600">Dual-control adjudication, fail-closed AI, and hash-chained audits make it institution-ready from day one.</p>
-        </div>
+  <section class="slide fade relative flex-col justify-center px-6 py-12 sm:px-16 bg-gradient-to-br from-slate-950 via-slate-900 to-blue-950/40 grid-lines">
+    <div class="glow h-80 w-80 bg-blue-600/40 bottom-10 left-10"></div>
+    <div class="relative z-10 mx-auto w-full max-w-5xl">
+      <p class="text-xs font-bold uppercase tracking-widest text-blue-400">Why it wins</p>
+      <h2 class="mt-2 text-3xl font-extrabold text-white sm:text-4xl">A data flywheel with a legal moat.</h2>
+      <div class="mt-10 grid grid-cols-1 gap-5 md:grid-cols-3">
+        <div class="rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur"><h3 class="text-base font-bold text-white">Network effects</h3><p class="mt-2 text-sm text-slate-300">More lookups → more reports → better coverage → more lookups. The registry gets stronger with every user.</p></div>
+        <div class="rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur"><h3 class="text-base font-bold text-white">Asymmetric data, defensibly</h3><p class="mt-2 text-sm text-slate-300">Exact-match disclosure + asymmetric redaction make the registry useful without becoming a defamation or doxxing liability.</p></div>
+        <div class="rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur"><h3 class="text-base font-bold text-white">Trust infrastructure</h3><p class="mt-2 text-sm text-slate-300">Dual-control adjudication, fail-closed AI, and hash-chained audits make it institution-ready from day one.</p></div>
       </div>
     </div>
   </section>
 
   <!-- ===================== 11. ROADMAP ===================== -->
-  <section class="slide fade flex-col justify-center px-6 sm:px-16 py-12 bg-white">
-    <div class="mx-auto w-full max-w-5xl">
-      <p class="text-xs font-bold uppercase tracking-widest text-blue-600">Roadmap</p>
-      <h2 class="mt-2 text-3xl sm:text-4xl font-extrabold text-slate-900">From MVP to regional infrastructure.</h2>
-      <div class="mt-8 space-y-4">
-        <div class="flex gap-4">
-          <span class="w-28 shrink-0 rounded-lg bg-emerald-100 px-3 py-1 text-center text-xs font-bold text-emerald-800">Now · MVP</span>
-          <p class="text-sm text-slate-700">Resolver + risk scoring, reporting pipeline with fail-closed redaction, community &amp; disputes, admin dual-control, full 6-language UI, AI forensics.</p>
-        </div>
-        <div class="flex gap-4">
-          <span class="w-28 shrink-0 rounded-lg bg-blue-100 px-3 py-1 text-center text-xs font-bold text-blue-800">Next</span>
-          <p class="text-sm text-slate-700">Live model validation on real slips, object-storage hardening (S3/GCS), partner API keys + webhooks, App Check / reCAPTCHA.</p>
-        </div>
-        <div class="flex gap-4">
-          <span class="w-28 shrink-0 rounded-lg bg-slate-100 px-3 py-1 text-center text-xs font-bold text-slate-700">Later</span>
-          <p class="text-sm text-slate-700">Government registry connectors (cekrekening.id, PDRM, SPF ASC, AOC, NCSC, IACAT) under MoU, bank integrations, and a regional fraud-intelligence layer.</p>
-        </div>
+  <section class="slide fade relative flex-col justify-center px-6 py-12 sm:px-16 bg-gradient-to-br from-slate-950 via-slate-900 to-rose-950/30 grid-lines">
+    <div class="glow h-80 w-80 bg-rose-600/30 top-10 right-1/4"></div>
+    <div class="relative z-10 mx-auto w-full max-w-5xl">
+      <p class="text-xs font-bold uppercase tracking-widest text-blue-400">Roadmap</p>
+      <h2 class="mt-2 text-3xl font-extrabold text-white sm:text-4xl">From MVP to regional infrastructure.</h2>
+      <div class="mt-10 space-y-4">
+        <div class="flex gap-4"><span class="w-28 shrink-0 rounded-lg bg-emerald-500/20 px-3 py-1 text-center text-xs font-bold text-emerald-300">Now · MVP</span><p class="text-sm text-slate-200">Resolver + risk scoring, reporting pipeline with fail-closed redaction, community &amp; disputes, admin dual-control, full 6-language UI, AI forensics.</p></div>
+        <div class="flex gap-4"><span class="w-28 shrink-0 rounded-lg bg-blue-500/20 px-3 py-1 text-center text-xs font-bold text-blue-300">Next</span><p class="text-sm text-slate-200">Live model validation on real slips, object-storage hardening (S3/GCS), partner API keys + webhooks, App Check / reCAPTCHA.</p></div>
+        <div class="flex gap-4"><span class="w-28 shrink-0 rounded-lg bg-white/10 px-3 py-1 text-center text-xs font-bold text-slate-300">Later</span><p class="text-sm text-slate-200">Government registry connectors (cekrekening.id, PDRM, SPF ASC, AOC, NCSC, IACAT) under MoU, bank integrations, and a regional fraud-intelligence layer.</p></div>
       </div>
     </div>
   </section>
 
   <!-- ===================== 12. CLOSE ===================== -->
-  <section class="slide fade flex-col items-center justify-center px-6 text-center bg-white">
-    <span class="flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-md mb-6">
-      <svg class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
-    </span>
-    <h2 class="max-w-3xl text-3xl sm:text-4xl font-black text-slate-900">Check before you pay.</h2>
-    <p class="mt-4 max-w-xl text-lg text-slate-600">A community payment-risk registry for Southeast Asia — turning every victim's report into protection for the next payer.</p>
-    <p class="mt-10 text-xs text-slate-400">TrustPay SEA · Informational reputation registry — not a bank, not a payment gateway, holds no consumer funds.</p>
+  <section class="slide fade relative flex-col items-center justify-center px-6 text-center bg-slate-950 grid-lines">
+    <div class="glow h-96 w-96 bg-blue-600/50 -top-20 left-1/4"></div>
+    <div class="glow h-96 w-96 bg-indigo-600/40 -bottom-20 right-1/4"></div>
+    <div class="relative z-10 flex flex-col items-center">
+      <span class="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-600 shadow-[0_0_40px_-6px_rgba(37,99,235,.9)]">
+        <svg class="h-9 w-9" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+      </span>
+      <h2 class="max-w-3xl text-4xl font-black text-white sm:text-5xl">Check before you pay.</h2>
+      <p class="mt-4 max-w-xl text-lg text-slate-300">A community payment-risk registry for Southeast Asia — turning every victim's report into protection for the next payer.</p>
+      <p class="mt-12 text-xs text-slate-500">TrustPay SEA · Informational reputation registry — not a bank, not a payment gateway, holds no consumer funds.</p>
+    </div>
   </section>
 
 </div>
 
-<!-- controls -->
-<div class="no-print fixed bottom-4 right-4 z-50 flex items-center gap-3 rounded-full border border-slate-200 bg-white/90 px-3 py-1.5 shadow-md backdrop-blur">
-  <button id="prev" class="rounded-full px-2 py-1 text-slate-500 hover:bg-slate-100" aria-label="Previous">←</button>
-  <span id="counter" class="font-mono text-xs font-bold text-slate-700">1 / 12</span>
-  <button id="next" class="rounded-full px-2 py-1 text-slate-500 hover:bg-slate-100" aria-label="Next">→</button>
+<div class="no-print fixed bottom-4 right-4 z-50 flex items-center gap-3 rounded-full border border-white/10 bg-slate-900/90 px-3 py-1.5 shadow-lg backdrop-blur">
+  <button id="prev" class="rounded-full px-2 py-1 text-slate-400 hover:bg-white/10" aria-label="Previous">←</button>
+  <span id="counter" class="font-mono text-xs font-bold text-slate-200">1 / 12</span>
+  <button id="next" class="rounded-full px-2 py-1 text-slate-400 hover:bg-white/10" aria-label="Next">→</button>
 </div>
 
 <script>
   const slides = Array.from(document.querySelectorAll(".slide"));
   let i = 0;
-
   function show(n) {
     i = Math.max(0, Math.min(slides.length - 1, n));
     slides.forEach((s, idx) => s.classList.toggle("active", idx === i));
@@ -336,22 +271,17 @@
     document.getElementById("progress").style.width = ((i + 1) / slides.length * 100) + "%";
     if (history.replaceState) history.replaceState(null, "", "#" + (i + 1));
   }
-  function next() { show(i + 1); }
-  function prev() { show(i - 1); }
-
+  const next = () => show(i + 1);
+  const prev = () => show(i - 1);
   document.getElementById("next").onclick = next;
   document.getElementById("prev").onclick = prev;
   document.addEventListener("keydown", (e) => {
-    if (["ArrowRight", "ArrowDown", "PageDown", " "].includes(e.key)) { e.preventDefault(); next(); }
-    else if (["ArrowLeft", "ArrowUp", "PageUp"].includes(e.key)) { e.preventDefault(); prev(); }
+    if (["ArrowRight","ArrowDown","PageDown"," "].includes(e.key)) { e.preventDefault(); next(); }
+    else if (["ArrowLeft","ArrowUp","PageUp"].includes(e.key)) { e.preventDefault(); prev(); }
     else if (e.key === "Home") show(0);
     else if (e.key === "End") show(slides.length - 1);
   });
-  document.getElementById("deck").addEventListener("click", (e) => {
-    if (e.target.closest("button")) return;
-    next();
-  });
-
+  document.getElementById("deck").addEventListener("click", (e) => { if (!e.target.closest("button")) next(); });
   const start = parseInt((location.hash || "#1").slice(1), 10);
   show(isNaN(start) ? 0 : start - 1);
 </script>
