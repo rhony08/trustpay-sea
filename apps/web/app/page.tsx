@@ -304,7 +304,7 @@ function TabButton({
     <button
       type="button"
       onClick={onClick}
-      className={`flex items-center gap-2 px-4 pb-3 text-sm ${
+      className={`flex items-center gap-1.5 whitespace-nowrap px-2 pb-3 text-xs sm:gap-2 sm:px-4 sm:text-sm ${
         active
           ? "border-b-2 border-blue-600 font-bold text-blue-600"
           : "font-semibold text-slate-500 hover:text-slate-800"

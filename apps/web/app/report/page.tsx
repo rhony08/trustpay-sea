@@ -168,7 +168,7 @@ export default function ReportPage() {
   return (
     <main className="flex-1 py-10">
       <div className="mx-auto max-w-2xl px-4 sm:px-6">
-        <div className="mb-6 flex items-start justify-between">
+        <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <h1 className="text-2xl font-extrabold text-slate-900 sm:text-3xl">{t("report.title")}</h1>
             <p className="mt-1 text-xs text-slate-600 sm:text-sm">{t("report.subtitle")}</p>
@@ -179,12 +179,12 @@ export default function ReportPage() {
                 setToken(null);
                 setTokenState(null);
               }}
-              className="text-sm text-slate-400 underline"
+              className="self-start text-sm text-slate-400 underline"
             >
               {t("common.signOut")}
             </button>
           ) : (
-            <span className="rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
+            <span className="self-start whitespace-nowrap rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
               {t("report.noAccountNeeded")}
             </span>
           )}
