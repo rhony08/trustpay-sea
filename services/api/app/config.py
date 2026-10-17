@@ -62,13 +62,13 @@ class Settings(BaseSettings):
     ai_provider: str = "mock"
     # GCP / Vertex AI (preferred in the GCP deploy; uses Application Default Credentials)
     gcp_project: str | None = None
-    gcp_location: str = "asia-southeast1"  # region-pin (Doc 02 §9.6)
-    gcp_vision_model: str = "gemini-3.5-flash"
-    gcp_text_model: str = "gemini-3.5-flash"
+    gcp_location: str = "global"  # region-pin (Doc 02 §9.6)
+    gcp_vision_model: str = "gemini-3.1-flash-lite"
+    gcp_text_model: str = "gemini-3.1-flash-lite"
     # OpenRouter (alternative; OpenAI-compatible gateway)
     openrouter_api_key: str | None = None
     openrouter_base_url: str = "https://openrouter.ai/api/v1"
-    openrouter_model: str = "google/gemini-3.5-flash-001"
+    openrouter_model: str = "google/gemini-3.1-flash-lite-001"
     openrouter_app_name: str = "TrustPay SEA"
 
     # Account hashing (ADR-002/013). MVP: key from env stands in for KMS/HSM;
