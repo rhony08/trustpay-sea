@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TrustPay SEA — Demo</title>
+<script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-slate-950 text-slate-100 antialiased flex flex-col items-center justify-center p-6">
+  <div class="w-full max-w-4xl">
+    <div class="mb-4 flex items-center justify-between">
+      <h1 class="text-xl font-extrabold text-white">TrustPay SEA — Product demo</h1>
+      <div class="flex gap-3 text-sm">
+        <a href="/deck/" class="text-blue-300 underline">Pitch deck</a>
+        <a href="/deck/demo.webm" download class="text-blue-300 underline">Download</a>
+      </div>
+    </div>
+    <video class="w-full rounded-2xl border border-white/10 bg-black shadow-2xl" controls autoplay muted playsinline>
+      <source src="/deck/demo.webm" type="video/webm" />
+      Your browser does not support the video tag. <a href="/deck/demo.webm">Download the demo</a>.
+    </video>
+    <p class="mt-3 text-xs text-slate-400">
+      Walkthrough: home → check dossier → scam-message analyzer → recovery. Live app:
+      <a href="https://trustpay-sea.quesitive.com" class="text-blue-300 underline">trustpay-sea.quesitive.com</a>
+    </p>
+  </div>
+</body>
+</html>
