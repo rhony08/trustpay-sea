@@ -324,7 +324,171 @@
     </div>
   </section>
 
-  <!-- ===================== 7. PROBLEM ===================== -->
+  <!-- ===================== 7. TECHNOLOGIES ===================== -->
+  <section class="slide fade relative flex-col justify-center px-6 py-10 sm:px-16 bg-gradient-to-br from-slate-950 via-slate-900 to-blue-950/50 grid-lines">
+    <div class="glow h-80 w-80 bg-blue-600/40 top-10 right-16"></div>
+    <div class="relative z-10 mx-auto w-full max-w-6xl">
+      <p class="text-xs font-bold uppercase tracking-widest text-blue-400">Technologies</p>
+      <h2 class="mt-2 text-3xl font-extrabold text-white sm:text-4xl">Technologies used in the solution.</h2>
+      <div class="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div class="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur"><p class="text-sm font-bold text-blue-300">Frontend</p><ul class="mt-2 space-y-1 text-sm text-slate-300"><li>• Next.js 15 (App Router) + React 19</li><li>• Tailwind CSS · PWA</li><li>• 6-language i18n (EN/ID/MS/TH/VI/FIL)</li></ul></div>
+        <div class="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur"><p class="text-sm font-bold text-rose-300">Backend</p><ul class="mt-2 space-y-1 text-sm text-slate-300"><li>• FastAPI (Python 3.11) modular monolith</li><li>• SQLAlchemy (async) + Alembic</li><li>• Pydantic v2 · OpenAPI</li></ul></div>
+        <div class="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur"><p class="text-sm font-bold text-emerald-300">Data</p><ul class="mt-2 space-y-1 text-sm text-slate-300"><li>• PostgreSQL 16</li><li>• Redis 7 (rate-limit, cache, idempotency)</li><li>• KMS-keyed HMAC account index</li></ul></div>
+        <div class="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur"><p class="text-sm font-bold text-violet-300">AI &amp; vision</p><ul class="mt-2 space-y-1 text-sm text-slate-300"><li>• Pluggable provider: Vertex AI Gemini / OpenRouter / mock</li><li>• OpenCV (QR decode, image forensics, redaction)</li><li>• JSON-schema, prompt-injection-proof prompts</li></ul></div>
+        <div class="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur"><p class="text-sm font-bold text-amber-300">Security</p><ul class="mt-2 space-y-1 text-sm text-slate-300"><li>• RS256 JWT + refresh rotation</li><li>• WebAuthn passkeys + MFA step-up</li><li>• argon2id password hashing</li></ul></div>
+        <div class="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur"><p class="text-sm font-bold text-indigo-300">Infra &amp; integrations</p><ul class="mt-2 space-y-1 text-sm text-slate-300"><li>• Docker Compose · Google Compute Engine</li><li>• Cloudflare DNS/TLS · Caddy/nginx</li><li>• PDRM Semak Mule API · gov adapters</li></ul></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== 8. PERFORMANCE ===================== -->
+  <section class="slide fade relative flex-col justify-center px-6 py-10 sm:px-16 bg-gradient-to-br from-slate-950 via-slate-900 to-emerald-950/30 grid-lines">
+    <div class="glow h-80 w-80 bg-emerald-600/30 bottom-10 right-16"></div>
+    <div class="relative z-10 mx-auto w-full max-w-5xl">
+      <p class="text-xs font-bold uppercase tracking-widest text-blue-400">Prototype performance</p>
+      <h2 class="mt-2 text-3xl font-extrabold text-white sm:text-4xl">Benchmarking of the working prototype.</h2>
+      <div class="mt-8 overflow-hidden rounded-2xl border border-white/10 bg-white/5 backdrop-blur">
+        <table class="w-full text-left text-sm">
+          <thead class="bg-white/5 text-xs uppercase tracking-wide text-slate-400">
+            <tr><th class="px-4 py-3">Area</th><th class="px-4 py-3">Prototype result</th></tr>
+          </thead>
+          <tbody class="divide-y divide-white/5 text-slate-200">
+            <tr><td class="px-4 py-2.5">Backend test suite</td><td class="px-4 py-2.5">179 tests passing · ~78% line coverage (gate ≥70%)</td></tr>
+            <tr><td class="px-4 py-2.5">Frontend quality gate</td><td class="px-4 py-2.5">TypeScript + ESLint clean · production build green · Playwright smoke 3/3</td></tr>
+            <tr><td class="px-4 py-2.5">Evidence pipeline</td><td class="px-4 py-2.5">5.4 MB upload → 153 KB redacted copy (1920 px) = <b class="text-emerald-300">36× smaller</b>; fail-closed verified</td></tr>
+            <tr><td class="px-4 py-2.5">Registry coverage</td><td class="px-4 py-2.5">419 institutions · 6 countries · server-side EMVCo CRC validation</td></tr>
+            <tr><td class="px-4 py-2.5">AI (live)</td><td class="px-4 py-2.5">Gemini 2.5 Flash for slip + message analysis (async, seconds); 0-key mock fallback</td></tr>
+            <tr><td class="px-4 py-2.5">Lookup latency</td><td class="px-4 py-2.5">Exact-match HMAC index + Redis cache; design target &lt;50 ms (ADR-007)</td></tr>
+            <tr><td class="px-4 py-2.5">Security</td><td class="px-4 py-2.5">RS256 JWT + WebAuthn MFA + four-eyes dual control · hash-chained audit</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="mt-4 text-xs text-slate-400">Figures measured on the deployed prototype (single GCE VM, Docker Compose) and the CI test suite.</p>
+    </div>
+  </section>
+
+  <!-- ===================== 9. FUTURE DEVELOPMENT ===================== -->
+  <section class="slide fade relative flex-col justify-center px-6 py-10 sm:px-16 bg-gradient-to-br from-slate-950 via-indigo-950/50 to-slate-900 grid-lines">
+    <div class="glow h-80 w-80 bg-indigo-600/40 top-10 left-10"></div>
+    <div class="relative z-10 mx-auto w-full max-w-5xl">
+      <p class="text-xs font-bold uppercase tracking-widest text-blue-400">Additional details · Future development</p>
+      <h2 class="mt-2 text-3xl font-extrabold text-white sm:text-4xl">From hackathon MVP to regional infrastructure.</h2>
+      <div class="mt-8 grid grid-cols-1 gap-4 md:grid-cols-2">
+        <div class="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur">
+          <p class="text-sm font-bold text-blue-300">Near-term</p>
+          <ul class="mt-2 space-y-1 text-sm text-slate-300">
+            <li>• Live AI validation on real slips (Vertex)</li>
+            <li>• Object storage hardening (S3/GCS presigned, AV scan, cookieless media domain)</li>
+            <li>• Partner API keys + webhooks; move /check off the static bank mirror</li>
+            <li>• App Check / reCAPTCHA on anonymous endpoints</li>
+            <li>• ToS/Privacy pages · DSAR tombstone semantics</li>
+          </ul>
+        </div>
+        <div class="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur">
+          <p class="text-sm font-bold text-emerald-300">Longer-term</p>
+          <ul class="mt-2 space-y-1 text-sm text-slate-300">
+            <li>• Government registry connectors (cekrekening.id, PDRM, SPF ASC, AOC, NCSC, IACAT) under MoU</li>
+            <li>• Bank / e-wallet integrations (pre-transfer screening)</li>
+            <li>• Regional fraud-intelligence layer &amp; threat feeds</li>
+            <li>• Trust-rank ladder, badges &amp; partner ecosystem</li>
+          </ul>
+        </div>
+      </div>
+      <div class="mt-4 rounded-2xl border border-blue-400/30 bg-blue-500/10 p-4 text-sm text-slate-200 backdrop-blur">
+        <b class="text-white">Business model:</b> free for consumers (community registry) · paid B2B <b>Screen API</b> for banks/e-wallets/marketplaces · B2G connectors under MoU.
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== 10. WIREFRAMES ===================== -->
+  <section class="slide fade relative flex-col justify-center px-6 py-10 sm:px-16 bg-gradient-to-br from-slate-950 via-slate-900 to-blue-950/50 grid-lines">
+    <div class="glow h-80 w-80 bg-blue-600/40 top-10 left-1/4"></div>
+    <div class="relative z-10 mx-auto w-full max-w-6xl">
+      <p class="text-xs font-bold uppercase tracking-widest text-blue-400">Wireframes</p>
+      <h2 class="mt-2 text-3xl font-extrabold text-white sm:text-4xl">Low-fidelity wireframes of the core screens.</h2>
+      <div class="mt-8 grid grid-cols-2 gap-4 lg:grid-cols-4">
+
+        <!-- Home / search -->
+        <div class="rounded-xl border border-white/10 bg-white/5 p-3 backdrop-blur">
+          <div class="mb-2 flex gap-1"><span class="h-2 w-2 rounded-full bg-white/20"></span><span class="h-2 w-2 rounded-full bg-white/20"></span><span class="h-2 w-2 rounded-full bg-white/20"></span></div>
+          <div class="flex items-center justify-between rounded bg-white/10 px-2 py-1"><div class="h-2 w-8 rounded bg-white/25"></div><div class="flex gap-1"><div class="h-2 w-6 rounded bg-white/15"></div><div class="h-2 w-6 rounded bg-white/15"></div></div></div>
+          <div class="mt-2 space-y-1.5 rounded border border-white/10 p-2">
+            <div class="h-3 w-1/2 rounded bg-white/20"></div>
+            <div class="h-2 w-3/4 rounded bg-white/10"></div>
+            <div class="h-5 rounded bg-white/10"></div>
+            <div class="h-5 rounded bg-white/10"></div>
+            <div class="h-5 w-1/2 rounded bg-blue-500/40"></div>
+          </div>
+          <p class="mt-2 text-[11px] font-semibold text-slate-300">Home · search</p>
+        </div>
+
+        <!-- Dossier -->
+        <div class="rounded-xl border border-white/10 bg-white/5 p-3 backdrop-blur">
+          <div class="mb-2 flex gap-1"><span class="h-2 w-2 rounded-full bg-white/20"></span><span class="h-2 w-2 rounded-full bg-white/20"></span><span class="h-2 w-2 rounded-full bg-white/20"></span></div>
+          <div class="flex items-center justify-between"><div class="h-3 w-1/2 rounded bg-white/20"></div><div class="h-4 w-10 rounded bg-red-500/50"></div></div>
+          <div class="mt-2 rounded border border-white/10 p-2">
+            <div class="flex items-center justify-between"><div class="h-4 w-16 rounded bg-white/20"></div><div class="h-4 w-8 rounded bg-red-500/40"></div></div>
+            <div class="mt-2 h-2 w-full rounded-full bg-white/10"><div class="h-2 w-3/4 rounded-full bg-red-500/60"></div></div>
+          </div>
+          <div class="mt-2 rounded border border-red-400/40 bg-red-500/10 p-2"><div class="h-2 w-3/4 rounded bg-red-300/40"></div><div class="mt-1 h-2 w-1/2 rounded bg-white/10"></div></div>
+          <div class="mt-2 space-y-1"><div class="h-4 rounded bg-white/10"></div><div class="h-4 rounded bg-white/10"></div></div>
+          <p class="mt-2 text-[11px] font-semibold text-slate-300">Dossier · risk + matcher</p>
+        </div>
+
+        <!-- Report wizard -->
+        <div class="rounded-xl border border-white/10 bg-white/5 p-3 backdrop-blur">
+          <div class="mb-2 flex gap-1"><span class="h-2 w-2 rounded-full bg-white/20"></span><span class="h-2 w-2 rounded-full bg-white/20"></span><span class="h-2 w-2 rounded-full bg-white/20"></span></div>
+          <div class="flex items-center justify-between px-1"><span class="h-4 w-4 rounded-full bg-blue-500/50"></span><span class="h-2 w-6 rounded bg-white/15"></span><span class="h-4 w-4 rounded-full bg-white/15"></span><span class="h-2 w-6 rounded bg-white/15"></span><span class="h-4 w-4 rounded-full bg-white/15"></span><span class="h-4 w-4 rounded-full bg-white/15"></span></div>
+          <div class="mt-2 space-y-1.5 rounded border border-white/10 p-2">
+            <div class="h-3 w-2/3 rounded bg-white/20"></div>
+            <div class="h-5 rounded bg-white/10"></div>
+            <div class="h-5 rounded bg-white/10"></div>
+            <div class="h-8 rounded border border-dashed border-white/20 bg-white/5"></div>
+            <div class="h-5 w-1/2 rounded bg-rose-500/40"></div>
+          </div>
+          <p class="mt-2 text-[11px] font-semibold text-slate-300">Report · 4-step wizard</p>
+        </div>
+
+        <!-- Admin queue -->
+        <div class="rounded-xl border border-white/10 bg-white/5 p-3 backdrop-blur">
+          <div class="mb-2 flex gap-1"><span class="h-2 w-2 rounded-full bg-white/20"></span><span class="h-2 w-2 rounded-full bg-white/20"></span><span class="h-2 w-2 rounded-full bg-white/20"></span></div>
+          <div class="grid grid-cols-3 gap-1"><div class="h-6 rounded bg-white/10"></div><div class="h-6 rounded bg-rose-500/30"></div><div class="h-6 rounded bg-white/10"></div></div>
+          <div class="mt-2 space-y-1.5">
+            <div class="rounded border border-white/10 p-2"><div class="h-2 w-2/3 rounded bg-white/20"></div><div class="mt-1 flex gap-1"><div class="h-4 w-10 rounded bg-emerald-500/40"></div><div class="h-4 w-10 rounded bg-white/10"></div></div></div>
+            <div class="rounded border border-white/10 p-2"><div class="h-2 w-1/2 rounded bg-white/20"></div><div class="mt-1 flex gap-1"><div class="h-4 w-10 rounded bg-emerald-500/40"></div><div class="h-4 w-10 rounded bg-white/10"></div></div></div>
+          </div>
+          <p class="mt-2 text-[11px] font-semibold text-slate-300">Admin · dual-control queue</p>
+        </div>
+      </div>
+      <p class="mt-4 text-xs text-slate-400">Grey blocks are placeholders; the shipped UI follows the institutional light-mode design system.</p>
+    </div>
+  </section>
+
+  <!-- ===================== 11. LINKS ===================== -->
+  <section class="slide fade relative flex-col justify-center px-6 py-12 sm:px-16 bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950/50 grid-lines">
+    <div class="glow h-80 w-80 bg-indigo-600/40 top-10 left-1/4"></div>
+    <div class="relative z-10 mx-auto w-full max-w-4xl">
+      <p class="text-xs font-bold uppercase tracking-widest text-blue-400">Links</p>
+      <h2 class="mt-2 text-3xl font-extrabold text-white sm:text-4xl">Repository · live product · demo.</h2>
+      <div class="mt-9 space-y-3">
+        <a href="https://github.com/rhony08/trustpay-sea" target="_blank" class="flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur transition hover:border-blue-400/40">
+          <div><p class="text-sm font-bold text-white">GitHub repository</p><p class="font-mono text-xs text-blue-300">github.com/rhony08/trustpay-sea</p></div>
+          <span class="text-slate-400">↗</span>
+        </a>
+        <a href="https://trustpay-sea.quesitive.com" target="_blank" class="flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur transition hover:border-emerald-400/40">
+          <div><p class="text-sm font-bold text-white">Live product (deployed)</p><p class="font-mono text-xs text-emerald-300">trustpay-sea.quesitive.com</p></div>
+          <span class="text-slate-400">↗</span>
+        </a>
+        <a href="/deck/demo.webm" target="_blank" class="flex items-center justify-between rounded-2xl border border-blue-400/40 bg-blue-500/10 p-5 backdrop-blur transition hover:border-blue-300/60">
+          <div><p class="text-sm font-bold text-white">Demo video</p><p class="font-mono text-xs text-blue-200">trustpay-sea.quesitive.com/deck/demo.webm</p></div>
+          <span class="text-slate-300">▶</span>
+        </a>
+      </div>
+      <p class="mt-4 text-xs text-slate-400">Demo login (analyst): analyst@trustpay.dev / demo-analyst-pass</p>
+    </div>
+  </section>
+
+  <!-- ===================== 12. PROBLEM ===================== -->
   <section class="slide fade relative flex-col justify-center px-6 py-12 sm:px-16 bg-gradient-to-br from-slate-950 via-slate-900 to-rose-950/40 grid-lines">
     <div class="glow h-80 w-80 bg-rose-600/40 top-10 right-0"></div>
     <div class="relative z-10 mx-auto w-full max-w-5xl">
