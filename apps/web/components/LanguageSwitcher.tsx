@@ -14,7 +14,7 @@ export function LanguageSwitcher({ compact = false }: { compact?: boolean }) {
       className={
         compact
           ? "cursor-pointer rounded-lg border border-slate-300 bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700 outline-none hover:bg-slate-200"
-          : "cursor-pointer rounded-lg border border-slate-300 bg-slate-100 px-2.5 py-1.5 text-xs font-semibold text-slate-700 outline-none hover:bg-slate-200"
+          : "cursor-pointer rounded-lg border border-slate-300 bg-slate-100 px-0 py-1.5 text-xs font-semibold text-slate-700 outline-none hover:bg-slate-200 md:px-2.5"
       }
     >
       {LOCALES.map((l) => (

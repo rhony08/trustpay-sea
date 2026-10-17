@@ -621,12 +621,6 @@ function ResultView({
               {t("check.reportThis")}
             </button>
             <Link
-              href={`/receipt?country=${entity.country}&bank=${entity.institution ?? ""}&account=`}
-              className="rounded-lg border border-slate-300 bg-slate-50 px-3.5 py-2 font-bold text-slate-700 hover:bg-slate-100"
-            >
-              {t("check.exportReceipt")}
-            </Link>
-            <Link
               href={`/claim?entity=${entity.id}`}
               className="rounded-lg border border-slate-300 bg-slate-50 px-3.5 py-2 font-bold text-blue-700 hover:bg-slate-100"
             >
