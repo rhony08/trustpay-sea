@@ -244,7 +244,87 @@
     </div>
   </section>
 
-  <!-- ===================== 6. PROBLEM ===================== -->
+  <!-- ===================== 6. ARCHITECTURE ===================== -->
+  <section class="slide fade relative flex-col justify-center px-6 py-10 sm:px-16 bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950/50 grid-lines">
+    <div class="glow h-80 w-80 bg-indigo-600/40 top-10 right-16"></div>
+    <div class="relative z-10 mx-auto w-full max-w-6xl">
+      <p class="text-xs font-bold uppercase tracking-widest text-blue-400">Architecture</p>
+      <h2 class="mt-2 text-3xl font-extrabold text-white sm:text-4xl">A modular monolith, built to harden.</h2>
+
+      <div class="mt-7 space-y-3">
+        <!-- Clients -->
+        <div class="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur">
+          <p class="text-[11px] font-bold uppercase tracking-wide text-slate-400">Clients</p>
+          <div class="mt-2 flex flex-wrap gap-2 text-xs font-semibold text-slate-200">
+            <span class="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5">Next.js 15 PWA (web)</span>
+            <span class="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5">Partner clients — Screen API</span>
+            <span class="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5">Browsers / mobile web</span>
+          </div>
+        </div>
+        <p class="text-center text-slate-500">↓ HTTPS</p>
+
+        <!-- Edge -->
+        <div class="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur">
+          <p class="text-[11px] font-bold uppercase tracking-wide text-slate-400">Edge &amp; delivery</p>
+          <div class="mt-2 flex flex-wrap items-center gap-2 text-xs font-semibold text-slate-200">
+            <span class="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5">Cloudflare (DNS · TLS · WAF)</span>
+            <span class="text-slate-500">→</span>
+            <span class="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5">Caddy / nginx reverse proxy</span>
+            <span class="text-slate-500">→</span>
+            <span class="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5">Next.js (SSR/static)</span>
+          </div>
+        </div>
+        <p class="text-center text-slate-500">↓ /api/v1</p>
+
+        <!-- Application -->
+        <div class="rounded-2xl border border-blue-400/40 bg-blue-500/10 p-4 backdrop-blur">
+          <p class="text-[11px] font-bold uppercase tracking-wide text-blue-300">Application — FastAPI modular monolith</p>
+          <div class="mt-2 flex flex-wrap gap-1.5 text-[11px] font-semibold text-slate-100">
+            <span class="rounded-md border border-white/10 bg-white/5 px-2 py-1">Resolver (bank/QR)</span>
+            <span class="rounded-md border border-white/10 bg-white/5 px-2 py-1">Reports + evidence</span>
+            <span class="rounded-md border border-white/10 bg-white/5 px-2 py-1">Risk engine</span>
+            <span class="rounded-md border border-white/10 bg-white/5 px-2 py-1">Moderation</span>
+            <span class="rounded-md border border-white/10 bg-white/5 px-2 py-1">Disputes / safe-harbor</span>
+            <span class="rounded-md border border-white/10 bg-white/5 px-2 py-1">Admin (dual-control)</span>
+            <span class="rounded-md border border-white/10 bg-white/5 px-2 py-1">Screen API (keyed tiers)</span>
+            <span class="rounded-md border border-white/10 bg-white/5 px-2 py-1">Auth (JWT + WebAuthn)</span>
+            <span class="rounded-md border border-white/10 bg-white/5 px-2 py-1">AI orchestrator</span>
+          </div>
+        </div>
+        <p class="text-center text-slate-500">↓</p>
+
+        <!-- Data + AI + Integrations -->
+        <div class="grid grid-cols-1 gap-3 md:grid-cols-3">
+          <div class="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur">
+            <p class="text-[11px] font-bold uppercase tracking-wide text-emerald-300">Data</p>
+            <ul class="mt-2 space-y-1 text-xs text-slate-300">
+              <li>• PostgreSQL 16 — KMS-HMAC account index, hash-chained audit</li>
+              <li>• Redis — rate-limit, idempotency, cache, scheduler</li>
+              <li>• Object storage — redacted public media (private quarantine)</li>
+            </ul>
+          </div>
+          <div class="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur">
+            <p class="text-[11px] font-bold uppercase tracking-wide text-violet-300">AI (pluggable)</p>
+            <ul class="mt-2 space-y-1 text-xs text-slate-300">
+              <li>• <code class="text-blue-300">mock | Vertex Gemini | OpenRouter</code></li>
+              <li>• Slip OCR · tamper · PII redaction (fail-closed)</li>
+              <li>• Typology / NER · grounded summaries · message analysis</li>
+            </ul>
+          </div>
+          <div class="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur">
+            <p class="text-[11px] font-bold uppercase tracking-wide text-amber-300">Integrations</p>
+            <ul class="mt-2 space-y-1 text-xs text-slate-300">
+              <li>• PDRM Semak Mule (live)</li>
+              <li>• cekrekening.id · SPF · AOC · NCSC · IACAT (adapters)</li>
+              <li>• Deploy: GCE (Compose) · Cloud Run / Cloud SQL</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== 7. PROBLEM ===================== -->
   <section class="slide fade relative flex-col justify-center px-6 py-12 sm:px-16 bg-gradient-to-br from-slate-950 via-slate-900 to-rose-950/40 grid-lines">
     <div class="glow h-80 w-80 bg-rose-600/40 top-10 right-0"></div>
     <div class="relative z-10 mx-auto w-full max-w-5xl">
