@@ -38,7 +38,9 @@ def redact_image(data: bytes) -> bytes:
         k = max(3, (width // 40) | 1)
         image[top:bottom, :] = cv2.GaussianBlur(band, (k, k), 0)
 
-    ok, encoded = cv2.imencode(".jpg", image, [int(cv2.IMWRITE_JPEG_QUALITY), 85])
+    ok, encoded = cv2.imencode(
+        ".jpg", image, [int(cv2.IMWRITE_JPEG_QUALITY), settings.evidence_jpeg_quality]
+    )
     if not ok:
         raise RedactionError("redaction re-encode failed")
     return encoded.tobytes()

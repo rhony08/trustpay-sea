@@ -83,7 +83,12 @@ class NormalizedImage:
 
 
 def normalize_image(data: bytes) -> NormalizedImage:
-    """Validate + re-encode. Output is always JPEG (EXIF stripped)."""
+    """Validate + re-encode. Output is always JPEG (EXIF stripped).
+
+    Storage-saving: the long edge is downscaled to `evidence_max_dimension` and
+    re-encoded at `evidence_jpeg_quality`, so a 12 MP phone photo becomes a few
+    hundred KB while staying legible for OCR/forensics.
+    """
     settings = get_settings()
     if not data:
         raise UploadValidationError("empty upload")
@@ -103,7 +108,24 @@ def normalize_image(data: bytes) -> NormalizedImage:
     if width * height > settings.evidence_max_pixels:
         raise UploadValidationError("image exceeds maximum pixel count")
 
-    ok, encoded = cv2.imencode(".jpg", image, [int(cv2.IMWRITE_JPEG_QUALITY), 85])
+    image = downscale(image, settings.evidence_max_dimension)
+    height, width = image.shape[:2]
+
+    quality = max(1, min(100, settings.evidence_jpeg_quality))
+    ok, encoded = cv2.imencode(".jpg", image, [int(cv2.IMWRITE_JPEG_QUALITY), quality])
     if not ok:
         raise UploadValidationError("image re-encode failed")
     return NormalizedImage(encoded.tobytes(), JPEG, int(width), int(height))
+
+
+def downscale(image, max_dimension: int):
+    """Resize so the longest edge is <= max_dimension (0/None = unchanged)."""
+    if not max_dimension or max_dimension <= 0:
+        return image
+    height, width = image.shape[:2]
+    longest = max(width, height)
+    if longest <= max_dimension:
+        return image
+    scale = max_dimension / float(longest)
+    new_size = (max(1, int(round(width * scale))), max(1, int(round(height * scale))))
+    return cv2.resize(image, new_size, interpolation=cv2.INTER_AREA)

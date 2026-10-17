@@ -94,6 +94,9 @@ class Settings(BaseSettings):
     evidence_local_dir: str = "/tmp/trustpay-evidence"
     evidence_max_bytes: int = 8 * 1024 * 1024  # 8 MiB
     evidence_max_pixels: int = 25_000_000  # decompression-bomb guard
+    # Storage-saving compression: downscale the long edge and re-encode as JPEG.
+    evidence_max_dimension: int = 1920  # px on the longest edge (0 = no downscale)
+    evidence_jpeg_quality: int = 80  # 1..100 (lower = smaller)
     evidence_public_base_url: str = "http://localhost:8000/media"  # cookieless domain in prod
 
     # Report quotas (Phase 2.1 / Doc 02 §5.2, §9)
