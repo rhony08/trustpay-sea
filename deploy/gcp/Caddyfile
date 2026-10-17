@@ -1,7 +1,8 @@
 # TrustPay SEA — Caddy reverse proxy for the single-VM GCP deploy.
 #
-# Set DOMAIN to your hostname (e.g. trustpay.example.com) for automatic HTTPS,
-# or to ":80" to serve plain HTTP on the VM's IP (no TLS).
+# Uses the provided origin certificate (Cloudflare Origin CA) so Cloudflare can
+# run in Full (strict) mode. Put the cert + key at deploy/gcp/certs/tls.pem and
+# deploy/gcp/certs/tls.key (mounted read-only into the container).
 #
 # Routing:
 #   /api/*, /media/*, /healthz, /docs*, /openapi.json  -> FastAPI  (api:8000)
@@ -14,6 +15,9 @@
 		X-Frame-Options "SAMEORIGIN"
 		Referrer-Policy "strict-origin-when-cross-origin"
 	}
+
+	# Provided origin cert (no ACME). Remove this line to fall back to auto-TLS.
+	tls /etc/caddy/certs/tls.pem /etc/caddy/certs/tls.key
 
 	@api path /api/* /media/* /healthz /docs /docs/* /openapi.json
 	handle @api {

@@ -1,0 +1,5 @@
+# Never commit TLS material. Place the origin cert + key here as:
+#   deploy/gcp/certs/tls.pem   (certificate, full chain)
+#   deploy/gcp/certs/tls.key   (private key)
+*
+!.gitignore
