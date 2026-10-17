@@ -72,6 +72,10 @@ services:
       # --- optional integrations ---
       SEMAKMULE_API_KEY: ${SEMAKMULE_API_KEY:-}
       MFA_REQUIRED_FOR_ADMINS: ${MFA_REQUIRED_FOR_ADMINS:-true}
+      COOKIE_SECURE: ${COOKIE_SECURE:-true}
+      # --- crypto secrets (required in prod; the API refuses to boot without them) ---
+      ACCOUNT_HMAC_KEY: ${ACCOUNT_HMAC_KEY:?set ACCOUNT_HMAC_KEY in .env.gcp}
+      RECEIPT_SIGNING_KEY: ${RECEIPT_SIGNING_KEY:?set RECEIPT_SIGNING_KEY in .env.gcp}
     volumes:
       - trustpay_secrets:/run/secrets
       - trustpay_evidence:/data/evidence
