@@ -31,10 +31,14 @@ services:
       # Notifications (G-15): in-app always; email opt-in via SMTP
       NOTIFICATIONS_EMAIL_ENABLED: ${NOTIFICATIONS_EMAIL_ENABLED:-false}
       SMTP_HOST: ${SMTP_HOST:-}
+      # Evidence: persistent dir + the public base URL baked into stored media_urls.
+      EVIDENCE_LOCAL_DIR: /data/evidence
+      EVIDENCE_PUBLIC_BASE_URL: ${EVIDENCE_PUBLIC_BASE_URL:-https://trustpay.quesitive.com/media}
     extra_hosts:
       - "host.docker.internal:host-gateway"
     volumes:
       - trustpay_secrets:/run/secrets
+      - ./var/evidence:/data/evidence
     ports:
       - "127.0.0.1:8010:8000"
     networks: [default, shared]
