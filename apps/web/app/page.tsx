@@ -370,7 +370,7 @@ function PhoneMockup() {
   return (
     <div className="relative w-full max-w-sm">
       <div className="absolute -inset-4 rotate-2 rounded-3xl bg-gradient-to-r from-blue-100 to-indigo-100 blur-sm" />
-      <div className="relative space-y-4 rounded-3xl border-4 border-slate-900 bg-white p-5 shadow-2xl">
+      <div className="relative space-y-4 rounded-3xl border-4 border-slate-900 bg-white p-5 shadow-[0_16px_36px_-20px_rgba(15,23,42,0.35)]">
         <div className="flex items-center justify-between border-b border-slate-100 pb-3">
           <div className="flex items-center gap-2">
             <span className="h-3 w-3 rounded-full bg-red-500" />

@@ -665,6 +665,27 @@ const en: Record<string, string> = {
   "check.loss": "Loss:",
   "report.tamper": "⚠ AI flagged possible tampering",
 
+  // ---- auth menu / admin gate / merchant accounts ----
+  "nav.signIn": "Sign in",
+  "nav.admin": "Admin",
+  "admin.approvalPending": "Approval pending — a second admin must approve before this takes effect.",
+  "admin.accessDeniedTitle": "Admins only",
+  "admin.accessDeniedBody":
+    "Your account does not have analyst access. Ask an administrator if you believe this is a mistake.",
+  "claim.selectAccountTitle": "Which account do you want to dispute?",
+  "claim.selectAccountHelp": "Choose one of the bank accounts you have already added and verified.",
+  "claim.selectAccountPlaceholder": "Select your account…",
+  "claim.addAccountsFirst":
+    "You haven't added any bank accounts yet. Add and verify your accounts in your profile first.",
+  "claim.goToProfile": "Go to my profile",
+  "profile.myAccounts": "My accounts",
+  "profile.addAccount": "Add account",
+  "profile.noAccounts":
+    "No accounts yet. Check an account and choose “Are you the owner?” to add and verify it.",
+  "profile.verified": "Verified",
+  "profile.pending": "Pending",
+  "profile.dispute": "Dispute",
+
   // ---- taxonomy: report categories ----
   "cat.ONLINE_SHOP_GHOSTING": "Online shop ghosting",
   "cat.FAKE_JOB": "Fake job",

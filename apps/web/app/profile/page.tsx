@@ -10,6 +10,7 @@ import {
   exportData,
   getNotifications,
   getProfile,
+  getMyEntities,
   getQuiz,
   getToken,
   getWatchlist,
@@ -23,6 +24,7 @@ import {
   verifyPhoneConfirm,
   verifyPhoneStart,
   type NotificationItem,
+  type OwnedEntity,
   type QuizQuestion,
   type TrustProfile,
   type WatchlistItem,
@@ -50,6 +52,7 @@ export default function ProfilePage() {
 
   const [profile, setProfile] = useState<TrustProfile | null>(null);
   const [watchlist, setWatchlist] = useState<WatchlistItem[]>([]);
+  const [owned, setOwned] = useState<OwnedEntity[]>([]);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
   const [answers, setAnswers] = useState<number[]>([]);
@@ -64,6 +67,7 @@ export default function ProfilePage() {
     setProfile(await getProfile(t));
     setWatchlist(await getWatchlist(t));
     setNotifications(await getNotifications(t));
+    setOwned(await getMyEntities(t));
     listPasskeys()
       .then(setPasskeys)
       .catch(() => undefined);
@@ -277,6 +281,35 @@ export default function ProfilePage() {
                 >
                   {t("profile.remove")}
                 </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      <div className={card}>
+        <div className="flex items-center justify-between">
+          <p className="font-semibold text-slate-800">{t("profile.myAccounts")}</p>
+          <Link href="/check" className="text-xs font-semibold text-blue-700 underline">
+            {t("profile.addAccount")}
+          </Link>
+        </div>
+        {owned.length === 0 ? (
+          <p className="mt-1 text-xs text-slate-500">{t("profile.noAccounts")}</p>
+        ) : (
+          <ul className="mt-3 space-y-2">
+            {owned.map((e) => (
+              <li key={e.id} className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm">
+                <span className="font-mono text-slate-800">{e.account_masked}</span>
+                <span className="text-xs text-slate-500">
+                  {e.country} · {e.institution ?? e.entity_type}
+                </span>
+                <span className={`text-xs font-semibold ${e.is_owner_verified ? "text-emerald-600" : "text-amber-600"}`}>
+                  {e.is_owner_verified ? t("profile.verified") : t("profile.pending")}
+                </span>
+                <Link href={`/claim?entity=${e.id}`} className="text-xs font-semibold text-blue-700 underline">
+                  {t("profile.dispute")}
+                </Link>
               </li>
             ))}
           </ul>

@@ -704,6 +704,27 @@ const ms: Record<string, string> = {
     "Tiada akaun diperlukan. Beritahu kami apa yang berlaku dan kami akan menyemak silang serta menerbitkan laporan yang disunting untuk melindungi pembayar lain.",
   "check.reportConsentRequired": "Sila tandakan perakuan sebelum menghantar.",
   "check.reportSuccess": "Laporan dihantar — terima kasih. Ia akan muncul pada akaun ini setelah disahkan.",
+
+  // ---- auth menu / admin gate / merchant accounts ----
+  "nav.signIn": "Log masuk",
+  "nav.admin": "Admin",
+  "admin.approvalPending": "Menunggu kelulusan — pentadbir kedua mesti meluluskan sebelum ini berkuat kuasa.",
+  "admin.accessDeniedTitle": "Pentadbir sahaja",
+  "admin.accessDeniedBody":
+    "Akaun anda tidak mempunyai akses penganalisis. Tanya pentadbir jika anda percaya ini satu kesilapan.",
+  "claim.selectAccountTitle": "Akaun mana yang ingin anda pertikaikan?",
+  "claim.selectAccountHelp": "Pilih salah satu akaun bank yang telah anda tambah dan sahkan.",
+  "claim.selectAccountPlaceholder": "Pilih akaun anda…",
+  "claim.addAccountsFirst":
+    "Anda belum menambah sebarang akaun bank. Tambah dan sahkan akaun anda dalam profil terlebih dahulu.",
+  "claim.goToProfile": "Pergi ke profil saya",
+  "profile.myAccounts": "Akaun saya",
+  "profile.addAccount": "Tambah akaun",
+  "profile.noAccounts":
+    "Belum ada akaun. Semak sesuatu akaun dan pilih “Adakah anda pemiliknya?” untuk menambah dan mengesahkannya.",
+  "profile.verified": "Disahkan",
+  "profile.pending": "Menunggu",
+  "profile.dispute": "Pertikaian",
 };
 
 export default ms;

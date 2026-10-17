@@ -695,6 +695,27 @@ const th: Record<string, string> = {
     "ไม่ต้องใช้บัญชี เล่าให้เราฟังว่าเกิดอะไรขึ้น แล้วเราจะตรวจสอบไขว้และเผยแพร่รายงานที่ปิดข้อมูลบางส่วนเพื่อปกป้องผู้จ่ายรายอื่น",
   "check.reportConsentRequired": "โปรดติ๊กเครื่องหมายในคำประกาศก่อนส่ง",
   "check.reportSuccess": "ส่งรายงานแล้ว — ขอบคุณ รายงานจะปรากฏบนบัญชีนี้เมื่อตรวจสอบแล้ว",
+
+  // ---- auth menu / admin gate / merchant accounts ----
+  "nav.signIn": "เข้าสู่ระบบ",
+  "nav.admin": "ผู้ดูแลระบบ",
+  "admin.approvalPending": "รอการอนุมัติ — ผู้ดูแลระบบคนที่สองต้องอนุมัติก่อนจึงจะมีผล",
+  "admin.accessDeniedTitle": "เฉพาะผู้ดูแลระบบ",
+  "admin.accessDeniedBody":
+    "บัญชีของคุณไม่มีสิทธิ์เข้าถึงในฐานะนักวิเคราะห์ โปรดสอบถามผู้ดูแลระบบหากคุณคิดว่านี่เป็นข้อผิดพลาด",
+  "claim.selectAccountTitle": "คุณต้องการโต้แย้งบัญชีใด?",
+  "claim.selectAccountHelp": "เลือกหนึ่งในบัญชีธนาคารที่คุณเพิ่มและยืนยันแล้ว",
+  "claim.selectAccountPlaceholder": "เลือกบัญชีของคุณ…",
+  "claim.addAccountsFirst":
+    "คุณยังไม่ได้เพิ่มบัญชีธนาคารใดเลย โปรดเพิ่มและยืนยันบัญชีของคุณในโปรไฟล์ก่อน",
+  "claim.goToProfile": "ไปที่โปรไฟล์ของฉัน",
+  "profile.myAccounts": "บัญชีของฉัน",
+  "profile.addAccount": "เพิ่มบัญชี",
+  "profile.noAccounts":
+    "ยังไม่มีบัญชี ตรวจสอบบัญชีและเลือก “คุณเป็นเจ้าของหรือไม่?” เพื่อเพิ่มและยืนยันบัญชี",
+  "profile.verified": "ยืนยันแล้ว",
+  "profile.pending": "รอดำเนินการ",
+  "profile.dispute": "โต้แย้ง",
 };
 
 export default th;

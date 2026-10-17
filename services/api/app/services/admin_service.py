@@ -87,6 +87,20 @@ async def request_approval(
 ) -> AdminApproval:
     if action not in _EXECUTORS:
         raise AdminError(f"unknown approval action: {action}")
+    # Idempotent: a second request for the same subject returns the existing
+    # pending approval instead of stacking duplicates (prevents double-execution).
+    existing = await db.scalar(
+        select(AdminApproval)
+        .where(
+            AdminApproval.action == action,
+            AdminApproval.subject_type == subject_type,
+            AdminApproval.subject_id == subject_id,
+            AdminApproval.status == "PENDING",
+        )
+        .limit(1)
+    )
+    if existing is not None:
+        return existing
     approval = AdminApproval(
         action=action,
         subject_type=subject_type,
@@ -328,6 +342,16 @@ async def dispute_queue(
         stmt = stmt.where(OwnerDispute.status == status)
     disputes = list(await db.scalars(stmt))
     entities = await _entity_index(db, {d.payment_entity_id for d in disputes})
+    pending_ids: set[str] = set()
+    if disputes:
+        rows = await db.scalars(
+            select(AdminApproval.subject_id).where(
+                AdminApproval.subject_type == "owner_dispute",
+                AdminApproval.status == "PENDING",
+                AdminApproval.subject_id.in_([d.id for d in disputes]),
+            )
+        )
+        pending_ids = {str(x) for x in rows}
 
     out = []
     for dispute in disputes:
@@ -343,6 +367,7 @@ async def dispute_queue(
                 "target_report_id": str(dispute.target_report_id)
                 if dispute.target_report_id
                 else None,
+                "pending_approval": str(dispute.id) in pending_ids,
                 "created_at": dispute.created_at.isoformat() if dispute.created_at else None,
                 "entity": _entity_brief(entities.get(dispute.payment_entity_id)),
             }

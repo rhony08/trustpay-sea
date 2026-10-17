@@ -471,6 +471,21 @@ export async function listPasskeys(): Promise<{ credential_id: string; created_a
   return body.data.credentials;
 }
 
+export interface Me {
+  id: string;
+  email: string;
+  display_name: string | null;
+  role: string;
+  status: string;
+  identity_trust: number;
+  reputation_score: number;
+}
+
+/** Current user (role/status). Throws ApiError(401) when not signed in. */
+export async function getMe(token: string): Promise<Me> {
+  return authed<Me>("/api/v1/auth/me", token);
+}
+
 // --- WebAuthn JSON (b64url) <-> browser API helpers -----------------------
 
 function b64urlToBuffer(value: string): ArrayBuffer {
@@ -717,6 +732,26 @@ export interface Receipt {
 export async function getProfile(token: string): Promise<TrustProfile> {
   const body = await authed<{ data: TrustProfile }>("/api/v1/profile/me", token);
   return body.data;
+}
+
+export interface OwnedEntity {
+  id: string;
+  entity_type: string;
+  country: string;
+  institution: string | null;
+  account_masked: string;
+  is_owner_verified: boolean;
+  is_under_dispute: boolean;
+  risk_score: number;
+}
+
+/** Bank accounts the current user has claimed (their merchant accounts). */
+export async function getMyEntities(token: string): Promise<OwnedEntity[]> {
+  const body = await authed<{ data: { entities: OwnedEntity[] } }>(
+    "/api/v1/profile/entities",
+    token,
+  );
+  return body.data.entities;
 }
 
 export async function getNotifications(token: string): Promise<NotificationItem[]> {
@@ -1145,6 +1180,7 @@ export interface AdminDispute {
   justification: string | null;
   counter_evidence_urls: string[] | null;
   target_report_id: string | null;
+  pending_approval?: boolean;
   created_at: string | null;
   entity: AdminEntityBrief | null;
 }

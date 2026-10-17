@@ -44,6 +44,38 @@ def _badge_view(badges) -> list[dict]:
     ]
 
 
+@router.get("/entities")
+async def my_entities(
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Bank accounts the user has claimed (owner_claimed_by) — the merchant's
+    own accounts, used to pick which one to dispute."""
+    rows = await db.scalars(
+        select(PaymentEntity)
+        .where(PaymentEntity.owner_claimed_by == user.id)
+        .order_by(PaymentEntity.created_at)
+    )
+    return {
+        "status": "success",
+        "data": {
+            "entities": [
+                {
+                    "id": str(e.id),
+                    "entity_type": e.entity_type,
+                    "country": e.country_code,
+                    "institution": e.institution_code,
+                    "account_masked": e.account_masked,
+                    "is_owner_verified": e.is_owner_verified,
+                    "is_under_dispute": e.is_under_dispute,
+                    "risk_score": e.risk_score,
+                }
+                for e in rows
+            ]
+        },
+    }
+
+
 @router.get("/me")
 async def profile_me(user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
     badges = await reputation.list_badges(db, user.id)

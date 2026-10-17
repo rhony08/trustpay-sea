@@ -706,6 +706,27 @@ const id: Record<string, string> = {
     "Tidak perlu akun. Beri tahu kami apa yang terjadi dan kami akan memeriksa silang serta menerbitkan laporan yang disunting untuk melindungi pembayar lain.",
   "check.reportConsentRequired": "Harap centang pernyataan sebelum mengirim.",
   "check.reportSuccess": "Laporan terkirim — terima kasih. Laporan akan muncul di rekening ini setelah diverifikasi.",
+
+  // ---- auth menu / admin gate / merchant accounts ----
+  "nav.signIn": "Masuk",
+  "nav.admin": "Admin",
+  "admin.approvalPending": "Menunggu persetujuan — admin kedua harus menyetujui sebelum ini berlaku.",
+  "admin.accessDeniedTitle": "Khusus admin",
+  "admin.accessDeniedBody":
+    "Akun Anda tidak memiliki akses analis. Hubungi administrator jika menurut Anda ini keliru.",
+  "claim.selectAccountTitle": "Akun mana yang ingin Anda sengketakan?",
+  "claim.selectAccountHelp": "Pilih salah satu rekening bank yang sudah Anda tambahkan dan verifikasi.",
+  "claim.selectAccountPlaceholder": "Pilih akun Anda…",
+  "claim.addAccountsFirst":
+    "Anda belum menambahkan rekening bank apa pun. Tambahkan dan verifikasi akun Anda di profil terlebih dahulu.",
+  "claim.goToProfile": "Buka profil saya",
+  "profile.myAccounts": "Akun saya",
+  "profile.addAccount": "Tambah akun",
+  "profile.noAccounts":
+    "Belum ada akun. Periksa suatu akun dan pilih “Apakah Anda pemiliknya?” untuk menambahkan dan memverifikasinya.",
+  "profile.verified": "Terverifikasi",
+  "profile.pending": "Tertunda",
+  "profile.dispute": "Sengketa",
 };
 
 export default id;

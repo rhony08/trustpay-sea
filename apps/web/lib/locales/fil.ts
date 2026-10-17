@@ -704,6 +704,27 @@ const fil: Record<string, string> = {
     "Hindi kailangan ng account. Sabihin sa amin ang nangyari at i-cross-check namin at maglalathala ng redacted na ulat na protektado ang ibang nagbabayad.",
   "check.reportConsentRequired": "Mangyaring lagyan ng tsek ang deklarasyon bago magsumite.",
   "check.reportSuccess": "Naisumite ang ulat — salamat. Lalabas ito sa account na ito kapag na-verify.",
+
+  // ---- auth menu / admin gate / merchant accounts ----
+  "nav.signIn": "Mag-sign in",
+  "nav.admin": "Admin",
+  "admin.approvalPending": "Naghihintay ng pag-apruba — kailangang aprubahan ng pangalawang admin bago ito magkabisa.",
+  "admin.accessDeniedTitle": "Para sa admin lamang",
+  "admin.accessDeniedBody":
+    "Walang analyst access ang account mo. Magtanong sa administrator kung sa tingin mo ay pagkakamali ito.",
+  "claim.selectAccountTitle": "Aling account ang gusto mong i-dispute?",
+  "claim.selectAccountHelp": "Pumili ng isa sa mga bank account na naidagdag at na-verify mo na.",
+  "claim.selectAccountPlaceholder": "Piliin ang account mo…",
+  "claim.addAccountsFirst":
+    "Wala ka pang naidagdag na bank account. Idagdag at i-verify muna ang mga account mo sa profile.",
+  "claim.goToProfile": "Pumunta sa profile ko",
+  "profile.myAccounts": "Mga account ko",
+  "profile.addAccount": "Magdagdag ng account",
+  "profile.noAccounts":
+    "Wala pang account. Suriin ang isang account at piliin ang “Ikaw ba ang may-ari?” para idagdag at i-verify ito.",
+  "profile.verified": "Na-verify",
+  "profile.pending": "Nakabinbin",
+  "profile.dispute": "I-dispute",
 };
 
 export default fil;

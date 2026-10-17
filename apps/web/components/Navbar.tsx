@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Brand } from "./Brand";
 import { LanguageSwitcher } from "./LanguageSwitcher";
+import { AuthMenu } from "./AuthMenu";
 import { useI18n } from "./LocaleProvider";
 
 const LINKS: { href: string; key: string; accent?: "rose" }[] = [
@@ -49,6 +50,7 @@ export function Navbar() {
           >
             {t("nav.reportBtn")}
           </Link>
+          <AuthMenu />
         </div>
       </div>
     </header>

@@ -8,6 +8,7 @@ import {
   DISPUTE_REASONS,
   PROOF_TYPES,
   claimEntity,
+  getMyEntities,
   getToken,
   login,
   setOwnerResponse,
@@ -17,6 +18,7 @@ import {
   submitDispute,
   verifyMicroDeposit,
   type DisputeView,
+  type OwnedEntity,
 } from "@/lib/api";
 import { useI18n } from "@/components/LocaleProvider";
 
@@ -26,7 +28,11 @@ const inputCls =
 function ClaimInner() {
   const { t } = useI18n();
   const search = useSearchParams();
-  const entityId = search.get("entity") ?? "";
+  const [entityId, setEntityId] = useState(search.get("entity") ?? "");
+
+  const [owned, setOwned] = useState<OwnedEntity[]>([]);
+  const [ownedLoaded, setOwnedLoaded] = useState(false);
+  const [toast, setToast] = useState(false);
 
   const [token, setTokenState] = useState<string | null>(null);
   const [email, setEmail] = useState("");
@@ -46,6 +52,23 @@ function ClaimInner() {
   const [message, setMessage] = useState<string | null>(null);
 
   useEffect(() => setTokenState(getToken()), []);
+
+  useEffect(() => {
+    if (!token) return;
+    getMyEntities(token)
+      .then((rows) => setOwned(rows))
+      .catch(() => undefined)
+      .finally(() => setOwnedLoaded(true));
+  }, [token]);
+
+  // Toast: merchant has no accounts yet → send them to the profile to add one.
+  useEffect(() => {
+    if (ownedLoaded && owned.length === 0 && !entityId) {
+      setToast(true);
+      const id = setTimeout(() => setToast(false), 9000);
+      return () => clearTimeout(id);
+    }
+  }, [ownedLoaded, owned, entityId]);
 
   async function authenticate(e: React.FormEvent) {
     e.preventDefault();
@@ -121,10 +144,37 @@ function ClaimInner() {
           </div>
         </div>
 
-        {!entityId && (
-          <p className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
-            {t("claim.missingEntity")}
-          </p>
+        {!entityId && ownedLoaded && (
+          owned.length > 0 ? (
+            <div className="mb-6 space-y-3 rounded-2xl border border-slate-200 bg-white p-6 shadow-xs">
+              <div>
+                <h2 className="text-sm font-bold text-slate-900">{t("claim.selectAccountTitle")}</h2>
+                <p className="text-xs text-slate-500">{t("claim.selectAccountHelp")}</p>
+              </div>
+              <select
+                className={inputCls}
+                value=""
+                onChange={(e) => setEntityId(e.target.value)}
+              >
+                <option value="">{t("claim.selectAccountPlaceholder")}</option>
+                {owned.map((e) => (
+                  <option key={e.id} value={e.id}>
+                    {e.account_masked} · {e.country} · {e.institution ?? e.entity_type}
+                  </option>
+                ))}
+              </select>
+            </div>
+          ) : (
+            <div className="mb-6 rounded-2xl border border-amber-200 bg-amber-50 p-5">
+              <p className="text-sm font-semibold text-amber-900">{t("claim.addAccountsFirst")}</p>
+              <Link
+                href="/profile"
+                className="mt-2 inline-block rounded-lg bg-amber-600 px-4 py-2 text-xs font-bold text-white"
+              >
+                {t("claim.goToProfile")}
+              </Link>
+            </div>
+          )
         )}
         {message && (
           <p className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
@@ -132,6 +182,7 @@ function ClaimInner() {
           </p>
         )}
 
+        {entityId && (
         <div className="space-y-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-xs sm:p-8">
           <section className="space-y-3">
             <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900">
@@ -264,6 +315,27 @@ function ClaimInner() {
             </>
           )}
         </div>
+        )}
+
+        {toast && (
+          <div className="fixed bottom-4 right-4 z-50 max-w-sm rounded-xl border border-amber-200 bg-white p-4 shadow-lg">
+            <p className="text-sm font-semibold text-slate-900">{t("claim.addAccountsFirst")}</p>
+            <div className="mt-2 flex items-center gap-2">
+              <Link
+                href="/profile"
+                className="rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-bold text-white"
+              >
+                {t("claim.goToProfile")}
+              </Link>
+              <button
+                onClick={() => setToast(false)}
+                className="text-xs text-slate-500 underline"
+              >
+                {t("common.close")}
+              </button>
+            </div>
+          </div>
+        )}
 
         <p className="mt-6 text-center text-xs text-slate-400">
           {t("claim.help")}{" "}

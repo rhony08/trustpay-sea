@@ -696,6 +696,27 @@ const vi: Record<string, string> = {
     "Không cần tài khoản. Hãy cho chúng tôi biết chuyện gì đã xảy ra và chúng tôi sẽ đối chiếu chéo rồi công bố một báo cáo đã được che thông tin để bảo vệ những người trả tiền khác.",
   "check.reportConsentRequired": "Vui lòng đánh dấu vào bản tuyên bố trước khi gửi.",
   "check.reportSuccess": "Đã gửi báo cáo — cảm ơn bạn. Báo cáo sẽ xuất hiện trên tài khoản này sau khi được xác minh.",
+
+  // ---- auth menu / admin gate / merchant accounts ----
+  "nav.signIn": "Đăng nhập",
+  "nav.admin": "Quản trị viên",
+  "admin.approvalPending": "Đang chờ phê duyệt — một quản trị viên thứ hai phải phê duyệt trước khi thay đổi này có hiệu lực.",
+  "admin.accessDeniedTitle": "Chỉ dành cho quản trị viên",
+  "admin.accessDeniedBody":
+    "Tài khoản của bạn không có quyền truy cập dành cho chuyên viên phân tích. Hãy hỏi quản trị viên nếu bạn cho rằng đây là nhầm lẫn.",
+  "claim.selectAccountTitle": "Bạn muốn khiếu nại tài khoản nào?",
+  "claim.selectAccountHelp": "Chọn một trong các tài khoản ngân hàng bạn đã thêm và xác minh.",
+  "claim.selectAccountPlaceholder": "Chọn tài khoản của bạn…",
+  "claim.addAccountsFirst":
+    "Bạn chưa thêm tài khoản ngân hàng nào. Hãy thêm và xác minh tài khoản của bạn trong hồ sơ trước.",
+  "claim.goToProfile": "Đi đến hồ sơ của tôi",
+  "profile.myAccounts": "Tài khoản của tôi",
+  "profile.addAccount": "Thêm tài khoản",
+  "profile.noAccounts":
+    "Chưa có tài khoản. Hãy kiểm tra một tài khoản và chọn “Bạn có phải là chủ sở hữu không?” để thêm và xác minh tài khoản đó.",
+  "profile.verified": "Đã xác minh",
+  "profile.pending": "Đang chờ",
+  "profile.dispute": "Khiếu nại",
 };
 
 export default vi;
