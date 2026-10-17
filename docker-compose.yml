@@ -17,7 +17,7 @@ services:
   api:
     build: ./services/api
     environment:
-      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-trustpay}:${POSTGRES_PASSWORD:-trustpay}@host.docker.internal:5432/${POSTGRES_DB:-trustpay}
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-trustpay}:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}@host.docker.internal:5432/${POSTGRES_DB:-trustpay}
       REDIS_URL: redis://rr-redis:6379/2
       ENVIRONMENT: ${ENVIRONMENT:-dev}
       SCHEDULER_ENABLED: "true"

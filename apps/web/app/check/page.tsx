@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import {
   ApiError,
-  BANKS,
   COUNTRIES,
   FLAG_REASONS,
   REPORT_CATEGORIES,
@@ -14,10 +13,12 @@ import {
   decodeQrImage,
   flagReport,
   getToken,
+  listBanks,
   screenAccount,
   screenQr,
   searchPhone,
   setToken,
+  type Bank,
   type PhoneSearchResult,
   type ReportView,
   type ScreenResult,
@@ -28,6 +29,7 @@ import { RiskGauge } from "@/components/RiskGauge";
 import { CoolingOffTimer } from "@/components/CoolingOffTimer";
 import { RedactedSlipViewer } from "@/components/RedactedSlipViewer";
 import { ReportCard } from "@/components/ReportCard";
+import { BankPicker } from "@/components/BankPicker";
 import { useI18n } from "@/components/LocaleProvider";
 
 type Tab = "account" | "phone" | "qr";
@@ -52,6 +54,7 @@ export default function CheckPage() {
   const [bank, setBank] = useState("014");
   const [account, setAccount] = useState("");
   const [nameClaim, setNameClaim] = useState("");
+  const [allBanks, setAllBanks] = useState<Bank[]>([]);
   const [phone, setPhone] = useState("");
   const [payload, setPayload] = useState("");
   const [busy, setBusy] = useState(false);
@@ -93,6 +96,13 @@ export default function CheckPage() {
     }
   }, [country, phone, t]);
 
+  // Full institution directory for the searchable picker (country-optional).
+  useEffect(() => {
+    void listBanks()
+      .then(setAllBanks)
+      .catch(() => undefined);
+  }, []);
+
   // Deep-link hydration: home search + shared QR both land here.
   useEffect(() => {
     const sp = new URLSearchParams(window.location.search);
@@ -116,9 +126,9 @@ export default function CheckPage() {
     if (claim) setNameClaim(claim);
     if (p) setPhone(p);
     if (pl) setPayload(pl);
-    if (nextTab === "account" && a && c && b) {
+    if (nextTab === "account" && a && b) {
       setAccount(a);
-      void run(() => screenAccount({ country: c, bank: b, account: a }));
+      void run(() => screenAccount({ country: c ?? undefined, bank: b, account: a }));
     } else if (nextTab === "phone" && p && c) {
       void searchPhone(c, p)
         .then((r) => setPhoneResult(r.data))
@@ -161,38 +171,22 @@ export default function CheckPage() {
 
           {tab === "account" && (
             <form
-              className="grid grid-cols-1 items-end gap-3 sm:grid-cols-4"
+              className="grid grid-cols-1 items-end gap-3 sm:grid-cols-3"
               onSubmit={(e) => {
                 e.preventDefault();
-                void run(() => screenAccount({ country, bank, account }));
+                void run(() => screenAccount({ country: country || undefined, bank, account }));
               }}
             >
               <div>
-                <MiniLabel>{t("common.country")}</MiniLabel>
-                <select
-                  className={inputCls}
-                  value={country}
-                  onChange={(e) => {
-                    setCountry(e.target.value);
-                    setBank(BANKS[e.target.value]?.[0]?.code ?? bank);
-                  }}
-                >
-                  {COUNTRIES.map((c) => (
-                    <option key={c.code} value={c.code}>
-                      {c.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
                 <MiniLabel>{t("check.institution")}</MiniLabel>
-                <select className={inputCls} value={bank} onChange={(e) => setBank(e.target.value)}>
-                  {(BANKS[country] ?? []).map((b) => (
-                    <option key={b.code} value={b.code}>
-                      {b.name}
-                    </option>
-                  ))}
-                </select>
+                <BankPicker
+                  banks={allBanks}
+                  value={`${country}:${bank}`}
+                  onChange={(b) => {
+                    setBank(b.code);
+                    setCountry(b.country);
+                  }}
+                />
               </div>
               <div>
                 <MiniLabel>{t("check.accountNumber")}</MiniLabel>
@@ -214,7 +208,7 @@ export default function CheckPage() {
                   placeholder={t("check.sellerClaimedPlaceholder")}
                 />
               </div>
-              <div className="sm:col-span-4">
+              <div className="sm:col-span-3">
                 <button
                   type="submit"
                   disabled={busy || !account}
@@ -618,6 +612,17 @@ function ResultView({
             {t("check.alreadyPaid")}
           </Link>
         </div>
+      </div>
+
+      <div className="rounded-2xl border border-rose-200 bg-rose-50 p-5">
+        <h3 className="text-sm font-bold text-rose-900">{t("check.reportThis")}</h3>
+        <p className="mt-1 text-xs leading-relaxed text-rose-800">{t("check.reportModalDesc")}</p>
+        <button
+          onClick={onReport}
+          className="mt-3 rounded-lg bg-rose-600 px-4 py-2 text-sm font-bold text-white shadow-xs hover:bg-rose-700"
+        >
+          {t("check.reportThis")}
+        </button>
       </div>
     </div>
   );

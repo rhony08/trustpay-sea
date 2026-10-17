@@ -216,12 +216,15 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 export function screenAccount(params: {
-  country: string;
+  country?: string;
   bank: string;
   account: string;
 }): Promise<ScreenResult> {
-  const qs = new URLSearchParams(params).toString();
-  return request<ScreenResult>(`/api/v1/entities/account?${qs}`);
+  const qs = new URLSearchParams();
+  if (params.country) qs.set("country", params.country);
+  qs.set("bank", params.bank);
+  qs.set("account", params.account);
+  return request<ScreenResult>(`/api/v1/entities/account?${qs.toString()}`);
 }
 
 export function screenQr(qr_payload: string): Promise<ScreenResult> {
@@ -354,7 +357,7 @@ export function setToken(token: string | null): void {
 
 export interface CreateReportInput {
   target:
-    | { kind: "ACCOUNT"; country: string; bank: string; account: string }
+    | { kind: "ACCOUNT"; country?: string; bank: string; account: string }
     | { kind: "QR"; qr_payload: string };
   category: string;
   severity: number;
@@ -578,10 +581,9 @@ function webauthnToRequestOptions(
   } as CredentialRequestOptions;
 }
 
-export async function listBanks(country: string): Promise<Bank[]> {
-  const body = await request<{ data: { banks: Bank[] } }>(
-    `/api/v1/banks?country=${country}`,
-  );
+export async function listBanks(country?: string): Promise<Bank[]> {
+  const qs = country ? `?country=${country}` : "";
+  const body = await request<{ data: { banks: Bank[] } }>(`/api/v1/banks${qs}`);
   return body.data.banks;
 }
 

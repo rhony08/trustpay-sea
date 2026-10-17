@@ -1,11 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ApiError,
   BANKS,
-  COUNTRIES,
   REPORT_CATEGORIES,
   createAnonymousReport,
   createReport,
@@ -19,6 +18,7 @@ import {
 } from "@/lib/api";
 import { RedactedSlipViewer } from "@/components/RedactedSlipViewer";
 import { AiForensics } from "@/components/AiForensics";
+import { BankPicker } from "@/components/BankPicker";
 import { useI18n } from "@/components/LocaleProvider";
 
 const inputCls =
@@ -86,22 +86,12 @@ export default function ReportPage() {
     if (a) setAccount(a);
   }, []);
 
-  const loadBanks = useCallback(async (c: string) => {
-    try {
-      const rows = await listBanks(c);
-      setBanks(rows.length ? rows : fallbackBanks(c));
-    } catch {
-      setBanks(fallbackBanks(c));
-    }
+  // Full institution directory (country-optional picker).
+  useEffect(() => {
+    void listBanks()
+      .then((rows) => setBanks(rows.length ? rows : fallbackBanks("ID")))
+      .catch(() => setBanks(fallbackBanks("ID")));
   }, []);
-
-  useEffect(() => {
-    void loadBanks(country);
-  }, [country, loadBanks]);
-
-  useEffect(() => {
-    if (banks.length && !banks.some((b) => b.code === bank)) setBank(banks[0].code);
-  }, [banks, bank]);
 
   async function poll(id: string) {
     for (let i = 0; i < 20; i += 1) {
@@ -236,27 +226,17 @@ export default function ReportPage() {
           ) : step === 1 ? (
             <>
               <h2 className="text-base font-bold text-slate-900">{t("report.s1Title")}</h2>
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <div>
-                  <Label>{t("report.destinationCountry")}</Label>
-                  <select className={inputCls} value={country} onChange={(e) => setCountry(e.target.value)}>
-                    {COUNTRIES.map((c) => (
-                      <option key={c.code} value={c.code}>
-                        {c.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <Label>{t("report.bank")}</Label>
-                  <select className={inputCls} value={bank} onChange={(e) => setBank(e.target.value)}>
-                    {banks.map((b) => (
-                      <option key={b.code} value={b.code}>
-                        {b.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+              <div>
+                <Label>{t("report.bank")}</Label>
+                <BankPicker
+                  banks={banks}
+                  value={`${country}:${bank}`}
+                  onChange={(b) => {
+                    setBank(b.code);
+                    setCountry(b.country);
+                  }}
+                  inputClassName={inputCls}
+                />
               </div>
               <div>
                 <Label>{t("report.account")}</Label>

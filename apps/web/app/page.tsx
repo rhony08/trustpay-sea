@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { BANKS, COUNTRIES } from "@/lib/api";
+import { useEffect, useState } from "react";
+import { listBanks, type Bank } from "@/lib/api";
 import { ShieldMark } from "@/components/Brand";
+import { BankPicker } from "@/components/BankPicker";
 import { useI18n } from "@/components/LocaleProvider";
 
 type Tab = "account" | "phone" | "qr";
@@ -17,12 +18,19 @@ export default function HomePage() {
   const { t } = useI18n();
   const [tab, setTab] = useState<Tab>("account");
   const [country, setCountry] = useState("ID");
-  const [bank, setBank] = useState(BANKS.ID[0].code);
+  const [bank, setBank] = useState("014");
+  const [allBanks, setAllBanks] = useState<Bank[]>([]);
   const [account, setAccount] = useState("");
   const [nameClaim, setNameClaim] = useState("");
   const [phoneCountry, setPhoneCountry] = useState("ID");
   const [phone, setPhone] = useState("");
   const [qrPayload, setQrPayload] = useState("");
+
+  useEffect(() => {
+    void listBanks()
+      .then(setAllBanks)
+      .catch(() => undefined);
+  }, []);
 
   function submitAccount(e: React.FormEvent) {
     e.preventDefault();
@@ -76,38 +84,17 @@ export default function HomePage() {
 
                 {tab === "account" ? (
                   <form className="space-y-4" onSubmit={submitAccount}>
-                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                      <div>
-                        <Label>{t("home.country")}</Label>
-                        <select
-                          className={inputCls}
-                          value={country}
-                          onChange={(e) => {
-                            setCountry(e.target.value);
-                            setBank(BANKS[e.target.value]?.[0]?.code ?? bank);
-                          }}
-                        >
-                          {COUNTRIES.map((c) => (
-                            <option key={c.code} value={c.code}>
-                              {c.label} ({c.code})
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                      <div>
-                        <Label>{t("home.bank")}</Label>
-                        <select
-                          className={inputCls}
-                          value={bank}
-                          onChange={(e) => setBank(e.target.value)}
-                        >
-                          {(BANKS[country] ?? []).map((b) => (
-                            <option key={b.code} value={b.code}>
-                              {b.name}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
+                    <div>
+                      <Label>{t("home.bank")}</Label>
+                      <BankPicker
+                        banks={allBanks}
+                        value={`${country}:${bank}`}
+                        onChange={(b) => {
+                          setBank(b.code);
+                          setCountry(b.country);
+                        }}
+                        inputClassName={inputCls}
+                      />
                     </div>
 
                     <div>
