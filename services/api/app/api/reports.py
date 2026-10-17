@@ -32,8 +32,9 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config import Settings, get_settings
 from app.core.idempotency import get_idempotent, store_idempotent
-from app.core.security import hash_password
+from app.core.security import TokenError, hash_password
 from app.db import get_db
 from app.deps import get_current_user, get_jwt_service
 from app.enums import EvidenceMediaType, ReportCategory, Role, UserStatus
@@ -236,22 +237,57 @@ async def create_anonymous_report(
             user_id=str(reporter.id), role=reporter.role
         )
         data["access_token"] = pair.access_token
+    # Report-scoped token: lets any anonymous submitter attach evidence to THIS
+    # report only (no session), including when the email is already registered.
+    data["evidence_token"] = jwt_service.issue_evidence_token(report_id=str(report.id))
     return {"status": "accepted", "data": data}
+
+
+async def _authorize_evidence(request: Request, report, db, jwt_service, settings) -> bool:
+    """Allow either the report owner/privileged user (access token) OR an
+    anonymous report-scoped evidence token. Cookie mutations keep CSRF."""
+    auth = request.headers.get("Authorization", "")
+    bearer = auth[7:].strip() if auth.lower().startswith("bearer ") else None
+    token = bearer or request.cookies.get("tp_access")
+    if not token:
+        return False
+    if bearer:
+        try:
+            ev = jwt_service.decode(bearer, expected_type="evidence")
+            if ev.get("sub") == str(report.id):
+                return True
+        except TokenError:
+            pass
+    try:
+        payload = jwt_service.decode(token, expected_type="access")
+    except TokenError:
+        return False
+    if bearer is None:
+        cookie_value = request.cookies.get(settings.csrf_cookie, "")
+        header_value = request.headers.get(settings.csrf_header, "")
+        if not cookie_value or cookie_value != header_value:
+            return False
+    user = await db.get(User, uuid.UUID(payload["sub"]))
+    if user is None or user.status == UserStatus.BANNED:
+        return False
+    return report.reporter_user_id == user.id or user.role in _PRIVILEGED
 
 
 @router.post("/{report_id}/evidence", status_code=status.HTTP_202_ACCEPTED)
 async def upload_evidence(
     report_id: uuid.UUID,
+    request: Request,
     file: UploadFile = File(...),
     media_type: EvidenceMediaType = Form(default=EvidenceMediaType.TRANSFER_SLIP),
-    user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
+    jwt_service=Depends(get_jwt_service),
+    settings: Settings = Depends(get_settings),
 ):
     report = await svc.get_report(db, report_id)
     if report is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "report not found")
-    if report.reporter_user_id != user.id and user.role not in _PRIVILEGED:
-        raise HTTPException(status.HTTP_403_FORBIDDEN, "not your report")
+    if not await _authorize_evidence(request, report, db, jwt_service, settings):
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "not authorized to attach evidence")
     if report.processing_status != "PROCESSING":
         raise HTTPException(status.HTTP_409_CONFLICT, "report is no longer accepting evidence")
 

@@ -18,6 +18,7 @@ import {
   screenQr,
   searchPhone,
   setToken,
+  uploadEvidence,
   type Bank,
   type PhoneSearchResult,
   type ReportView,
@@ -27,7 +28,6 @@ import { riskBand } from "@/lib/risk";
 import { isNameMismatch, NameMatcherBanner } from "@/components/NameMatcherBanner";
 import { RiskGauge } from "@/components/RiskGauge";
 import { CoolingOffTimer } from "@/components/CoolingOffTimer";
-import { RedactedSlipViewer } from "@/components/RedactedSlipViewer";
 import { ReportCard } from "@/components/ReportCard";
 import { BankPicker } from "@/components/BankPicker";
 import { useI18n } from "@/components/LocaleProvider";
@@ -411,6 +411,9 @@ function ResultView({
     gov_check,
   } = result.data;
   const reports = result.data.reports ?? [];
+  const evidence = reports
+    .flatMap((r) => r.evidence ?? [])
+    .filter((e) => e.media_url);
   const band = riskBand(risk.risk_score);
   const mismatch = isNameMismatch(nameClaim, entity.holder?.name);
 
@@ -577,13 +580,35 @@ function ResultView({
           </p>
         )}
 
-        <RedactedSlipViewer
-          fields={{
-            accountNumber: undefined,
-            holderName: entity.holder?.name ?? "Not disclosed",
-          }}
-          allowAnalystView={false}
-        />
+        {evidence.length > 0 && (
+          <div className="space-y-4 rounded-xl border border-slate-200 bg-white p-5">
+            <div>
+              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900">
+                {t("slip.title")}
+              </h3>
+              <p className="text-xs text-slate-500">{t("slip.subtitle")}</p>
+            </div>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              {evidence.map((e, i) => (
+                <figure key={i} className="rounded-lg border border-slate-200 bg-slate-50 p-2">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={e.media_url as string}
+                    alt={t("report.evidenceAlt")}
+                    className="mx-auto max-h-72 w-full rounded object-contain"
+                  />
+                  <figcaption className="mt-2 flex items-center justify-between text-[10px] text-slate-500">
+                    <span>{e.is_blurred_pii ? t("slip.public") : ""}</span>
+                    {e.ai_tampering_detected && (
+                      <span className="font-semibold text-rose-600">{t("ai.tamperDetected")}</span>
+                    )}
+                  </figcaption>
+                </figure>
+              ))}
+            </div>
+            <p className="text-[11px] text-slate-500">{t("slip.keptVisible")}</p>
+          </div>
+        )}
 
         {reports.length > 0 && <ReportsFeed reports={reports} onFlag={onFlag} reportHref={reportHref} />}
 
@@ -730,6 +755,7 @@ function ReportModal({
   const [description, setDescription] = useState("");
   const [amount, setAmount] = useState("");
   const [consent, setConsent] = useState(false);
+  const [file, setFile] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [doneId, setDoneId] = useState<string | null>(null);
@@ -752,9 +778,11 @@ function ReportModal({
       consent,
     };
     try {
+      let reportId: string;
+      let uploadToken: string | null = token;
       if (token) {
         const created = await createReport(token, payload);
-        setDoneId(created.report_id);
+        reportId = created.report_id;
       } else {
         if (!name.trim() || !email.trim()) {
           setError(t("report.reporterRequired"));
@@ -767,8 +795,17 @@ function ReportModal({
           reporter_email: email.trim(),
         });
         if (created.access_token) setToken(created.access_token);
-        setDoneId(created.report_id);
+        uploadToken = created.evidence_token ?? created.access_token ?? null;
+        reportId = created.report_id;
       }
+      if (file && uploadToken) {
+        try {
+          await uploadEvidence(uploadToken, reportId, file);
+        } catch {
+          /* evidence is optional; the report is already submitted */
+        }
+      }
+      setDoneId(reportId);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : t("report.submitError"));
     } finally {
@@ -868,6 +905,16 @@ function ReportModal({
                 placeholder={t("report.narrativePlaceholder")}
               />
             </div>
+
+            <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-dashed border-slate-300 bg-slate-50 px-3 py-2 text-xs text-slate-500 hover:border-blue-400">
+              <span>{file ? file.name : t("report.uploadTitle")}</span>
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+              />
+            </label>
 
             <label className="flex cursor-pointer items-start gap-2 text-[11px] text-slate-600">
               <input type="checkbox" className="mt-0.5 h-4 w-4 shrink-0 accent-blue-600" checked={consent} onChange={(e) => setConsent(e.target.checked)} />

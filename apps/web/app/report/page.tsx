@@ -121,7 +121,7 @@ export default function ReportPage() {
       consent,
     };
     try {
-      let sessionToken = token;
+      let uploadToken = token;
       let createdId: string;
       let createdStatus: string;
       if (token) {
@@ -141,18 +141,18 @@ export default function ReportPage() {
         });
         createdId = created.report_id;
         createdStatus = created.processing_status;
-        // New email → we get a session so evidence upload + tracking work.
         if (created.access_token) {
           setToken(created.access_token);
           setTokenState(created.access_token);
-          sessionToken = created.access_token;
         }
+        // Report-scoped token → evidence upload works even for a registered email.
+        uploadToken = created.evidence_token ?? created.access_token ?? null;
       }
-      if (file && sessionToken) {
+      if (file && uploadToken) {
         try {
-          await uploadEvidence(sessionToken, createdId, file);
+          await uploadEvidence(uploadToken, createdId, file);
         } catch {
-          /* evidence is optional for anonymous submissions */
+          /* evidence is optional; the report itself is already submitted */
         }
       }
       setReportId(createdId);

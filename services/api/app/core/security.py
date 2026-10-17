@@ -146,6 +146,16 @@ class JWTService:
             ttl_seconds=600,
         )
 
+    def issue_evidence_token(self, *, report_id: str, ttl_seconds: int = 3600) -> str:
+        """Report-scoped token so an anonymous submitter can attach evidence to
+        their own report without being granted a session (no account takeover)."""
+        return self._issue(
+            sub=report_id,
+            role="guest",
+            token_type="evidence",
+            ttl_seconds=ttl_seconds,
+        )
+
 
 def sha256_hex(value: str) -> str:
     return hashlib.sha256(value.encode()).hexdigest()

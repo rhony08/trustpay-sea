@@ -618,6 +618,8 @@ export interface AnonymousReportResult {
   reporter: { email: string; name: string; is_new: boolean };
   /** Present only when a new account was created for the reporter. */
   access_token?: string;
+  /** Report-scoped token to attach evidence (works for any anonymous submit). */
+  evidence_token?: string;
 }
 
 /**
