@@ -1,0 +1,10 @@
+node_modules
+.next
+out
+test-results
+playwright-report
+tsconfig.tsbuildinfo
+npm-debug.log*
+.env
+.env.*
+Dockerfile
