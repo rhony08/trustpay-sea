@@ -23,7 +23,7 @@ from app.enums import (
     Scheme,
 )
 from app.models import FraudReport, PaymentEntity, ReportEvidence
-from app.resolver.banks import get_institution
+from app.resolver.banks import resolve_institution
 from app.resolver.emvco import parse_emvco
 from app.resolver.normalize import normalize_account, normalize_phone, normalize_qr_identifier
 from app.services.entity_service import upsert_entity
@@ -38,10 +38,11 @@ class QuotaExceededError(ReportError):
 
 
 async def resolve_bank_target(
-    db: AsyncSession, *, country: str, bank: str, account: str
+    db: AsyncSession, *, country: str | None, bank: str, account: str
 ) -> PaymentEntity:
     settings = get_settings()
-    institution = get_institution(country, bank)
+    institution = resolve_institution(bank, country)
+    country = institution.country
     account_hash, masked = normalize_account(
         country=country,
         scheme=Scheme.BANK,

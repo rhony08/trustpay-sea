@@ -52,7 +52,7 @@ _PRIVILEGED = {Role.ANALYST, Role.SENIOR_ANALYST, Role.SUPERADMIN}
 
 class AccountTarget(BaseModel):
     kind: Literal["ACCOUNT"] = "ACCOUNT"
-    country: str = Field(min_length=2, max_length=2)
+    country: str | None = Field(default=None, min_length=2, max_length=2)
     bank: str = Field(min_length=1, max_length=50)
     account: str = Field(min_length=1, max_length=64)
 

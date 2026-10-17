@@ -19,6 +19,13 @@
 	# Provided origin cert (no ACME). Remove this line to fall back to auto-TLS.
 	tls /etc/caddy/certs/tls.pem /etc/caddy/certs/tls.key
 
+	# Static pitch deck (repo ./deck mounted read-only at /srv/deck).
+	redir /deck /deck/ 302
+	handle_path /deck/* {
+		root * /srv/deck
+		file_server
+	}
+
 	@api path /api/* /media/* /healthz /docs /docs/* /openapi.json
 	handle @api {
 		reverse_proxy api:8000

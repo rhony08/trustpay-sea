@@ -15,7 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.config import get_settings
 from app.db import get_db
 from app.enums import EntityType, Scheme
-from app.resolver.banks import UnsupportedBankError, get_institution
+from app.resolver.banks import AmbiguousBankError, UnsupportedBankError, resolve_institution
 from app.resolver.emvco import (
     EMVCoParseError,
     ParsedQR,
@@ -125,20 +125,20 @@ async def lookup_phone(country: str, phone: str, db: AsyncSession = Depends(get_
 @router.get("/entities/account", response_model=AccountLookupResponse)
 async def lookup_account(
     request: Request,
-    country: str,
     bank: str,
     account: str,
+    country: str | None = None,
     db: AsyncSession = Depends(get_db),
 ):
     settings = get_settings()
     try:
-        institution = get_institution(country, bank)
+        institution = resolve_institution(bank, country)
+    except AmbiguousBankError as exc:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, str(exc)) from exc
     except UnsupportedBankError as exc:
-        raise HTTPException(
-            status.HTTP_400_BAD_REQUEST,
-            f"unsupported bank: {country}:{bank}",
-        ) from exc
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, str(exc)) from exc
 
+    country = institution.country
     try:
         account_hash, masked = normalize_account(
             country=country,

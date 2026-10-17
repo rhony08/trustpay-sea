@@ -120,6 +120,7 @@ services:
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - ./certs:/etc/caddy/certs:ro
+      - ../../deck:/srv/deck:ro
       - caddy_data:/data
       - caddy_config:/config
     depends_on:

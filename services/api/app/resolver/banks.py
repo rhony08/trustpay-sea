@@ -32,10 +32,23 @@ _DEFAULT_LENGTH = (6, 20)
 
 
 class UnsupportedBankError(Exception):
-    def __init__(self, country: str, code: str) -> None:
+    def __init__(self, country: str | None, code: str) -> None:
         self.country = country
         self.code = code
-        super().__init__(f"unsupported bank: {country}:{code}")
+        where = f"{country}:" if country else ""
+        super().__init__(f"unsupported bank: {where}{code}")
+
+
+class AmbiguousBankError(Exception):
+    """A bank code that exists in more than one country (country required)."""
+
+    def __init__(self, code: str, countries: list[str]) -> None:
+        self.code = code
+        self.countries = countries
+        super().__init__(
+            f"bank code {code!r} exists in multiple countries ({', '.join(countries)}); "
+            "specify the country"
+        )
 
 
 @dataclass(frozen=True)
@@ -93,6 +106,29 @@ def get_institution(country: str, code: str) -> Institution:
     if inst is None:
         raise UnsupportedBankError(country, code)
     return inst
+
+
+def institutions_by_code(code: str) -> list[Institution]:
+    """All institutions matching a code across every country (codes aren't global)."""
+    code_u = code.upper()
+    return [inst for (_, c), inst in BANK_DIRECTORY.items() if c == code_u]
+
+
+def resolve_institution(code: str, country: str | None = None) -> Institution:
+    """Resolve an institution by code, with or without a country.
+
+    - country given → exact (country, code) lookup.
+    - country omitted → resolve by code alone; if the code is unique it wins,
+      otherwise AmbiguousBankError tells the caller which countries exist.
+    """
+    if country:
+        return get_institution(country, code)
+    matches = institutions_by_code(code)
+    if not matches:
+        raise UnsupportedBankError(None, code)
+    if len(matches) > 1:
+        raise AmbiguousBankError(code, sorted(m.country for m in matches))
+    return matches[0]
 
 
 def institutions_for_country(country: str) -> list[Institution]:
