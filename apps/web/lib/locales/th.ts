@@ -678,6 +678,15 @@ const th: Record<string, string> = {
   "tools.message.tips": "สิ่งที่ควรทำ",
   "tools.message.disclaimer":
     "การคัดกรองโดยความช่วยเหลือของ AI ถือเป็นคำแนะนำ ไม่ใช่หลักฐาน — ตรวจสอบผ่านช่องทางราชการเสมอ",
+
+  // ---- anonymous reporting ----
+  "report.noAccountNeeded": "ไม่ต้องใช้บัญชี",
+  "report.reporterName": "ชื่อของคุณ",
+  "report.reporterNamePlaceholder": "เช่น Rina Andriani",
+  "report.reporterEmail": "อีเมลของคุณ",
+  "report.reporterHelp":
+    "ไม่ต้องใช้บัญชี หากอีเมลของคุณลงทะเบียนไว้แล้ว เราจะใช้บัญชีนั้น มิฉะนั้นเราจะสร้างบัญชีใหม่ให้คุณ เพื่อให้คุณสามารถแนบหลักฐานและติดตามรายงานของคุณได้",
+  "report.reporterRequired": "โปรดกรอกชื่อและอีเมลของคุณก่อนส่ง",
 };
 
 export default th;

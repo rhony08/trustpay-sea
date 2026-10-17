@@ -687,6 +687,15 @@ const ms: Record<string, string> = {
   "tools.message.tips": "Apa yang perlu dilakukan",
   "tools.message.disclaimer":
     "Penyaringan berbantukan AI. Anggap ini sebagai panduan, bukan bukti — sentiasa sahkan melalui saluran rasmi.",
+
+  // ---- anonymous reporting ----
+  "report.noAccountNeeded": "Tiada akaun diperlukan",
+  "report.reporterName": "Nama anda",
+  "report.reporterNamePlaceholder": "cth. Rina Andriani",
+  "report.reporterEmail": "E-mel anda",
+  "report.reporterHelp":
+    "Tiada akaun diperlukan. Jika e-mel anda sudah berdaftar, kami akan menggunakan akaun itu; jika tidak, kami akan mencipta satu supaya anda boleh melampirkan bukti dan menjejak laporan anda.",
+  "report.reporterRequired": "Sila masukkan nama dan e-mel anda sebelum menghantar.",
 };
 
 export default ms;

@@ -7,13 +7,12 @@ import {
   BANKS,
   COUNTRIES,
   REPORT_CATEGORIES,
+  createAnonymousReport,
   createReport,
   getReport,
   getToken,
   listBanks,
-  login,
   setToken,
-  signup,
   uploadEvidence,
   type Bank,
   type ReportForensics,
@@ -48,11 +47,8 @@ const STEPS = ["report.step1", "report.step2", "report.step3", "report.step4"];
 export default function ReportPage() {
   const { t } = useI18n();
   const [token, setTokenState] = useState<string | null>(null);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [authMode, setAuthMode] = useState<"login" | "signup">("signup");
-  const [authBusy, setAuthBusy] = useState(false);
-  const [authError, setAuthError] = useState<string | null>(null);
+  const [anonName, setAnonName] = useState("");
+  const [anonEmail, setAnonEmail] = useState("");
 
   const [step, setStep] = useState(1);
   const [country, setCountry] = useState("ID");
@@ -79,6 +75,17 @@ export default function ReportPage() {
 
   useEffect(() => setTokenState(getToken()), []);
 
+  // Prefill the target from the dossier's "Add report" link (?country&bank&account).
+  useEffect(() => {
+    const sp = new URLSearchParams(window.location.search);
+    const c = sp.get("country");
+    const b = sp.get("bank");
+    const a = sp.get("account");
+    if (c) setCountry(c);
+    if (b) setBank(b);
+    if (a) setAccount(a);
+  }, []);
+
   const loadBanks = useCallback(async (c: string) => {
     try {
       const rows = await listBanks(c);
@@ -96,20 +103,6 @@ export default function ReportPage() {
     if (banks.length && !banks.some((b) => b.code === bank)) setBank(banks[0].code);
   }, [banks, bank]);
 
-  async function authenticate(e: React.FormEvent) {
-    e.preventDefault();
-    setAuthBusy(true);
-    setAuthError(null);
-    try {
-      const t = authMode === "login" ? await login(email, password) : await signup(email, password);
-      setTokenState(t);
-    } catch (err) {
-      setAuthError(err instanceof ApiError ? err.message : t("common.errorAuth"));
-    } finally {
-      setAuthBusy(false);
-    }
-  }
-
   async function poll(id: string) {
     for (let i = 0; i < 20; i += 1) {
       await new Promise((r) => setTimeout(r, 1500));
@@ -122,58 +115,64 @@ export default function ReportPage() {
   }
 
   async function submit() {
-    if (!token) return;
     setBusy(true);
     setError(null);
     setReportStatus(null);
     setEvidenceUrl(null);
     setForensics(null);
+    const payload = {
+      target: { kind: "ACCOUNT" as const, country, bank, account },
+      category,
+      severity,
+      description,
+      currency,
+      loss_amount: amount ? Number(amount) : null,
+      incident_date: incidentDate || null,
+      consent,
+    };
     try {
-      const created = await createReport(token, {
-        target: { kind: "ACCOUNT", country, bank, account },
-        category,
-        severity,
-        description,
-        currency,
-        loss_amount: amount ? Number(amount) : null,
-        incident_date: incidentDate || null,
-        consent,
-      });
-      if (file) await uploadEvidence(token, created.report_id, file);
-      setReportId(created.report_id);
-      setReportStatus(created.processing_status);
-      void poll(created.report_id);
+      let sessionToken = token;
+      let createdId: string;
+      let createdStatus: string;
+      if (token) {
+        const created = await createReport(token, payload);
+        createdId = created.report_id;
+        createdStatus = created.processing_status;
+      } else {
+        if (!anonName.trim() || !anonEmail.trim()) {
+          setError(t("report.reporterRequired"));
+          setBusy(false);
+          return;
+        }
+        const created = await createAnonymousReport({
+          ...payload,
+          reporter_email: anonEmail.trim(),
+          reporter_name: anonName.trim(),
+        });
+        createdId = created.report_id;
+        createdStatus = created.processing_status;
+        // New email → we get a session so evidence upload + tracking work.
+        if (created.access_token) {
+          setToken(created.access_token);
+          setTokenState(created.access_token);
+          sessionToken = created.access_token;
+        }
+      }
+      if (file && sessionToken) {
+        try {
+          await uploadEvidence(sessionToken, createdId, file);
+        } catch {
+          /* evidence is optional for anonymous submissions */
+        }
+      }
+      setReportId(createdId);
+      setReportStatus(createdStatus);
+      void poll(createdId);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : t("report.submitError"));
     } finally {
       setBusy(false);
     }
-  }
-
-  if (!token) {
-    return (
-      <main className="flex-1 py-12">
-        <div className="mx-auto flex max-w-md flex-col gap-4 px-6">
-          <div>
-            <h1 className="text-2xl font-bold text-slate-900">{t("report.signInTitle")}</h1>
-            <p className="mt-1 text-sm text-slate-500">
-              {authMode === "signup" ? t("report.signupPrompt") : t("report.loginPrompt")}
-            </p>
-          </div>
-          <form className="flex flex-col gap-3" onSubmit={authenticate}>
-            <input className={inputCls} type="email" placeholder={t("common.email")} value={email} onChange={(e) => setEmail(e.target.value)} required />
-            <input className={inputCls} type="password" placeholder={t("common.password")} value={password} onChange={(e) => setPassword(e.target.value)} minLength={8} required />
-            <button type="submit" disabled={authBusy} className="rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white disabled:opacity-50">
-              {authBusy ? t("common.pleaseWait") : authMode === "signup" ? t("common.createAccount") : t("common.signIn")}
-            </button>
-          </form>
-          {authError && <p className="text-sm text-rose-600">{authError}</p>}
-          <button className="text-sm text-slate-500 underline" onClick={() => setAuthMode(authMode === "signup" ? "login" : "signup")}>
-            {authMode === "signup" ? t("common.switchAuthSignup") : t("common.switchAuthLogin")}
-          </button>
-        </div>
-      </main>
-    );
   }
 
   return (
@@ -184,15 +183,21 @@ export default function ReportPage() {
             <h1 className="text-2xl font-extrabold text-slate-900 sm:text-3xl">{t("report.title")}</h1>
             <p className="mt-1 text-xs text-slate-600 sm:text-sm">{t("report.subtitle")}</p>
           </div>
-          <button
-            onClick={() => {
-              setToken(null);
-              setTokenState(null);
-            }}
-            className="text-sm text-slate-400 underline"
-          >
-            {t("common.signOut")}
-          </button>
+          {token ? (
+            <button
+              onClick={() => {
+                setToken(null);
+                setTokenState(null);
+              }}
+              className="text-sm text-slate-400 underline"
+            >
+              {t("common.signOut")}
+            </button>
+          ) : (
+            <span className="rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
+              {t("report.noAccountNeeded")}
+            </span>
+          )}
         </div>
 
         {!reportStatus && (
@@ -394,6 +399,32 @@ export default function ReportPage() {
           ) : (
             <>
               <h2 className="text-base font-bold text-slate-900">{t("report.s4Title")}</h2>
+              {!token && (
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <div>
+                    <Label>{t("report.reporterName")}</Label>
+                    <input
+                      className={inputCls}
+                      value={anonName}
+                      onChange={(e) => setAnonName(e.target.value)}
+                      placeholder={t("report.reporterNamePlaceholder")}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label>{t("report.reporterEmail")}</Label>
+                    <input
+                      className={inputCls}
+                      type="email"
+                      value={anonEmail}
+                      onChange={(e) => setAnonEmail(e.target.value)}
+                      placeholder={t("common.email")}
+                      required
+                    />
+                  </div>
+                  <p className="text-[11px] text-slate-500 sm:col-span-2">{t("report.reporterHelp")}</p>
+                </div>
+              )}
               <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-xs leading-relaxed text-slate-700">
                 <label className="flex cursor-pointer items-start gap-2.5">
                   <input type="checkbox" className="mt-0.5 h-4 w-4 shrink-0 accent-blue-600" checked={consent} onChange={(e) => setConsent(e.target.checked)} />

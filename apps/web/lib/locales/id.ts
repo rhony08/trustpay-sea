@@ -689,6 +689,15 @@ const id: Record<string, string> = {
   "tools.message.tips": "Yang harus dilakukan",
   "tools.message.disclaimer":
     "Penyaringan berbantuan AI. Anggap ini sebagai panduan, bukan bukti — selalu verifikasi melalui saluran resmi.",
+
+  // ---- anonymous reporting ----
+  "report.noAccountNeeded": "Tidak perlu akun",
+  "report.reporterName": "Nama Anda",
+  "report.reporterNamePlaceholder": "mis. Rina Andriani",
+  "report.reporterEmail": "Email Anda",
+  "report.reporterHelp":
+    "Tidak perlu akun. Jika email Anda sudah terdaftar, kami akan menggunakan akun itu; jika belum, kami akan membuatkannya agar Anda dapat melampirkan bukti dan memantau laporan Anda.",
+  "report.reporterRequired": "Harap masukkan nama dan email Anda sebelum mengirim.",
 };
 
 export default id;

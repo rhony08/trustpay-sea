@@ -687,6 +687,15 @@ const fil: Record<string, string> = {
   "tools.message.tips": "Ano ang dapat gawin",
   "tools.message.disclaimer":
     "Pagsusuri na tinutulungan ng AI. Ituring itong gabay, hindi patunay — palaging i-verify sa mga opisyal na channel.",
+
+  // ---- anonymous reporting ----
+  "report.noAccountNeeded": "Hindi kailangan ng account",
+  "report.reporterName": "Pangalan mo",
+  "report.reporterNamePlaceholder": "hal. Rina Andriani",
+  "report.reporterEmail": "Email mo",
+  "report.reporterHelp":
+    "Hindi kailangan ng account. Kung nakarehistro na ang email mo, gagamitin namin ang account na iyon; kung wala pa, gagawa kami ng isa para makapag-attach ka ng ebidensya at ma-track ang ulat mo.",
+  "report.reporterRequired": "Pakilagay ang pangalan at email mo bago magsumite.",
 };
 
 export default fil;

@@ -679,6 +679,15 @@ const vi: Record<string, string> = {
   "tools.message.tips": "Việc cần làm",
   "tools.message.disclaimer":
     "Sàng lọc có hỗ trợ AI. Hãy coi đây là hướng dẫn, không phải bằng chứng — luôn xác minh qua các kênh chính thức.",
+
+  // ---- anonymous reporting ----
+  "report.noAccountNeeded": "Không cần tài khoản",
+  "report.reporterName": "Tên của bạn",
+  "report.reporterNamePlaceholder": "ví dụ Rina Andriani",
+  "report.reporterEmail": "Email của bạn",
+  "report.reporterHelp":
+    "Không cần tài khoản. Nếu email của bạn đã được đăng ký, chúng tôi sẽ dùng tài khoản đó; nếu chưa, chúng tôi sẽ tạo một tài khoản để bạn có thể đính kèm bằng chứng và theo dõi báo cáo của mình.",
+  "report.reporterRequired": "Vui lòng nhập tên và email của bạn trước khi gửi.",
 };
 
 export default vi;

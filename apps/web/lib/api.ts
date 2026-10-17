@@ -604,6 +604,36 @@ export async function createReport(
   return body.data;
 }
 
+export interface AnonymousReportInput extends CreateReportInput {
+  reporter_email: string;
+  reporter_name: string;
+}
+
+export interface AnonymousReportResult {
+  report_id: string;
+  processing_status: string;
+  entity_masked: string;
+  reporter: { email: string; name: string; is_new: boolean };
+  /** Present only when a new account was created for the reporter. */
+  access_token?: string;
+}
+
+/**
+ * Submit a report without logging in. If the email is already registered the
+ * report is attributed to that account (its display name is used); a new email
+ * creates an account and returns a session token for evidence + tracking.
+ */
+export async function createAnonymousReport(
+  input: AnonymousReportInput,
+): Promise<AnonymousReportResult> {
+  const body = await request<{ data: AnonymousReportResult }>("/api/v1/reports/anonymous", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input),
+  });
+  return body.data;
+}
+
 export async function uploadEvidence(token: string, reportId: string, file: File): Promise<void> {
   const form = new FormData();
   form.append("file", file);

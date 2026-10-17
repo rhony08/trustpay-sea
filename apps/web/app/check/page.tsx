@@ -318,7 +318,16 @@ export default function CheckPage() {
           </div>
         )}
 
-        {result && <ResultView result={result} nameClaim={nameClaim} onFlag={setFlagged} />}
+        {result && (
+          <ResultView
+            result={result}
+            nameClaim={nameClaim}
+            onFlag={setFlagged}
+            reportHref={`/report?country=${encodeURIComponent(country)}&bank=${encodeURIComponent(
+              bank,
+            )}&account=${encodeURIComponent(account)}`}
+          />
+        )}
         {phoneResult && <PhoneResultCard data={phoneResult} />}
       </div>
 
@@ -337,10 +346,12 @@ function ResultView({
   result,
   nameClaim,
   onFlag,
+  reportHref,
 }: {
   result: ScreenResult;
   nameClaim: string;
   onFlag: (r: ReportView) => void;
+  reportHref: string;
 }) {
   const { t } = useI18n();
   if (result.status === "not_found") {
@@ -552,7 +563,7 @@ function ResultView({
           allowAnalystView={false}
         />
 
-        {reports.length > 0 && <ReportsFeed reports={reports} onFlag={onFlag} />}
+        {reports.length > 0 && <ReportsFeed reports={reports} onFlag={onFlag} reportHref={reportHref} />}
 
         <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-4 text-xs">
           <div className="flex items-center gap-2">
@@ -581,9 +592,11 @@ function ResultView({
 function ReportsFeed({
   reports,
   onFlag,
+  reportHref,
 }: {
   reports: ReportView[];
   onFlag: (r: ReportView) => void;
+  reportHref: string;
 }) {
   const { t } = useI18n();
   const [page, setPage] = useState(1);
@@ -609,7 +622,7 @@ function ReportsFeed({
           </p>
         </div>
         <Link
-          href="/report"
+          href={reportHref}
           className="rounded-lg bg-rose-600 px-3 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-rose-700"
         >
           {t("check.addReport")}

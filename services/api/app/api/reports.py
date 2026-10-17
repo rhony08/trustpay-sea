@@ -10,6 +10,7 @@ Submission requires consent and an authenticated reporter; accepts an
 
 from __future__ import annotations
 
+import secrets
 import uuid
 from datetime import date
 from decimal import Decimal
@@ -26,13 +27,16 @@ from fastapi import (
     UploadFile,
     status,
 )
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, EmailStr, Field
+from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.idempotency import get_idempotent, store_idempotent
+from app.core.security import hash_password
 from app.db import get_db
-from app.deps import get_current_user
-from app.enums import EvidenceMediaType, ReportCategory, Role
+from app.deps import get_current_user, get_jwt_service
+from app.enums import EvidenceMediaType, ReportCategory, Role, UserStatus
 from app.models import User
 from app.resolver.banks import UnsupportedBankError
 from app.resolver.emvco import EMVCoParseError
@@ -67,6 +71,42 @@ class ReportCreateRequest(BaseModel):
     loss_amount: Decimal | None = Field(default=None, ge=0)
     incident_date: date | None = None
     consent: bool
+
+
+class AnonymousReportRequest(ReportCreateRequest):
+    """Public report submission: no account required, but reporter identity is
+    captured. If the email already belongs to a registered user we attribute the
+    report to that account (and keep its display name); otherwise we create a new
+    USER account with the supplied name."""
+
+    reporter_email: EmailStr
+    reporter_name: str = Field(min_length=1, max_length=120)
+
+
+async def _resolve_reporter(db: AsyncSession, email: str, name: str) -> tuple[User, bool]:
+    """Return (user, created). Case-insensitive email match; race-safe create."""
+    normalized = email.strip().lower()
+    user = await db.scalar(select(User).where(User.email == normalized))
+    if user is not None:
+        return user, False
+    user = User(
+        email=normalized,
+        display_name=name.strip() or None,
+        password_hash=hash_password(secrets.token_urlsafe(32)),
+        role=Role.USER,
+        status=UserStatus.ACTIVE,
+    )
+    db.add(user)
+    try:
+        await db.commit()
+    except IntegrityError:
+        await db.rollback()
+        user = await db.scalar(select(User).where(User.email == normalized))
+        if user is None:  # pragma: no cover - defensive
+            raise
+        return user, False
+    await db.refresh(user)
+    return user, True
 
 
 @router.post("", status_code=status.HTTP_202_ACCEPTED)
@@ -127,6 +167,76 @@ async def create_report(
     if idempotency_key:
         await store_idempotent(redis, idem_scope, idempotency_key, payload)
     return payload
+
+
+@router.post("/anonymous", status_code=status.HTTP_202_ACCEPTED)
+async def create_anonymous_report(
+    body: AnonymousReportRequest,
+    db: AsyncSession = Depends(get_db),
+    jwt_service=Depends(get_jwt_service),
+):
+    """Public report submission (no login). Captures reporter name + email.
+
+    - Existing email → attributed to that account; its display name is used
+      (the supplied name is ignored) and no session is issued.
+    - New email → a USER account is created with the supplied name and an access
+      token is returned so the reporter can attach evidence and track the report.
+    """
+    if not body.consent:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "consent is required to publish a report")
+
+    try:
+        if isinstance(body.target, AccountTarget):
+            entity = await svc.resolve_bank_target(
+                db,
+                country=body.target.country,
+                bank=body.target.bank,
+                account=body.target.account,
+            )
+        else:
+            entity = await svc.resolve_qr_target(db, qr_payload=body.target.qr_payload)
+    except (UnsupportedBankError, NormalizationError, EMVCoParseError) as exc:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, str(exc)) from exc
+
+    reporter, created = await _resolve_reporter(
+        db, str(body.reporter_email), body.reporter_name
+    )
+
+    try:
+        await svc.enforce_quotas(db, user_id=reporter.id, entity_id=entity.id)
+    except svc.QuotaExceededError as exc:
+        raise HTTPException(status.HTTP_429_TOO_MANY_REQUESTS, str(exc)) from exc
+
+    report = await svc.create_report(
+        db,
+        entity=entity,
+        reporter_user_id=reporter.id,
+        category=body.category.value,
+        severity=body.severity,
+        description=body.description,
+        currency=body.currency,
+        loss_amount=body.loss_amount,
+        incident_date=body.incident_date,
+    )
+
+    data: dict = {
+        "report_id": str(report.id),
+        "processing_status": report.processing_status,
+        "entity_masked": entity.account_masked,
+        "reporter": {
+            "email": reporter.email,
+            "name": reporter.display_name or body.reporter_name.strip(),
+            "is_new": created,
+        },
+    }
+    if created:
+        # New account → hand back a session so the reporter can upload evidence
+        # and track the report. Existing accounts never get an implicit session.
+        pair, _access_jti, _refresh_jti = jwt_service.issue_token_pair(
+            user_id=str(reporter.id), role=reporter.role
+        )
+        data["access_token"] = pair.access_token
+    return {"status": "accepted", "data": data}
 
 
 @router.post("/{report_id}/evidence", status_code=status.HTTP_202_ACCEPTED)

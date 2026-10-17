@@ -284,6 +284,15 @@ const en: Record<string, string> = {
   "report.viewResult": "View risk verification result →",
   "report.openFreeze": "Open bank freeze guide",
 
+  // ---- anonymous reporting ----
+  "report.noAccountNeeded": "No account needed",
+  "report.reporterName": "Your name",
+  "report.reporterNamePlaceholder": "e.g. Rina Andriani",
+  "report.reporterEmail": "Your email",
+  "report.reporterHelp":
+    "No account needed. If your email is already registered we'll use that account; otherwise we create one so you can attach evidence and track your report.",
+  "report.reporterRequired": "Please enter your name and email before submitting.",
+
   // ---- claim ----
   "claim.signInTitle": "Merchant Shield — sign in",
   "claim.badge": "🛡️ Protecting legitimate merchants from extortion and smears",
